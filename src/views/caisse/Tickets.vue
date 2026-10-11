@@ -26,9 +26,12 @@
 
     <div class="toolbar">
       <span class="date-label">{{ todayLabel }}</span>
-      <button class="btn-refresh" @click="load" :disabled="loading">
-        {{ loading ? '…' : '↻ Actualiser' }}
-      </button>
+      <div class="toolbar-actions">
+        <router-link to="/caisse/new" class="btn-new">+ Nouveau</router-link>
+        <button class="btn-refresh" @click="load" :disabled="loading">
+          {{ loading ? '…' : '↻' }}
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="loading-state">Chargement...</div>
@@ -127,6 +130,12 @@ onMounted(load)
 .kpi-value { font-size: 18px; font-weight: 700; color: #fff; margin-top: 4px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .date-label { font-size: 13px; color: #aaa; }
+.toolbar-actions { display: flex; align-items: center; gap: 8px; }
+.btn-new {
+  background: #6c5ce7; color: #fff; border: none; border-radius: 8px;
+  padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+  text-decoration: none;
+}
 .btn-refresh {
   background: #1e1e32; color: #fff; border: none; border-radius: 8px;
   padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
