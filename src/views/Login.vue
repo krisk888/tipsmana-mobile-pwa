@@ -36,6 +36,26 @@
           {{ loading ? 'Connexion...' : 'Se connecter' }}
         </button>
       </form>
+
+      <!-- ═══ Connexion rapide (DEV) ═══ -->
+      <div class="quick-login" v-if="!loading">
+        <div class="quick-divider">
+          <span>⏺ Test rapide</span>
+        </div>
+        <div class="quick-grid">
+          <button
+            v-for="r in roles"
+            :key="r.label"
+            class="quick-btn"
+            :class="r.role"
+            @click="quickLogin(r)"
+          >
+            <span class="quick-label">{{ r.label }}</span>
+            <span class="quick-email">{{ r.email }}</span>
+          </button>
+        </div>
+        <p class="quick-hint">mdp : <code>test1234</code></p>
+      </div>
     </div>
   </div>
 </template>
@@ -47,9 +67,16 @@ import { login } from '../shared/auth'
 
 const router = useRouter()
 const email = ref('')
-const password = ref('')
+const password = ref('test1234')
 const loading = ref(false)
 const error = ref('')
+
+const roles = [
+  { label: 'Admin',   role: 'admin',   email: 'admin@tipsmana.com',     route: '/pilot' },
+  { label: 'Pilote',  role: 'pilot',   email: 'associe@tipsmana.com',   route: '/pilot' },
+  { label: 'Cuisine', role: 'cuisine', email: 'pierre.dubois@legrandcomptoir.fr', route: '/cuisine' },
+  { label: 'Caisse',  role: 'caisse',  email: 'boss@restoducoin.fr',    route: '/caisse' },
+]
 
 async function handleLogin() {
   loading.value = true
@@ -59,6 +86,19 @@ async function handleLogin() {
     router.push('/pilot')
   } catch (e) {
     error.value = e.data?.message || e.message || 'Email ou mot de passe incorrect'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function quickLogin(r) {
+  loading.value = true
+  error.value = ''
+  try {
+    await login(r.email, 'test1234')
+    router.push(r.route)
+  } catch (e) {
+    error.value = 'Quick login échoué pour ' + r.label
   } finally {
     loading.value = false
   }
@@ -112,4 +152,26 @@ input:focus { outline: none; border-color: #6c5ce7; }
 }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-primary:not(:disabled):hover { opacity: 0.9; }
+/* ═══ Quick login — DEV ═══ */
+.quick-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0 12px; font-size: 12px; color: #555;
+}
+.quick-divider::after { content: ''; flex: 1; height: 1px; background: #333; }
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.quick-btn {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 8px; border: 1px solid #333; border-radius: 10px;
+  background: #2a2a40; cursor: pointer; text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+.quick-btn:active { transform: scale(0.97); }
+.quick-btn.admin { border-color: #6c5ce7; }
+.quick-btn.pilot { border-color: #a29bfe; }
+.quick-btn.cuisine { border-color: #00d2a0; }
+.quick-btn.caisse { border-color: #ff6b6b; }
+.quick-label { font-size: 13px; font-weight: 700; color: #fff; }
+.quick-email { font-size: 10px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quick-hint { font-size: 11px; color: #444; text-align: center; margin-top: 8px; }
+.quick-hint code { color: #888; }
 </style>

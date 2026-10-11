@@ -20,15 +20,21 @@
     </div>
 
     <div v-else class="order-list">
-      <div v-for="o in orders" :key="o.id" class="order-card" @click="toggleDetail(o.id)">
-        <div class="order-header">
-          <strong>Cmd #{{ shortId(o.id) }}</strong>
-          <span class="order-amount">{{ formatEur(o.total_sales_ttc) }}</span>
-        </div>
-        <div class="order-meta">
-          <span class="shift-badge" :class="o.shift">{{ shiftLabel(o.shift) }}</span>
-          <span>{{ o.total_items != null ? o.total_items + ' lignes' : '' }}</span>
-          <span>{{ o.imported_by_name }}</span>
+      <div v-for="o in orders" :key="o.id" class="order-card">
+        <div class="order-card-header">
+          <div class="order-header" @click="toggleDetail(o.id)">
+            <strong>Cmd #{{ shortId(o.id) }}</strong>
+            <span class="order-amount">{{ formatEur(o.total_sales_ttc) }}</span>
+          </div>
+          <div class="order-meta">
+            <span class="shift-badge" :class="o.shift">{{ shiftLabel(o.shift) }}</span>
+            <span v-if="o.created_at" class="order-time">{{ formatTimeAgo(o.created_at) }}</span>
+            <span>{{ o.total_items != null ? o.total_items + ' lignes' : '' }}</span>
+            <span>{{ o.imported_by_name }}</span>
+          </div>
+          <button class="btn-ready" @click.stop="markReady(o.id)" :disabled="readyLoading[o.id]">
+            {{ readyLoading[o.id] ? '…' : '✅ Prêt' }}
+          </button>
         </div>
 
         <div v-if="expanded[o.id]" class="order-detail">
@@ -51,6 +57,7 @@
 import { ref, onMounted } from 'vue'
 import api from '../../shared/api'
 
+const readyLoading = ref({})
 const orders = ref([])
 const loading = ref(true)
 const error = ref(null)
@@ -70,6 +77,29 @@ function formatEur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency
 function shortId(id) { return id ? String(id).slice(0, 8) : '—' }
 function shiftLabel(s) {
   return { lunch: 'Midi', dinner: 'Soir', all_day: 'Journée' }[s] || (s || '—')
+}
+function formatTimeAgo(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return ''
+  const ago = Math.round((Date.now() - d.getTime()) / 60000)
+  if (ago < 1) return 'à l\'instant'
+  if (ago < 60) return `il y a ${ago} min`
+  const h = Math.floor(ago / 60)
+  const m = ago % 60
+  return `il y a ${h}h${m ? m + 'min' : ''}`
+}
+
+async function markReady(id) {
+  readyLoading.value[id] = true
+  try {
+    await api.put(`/sales/entries/${id}`, { validation_status: 'validated' })
+    orders.value = orders.value.filter(o => o.id !== id)
+  } catch (e) {
+    alert('Erreur: ' + (e.message || 'mise à jour échouée'))
+  } finally {
+    readyLoading.value[id] = false
+  }
 }
 
 async function load() {
