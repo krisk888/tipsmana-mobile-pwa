@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#1a1a2e"/>
+  <rect x="16" y="16" width="160" height="160" rx="28" fill="url(#g)"/>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="192" y2="192">
+    <stop offset="0%" stop-color="#6c5ce7"/><stop offset="100%" stop-color="#a29bfe"/>
+  </linearGradient></defs>
+  <text x="96" y="125" text-anchor="middle" font-family="Arial,sans-serif" font-size="96" font-weight="800" fill="white">T</text>
+</svg>
