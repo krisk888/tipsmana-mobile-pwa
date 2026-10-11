@@ -29,6 +29,12 @@ const routes = [
     meta: { title: 'Nouveau ticket', auth: true }
   },
   {
+    path: '/caisse/:id',
+    name: 'TicketDetail',
+    component: () => import('./views/caisse/TicketDetail.vue'),
+    meta: { title: 'Détail ticket', auth: true }
+  },
+  {
     path: '/cuisine',
     name: 'Cuisine',
     component: () => import('./views/cuisine/Orders.vue'),

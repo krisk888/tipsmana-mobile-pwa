@@ -42,21 +42,21 @@
     </div>
 
     <div v-else class="ticket-list">
-      <div v-for="t in tickets" :key="t.id" class="ticket-card">
-        <div class="ticket-header">
-          <strong>Ticket #{{ shortId(t.id) }}</strong>
-          <span class="ticket-amount">{{ formatEur(t.total_sales_ttc) }}</span>
-        </div>
-        <div class="ticket-meta">
-          <span class="shift-badge" :class="t.shift">{{ shiftLabel(t.shift) }}</span>
-          <span>{{ t.total_items != null ? t.total_items + ' articles' : '' }}</span>
-          <span>{{ t.imported_by_name }}</span>
-        </div>
-        <div class="ticket-status" :class="t.validation_status">
-          {{ statusLabel(t.validation_status) }}
-        </div>
-      </div>
-    </div>
+            <router-link v-for="t in tickets" :key="t.id" :to="'/caisse/' + t.id" class="ticket-card router-card">
+              <div class="ticket-header">
+                <strong>Ticket #{{ shortId(t.id) }}</strong>
+                <span class="ticket-amount">{{ formatEur(t.total_sales_ttc) }}</span>
+              </div>
+              <div class="ticket-meta">
+                <span class="shift-badge" :class="t.shift">{{ shiftLabel(t.shift) }}</span>
+                <span>{{ t.total_items != null ? t.total_items + ' articles' : '' }}</span>
+                <span>{{ t.imported_by_name }}</span>
+              </div>
+              <div class="ticket-status" :class="t.validation_status">
+                {{ statusLabel(t.validation_status) }}
+              </div>
+            </router-link>
+          </div>
   </div>
 </template>
 
@@ -146,6 +146,8 @@ onMounted(load)
 .ticket-card {
   background: #1e1e32; border-radius: 12px; padding: 14px;
 }
+.router-card { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; }
+.router-card:active { transform: scale(0.98); }
 .ticket-header { display: flex; justify-content: space-between; align-items: center; }
 .ticket-header strong { color: #fff; font-size: 15px; }
 .ticket-amount { color: #6c5ce7; font-weight: 700; font-size: 16px; }
