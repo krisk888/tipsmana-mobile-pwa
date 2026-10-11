@@ -23,6 +23,18 @@ const routes = [
     meta: { title: 'Caisse', icon: '💳', auth: true }
   },
   {
+    path: '/caisse/new',
+    name: 'NewTicket',
+    component: () => import('./views/caisse/NewTicket.vue'),
+    meta: { title: 'Nouveau ticket', auth: true }
+  },
+  {
+    path: '/caisse/:id',
+    name: 'TicketDetail',
+    component: () => import('./views/caisse/TicketDetail.vue'),
+    meta: { title: 'Détail ticket', auth: true }
+  },
+  {
     path: '/cuisine',
     name: 'Cuisine',
     component: () => import('./views/cuisine/Orders.vue'),
@@ -33,7 +45,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory('/mobile/'),
   routes,
   scrollBehavior: () => ({ top: 0 })
 })
