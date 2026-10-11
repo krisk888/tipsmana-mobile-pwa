@@ -74,8 +74,16 @@ async function load() {
   error.value = null
   try {
     const res = await api.get('/inventory/sessions')
-    const data = res.data || res.results || res || []
-    sessions.value = Array.isArray(data) ? data : []
+    const data = res.data || res.results || res || {}
+    // API renvoie {kitchen: {items}, dining_room: {items}} — on fusionne
+    if (Array.isArray(data)) {
+      sessions.value = data
+    } else {
+      sessions.value = [
+        ...(data.kitchen?.items || []),
+        ...(data.dining_room?.items || []),
+      ]
+    }
   } catch (e) {
     error.value = e.message
     sessions.value = []

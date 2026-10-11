@@ -42,6 +42,8 @@ const routes = [
   },
   { path: '/validations', name: 'Validations', component: () => import('./views/pilot/Validations.vue'), meta: { auth: true } },
   { path: '/scan', name: 'ScanQR', component: () => import('./views/stock/ScanQR.vue'), meta: { auth: true } },
+  { path: '/stock/receptions', name: 'Receptions', component: () => import('./views/stock/Receptions.vue'), meta: { title: 'Réceptions', auth: true } },
+  { path: '/stock/:id', name: 'StockDetail', component: () => import('./views/stock/StockDetail.vue'), meta: { title: 'Session stock', auth: true } },
 ]
 
 const router = createRouter({
