@@ -59,9 +59,9 @@
       </div>
 
       <!-- Actions -->
-      <div class="actions-section" v-if="entry.validation_status !== 'paid'">
+      <div class="actions-section" v-if="entry.validation_status !== 'validated'">
         <button class="btn-pay" @click="markPaid" :disabled="paying">
-          {{ paying ? 'Mise à jour…' : '✅ Marquer payé' }}
+          {{ paying ? 'Mise à jour…' : '✅ Valider le ticket' }}
         </button>
         <button class="btn-delete-entry" @click="deleteEntry" :disabled="deleting">
           {{ deleting ? 'Suppression…' : '🗑️ Supprimer' }}
@@ -88,8 +88,8 @@ const deleting = ref(false)
 
 const statusClass = computed(() => {
   const s = entry.value?.validation_status
-  if (s === 'paid') return 'status-paid'
   if (s === 'validated') return 'status-validated'
+  if (s === 'has_errors') return 'status-pending'
   return 'status-pending'
 })
 
@@ -128,9 +128,9 @@ async function markPaid() {
   paying.value = true
   try {
     await api.put(`/sales/entries/${route.params.id}`, {
-      validation_status: 'paid',
+      validation_status: 'validated',
     })
-    entry.value.validation_status = 'paid'
+    entry.value.validation_status = 'validated'
   } catch (e) {
     alert('Erreur: ' + (e.message || 'mise à jour échouée'))
   } finally {
