@@ -35,7 +35,7 @@
     </div>
 
     <div class="filter-bar">
-      <button v-for="f in [ {key:'pending', label:'En attente'}, {key:'paid', label:'Payés'}, {key:'all', label:'Tous'} ]" :key="f.key"
+      <button v-for="f in [ {key:'pending', label:'En attente'}, {key:'validated', label:'Validées'}, {key:'all', label:'Tous'} ]" :key="f.key"
         class="filter-btn" :class="{ active: filter === f.key }"
         @click="filter = f.key">{{ f.label }}</button>
     </div>
@@ -73,7 +73,7 @@ import api from '../../shared/api'
 const tickets = ref([])
 const loading = ref(true)
 const error = ref(null)
-const filter = ref('pending') // all / pending / paid
+const filter = ref('pending') // all / pending / validated
 
 const today = new Date()
 const todayLabel = today.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -89,7 +89,7 @@ function shiftLabel(s) {
   return { lunch: 'Midi', dinner: 'Soir', all_day: 'Journée' }[s] || (s || '—')
 }
 function statusLabel(s) {
-  return { pending: 'En attente', validated: 'Validée', paid: 'Payée', has_errors: 'Erreurs' }[s] || (s || '—')
+  return { pending: 'En attente', validated: 'Validée', has_errors: 'Erreurs' }[s] || (s || '—')
 }
 
 const filteredTickets = computed(() => {
@@ -188,7 +188,6 @@ onUnmounted(() => {
 .shift-badge.dinner { background: rgba(108,92,231,0.2); color: #a29bfe; }
 .ticket-status { margin-top: 10px; font-size: 12px; font-weight: 600; }
 .ticket-status.pending { color: #ffc107; }
-.ticket-status.paid { color: #00d2a0; }
 .ticket-status.validated { color: #00d2a0; }
 .ticket-status.has_errors { color: #ff6b6b; }
 </style>
