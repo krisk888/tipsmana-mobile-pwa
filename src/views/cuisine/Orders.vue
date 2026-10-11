@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
 
 const readyLoading = ref({})
@@ -140,7 +140,14 @@ async function toggleDetail(id) {
   }
 }
 
-onMounted(load)
+let refreshTimer
+onMounted(() => {
+  load()
+  refreshTimer = setInterval(load, 30000)
+})
+onUnmounted(() => {
+  clearInterval(refreshTimer)
+})
 </script>
 
 <style scoped>

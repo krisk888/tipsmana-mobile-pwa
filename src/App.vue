@@ -20,6 +20,10 @@
           <span class="nav-icon">{{ tab.icon }}</span>
           <span class="nav-label">{{ tab.label }}</span>
         </router-link>
+        <button class="nav-item nav-logout" @click="handleLogout">
+          <span class="nav-icon">⏻</span>
+          <span class="nav-label">Quitter</span>
+        </button>
       </nav>
     </div>
   </div>
@@ -27,9 +31,11 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { logout } from './shared/auth'
 
 const route = useRoute()
+const router = useRouter()
 const isLoginPage = computed(() => route.path === '/login')
 
 const tabs = [
@@ -38,6 +44,11 @@ const tabs = [
   { path: '/caisse', icon: '💳', label: 'Caisse' },
   { path: '/cuisine', icon: '🍳', label: 'Cuisine' },
 ]
+
+function handleLogout() {
+  logout()
+  router.push('/login')
+}
 </script>
 
 <style>
@@ -70,4 +81,9 @@ body {
 .nav-item.active { color: #6c5ce7; }
 .nav-icon { font-size: 22px; line-height: 1; }
 .nav-label { font-size: 10px; font-weight: 500; }
+.nav-logout {
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  color: #666; transition: color 0.2s;
+}
+.nav-logout:active { color: #ff6b6b; }
 </style>

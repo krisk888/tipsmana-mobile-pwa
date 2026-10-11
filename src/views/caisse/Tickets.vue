@@ -34,6 +34,12 @@
       </div>
     </div>
 
+    <div class="filter-bar">
+      <button v-for="f in [ {key:'pending', label:'En attente'}, {key:'paid', label:'Payés'}, {key:'all', label:'Tous'} ]" :key="f.key"
+        class="filter-btn" :class="{ active: filter === f.key }"
+        @click="filter = f.key">{{ f.label }}</button>
+    </div>
+
     <div v-if="loading" class="loading-state">Chargement...</div>
     <div v-else-if="error && !tickets.length" class="error-state">{{ error }}</div>
     <div v-else-if="!tickets.length" class="empty-state">
@@ -42,7 +48,7 @@
     </div>
 
     <div v-else class="ticket-list">
-            <router-link v-for="t in tickets" :key="t.id" :to="'/caisse/' + t.id" class="ticket-card router-card">
+            <router-link v-for="t in filteredTickets" :key="t.id" :to="'/caisse/' + t.id" class="ticket-card router-card">
               <div class="ticket-header">
                 <strong>Ticket #{{ shortId(t.id) }}</strong>
                 <span class="ticket-amount">{{ formatEur(t.total_sales_ttc) }}</span>
@@ -61,12 +67,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
 
 const tickets = ref([])
 const loading = ref(true)
 const error = ref(null)
+const filter = ref('pending') // all / pending / paid
 
 const today = new Date()
 const todayLabel = today.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -82,8 +89,13 @@ function shiftLabel(s) {
   return { lunch: 'Midi', dinner: 'Soir', all_day: 'Journée' }[s] || (s || '—')
 }
 function statusLabel(s) {
-  return { pending: 'En attente', validated: 'Validée', has_errors: 'Erreurs' }[s] || (s || '—')
+  return { pending: 'En attente', validated: 'Validée', paid: 'Payée', has_errors: 'Erreurs' }[s] || (s || '—')
 }
+
+const filteredTickets = computed(() => {
+  if (filter.value === 'all') return tickets.value
+  return tickets.value.filter(t => t.validation_status === filter.value)
+})
 
 const totals = computed(() => {
   let totalTtc = 0, lunchTtc = 0, dinnerTtc = 0
@@ -113,7 +125,14 @@ async function load() {
   }
 }
 
-onMounted(load)
+let refreshTimer
+onMounted(() => {
+  load()
+  refreshTimer = setInterval(load, 30000)
+})
+onUnmounted(() => {
+  clearInterval(refreshTimer)
+})
 </script>
 
 <style scoped>
@@ -130,6 +149,13 @@ onMounted(load)
 .kpi-value { font-size: 18px; font-weight: 700; color: #fff; margin-top: 4px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .date-label { font-size: 13px; color: #aaa; }
+.filter-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+.filter-btn {
+  flex: 1; background: #1e1e32; color: #888; border: 1px solid #2a2a40;
+  border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-btn.active { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
 .toolbar-actions { display: flex; align-items: center; gap: 8px; }
 .btn-new {
   background: #6c5ce7; color: #fff; border: none; border-radius: 8px;
@@ -162,6 +188,7 @@ onMounted(load)
 .shift-badge.dinner { background: rgba(108,92,231,0.2); color: #a29bfe; }
 .ticket-status { margin-top: 10px; font-size: 12px; font-weight: 600; }
 .ticket-status.pending { color: #ffc107; }
+.ticket-status.paid { color: #00d2a0; }
 .ticket-status.validated { color: #00d2a0; }
 .ticket-status.has_errors { color: #ff6b6b; }
 </style>
