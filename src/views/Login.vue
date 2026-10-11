@@ -48,7 +48,7 @@
             :key="r.label"
             class="quick-btn"
             :class="r.role"
-            @click="quickLogin(r)"
+            @click="fillLogin(r)"
           >
             <span class="quick-label">{{ r.label }}</span>
             <span class="quick-email">{{ r.email }}</span>
@@ -83,7 +83,8 @@ async function handleLogin() {
   error.value = ''
   try {
     await login(email.value, password.value)
-    router.push('/pilot')
+    const m = roles.find(r => r.email === email.value)
+    router.push(m ? m.route : '/pilot')
   } catch (e) {
     error.value = e.data?.message || e.message || 'Email ou mot de passe incorrect'
   } finally {
@@ -91,17 +92,10 @@ async function handleLogin() {
   }
 }
 
-async function quickLogin(r) {
-  loading.value = true
+async function fillLogin(r) {
+  email.value = r.email
+  password.value = 'test1234'
   error.value = ''
-  try {
-    await login(r.email, 'test1234')
-    router.push(r.route)
-  } catch (e) {
-    error.value = 'Quick login échoué pour ' + r.label
-  } finally {
-    loading.value = false
-  }
 }
 </script>
 
