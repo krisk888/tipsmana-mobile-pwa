@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp public/registerSW.js dist/registerSW.js",
     "preview": "vite preview"
   },
   "dependencies": {
