@@ -54,7 +54,6 @@
             <span class="quick-email">{{ r.email }}</span>
           </button>
         </div>
-        <p class="quick-hint">mdp : <code>test1234</code></p>
       </div>
     </div>
   </div>
@@ -67,7 +66,7 @@ import { login } from '../shared/auth'
 
 const router = useRouter()
 const email = ref('')
-const password = ref('test1234')
+const password = ref('')
 const loading = ref(false)
 const error = ref('')
 
@@ -96,6 +95,8 @@ async function fillLogin(r) {
   email.value = r.email
   password.value = 'test1234'
   error.value = ''
+  // focus sur le bouton Se connecter pour valider direct
+  document.querySelector('.btn-primary')?.focus()
 }
 </script>
 
