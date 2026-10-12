@@ -100,9 +100,12 @@ const filteredTickets = computed(() => {
 const totals = computed(() => {
   let totalTtc = 0, lunchTtc = 0, dinnerTtc = 0
   for (const t of tickets.value) {
-    totalTtc += t.total_sales_ttc || 0
-    if (t.shift === 'lunch') lunchTtc += t.total_sales_ttc || 0
-    if (t.shift === 'dinner') dinnerTtc += t.total_sales_ttc || 0
+    // L'API renvoie total_sales_ttc en chaîne ('1155.00') : convertir en nombre
+    // sinon totalTtc concatène ('01127.501155.00') → NaN
+    const v = Number(t.total_sales_ttc) || 0
+    totalTtc += v
+    if (t.shift === 'lunch') lunchTtc += v
+    if (t.shift === 'dinner') dinnerTtc += v
   }
   return { totalTtc, lunchTtc, dinnerTtc }
 })
