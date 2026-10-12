@@ -13,10 +13,11 @@ export default defineConfig({
         name: "Tipsmana — L'App du Boss",
         short_name: 'Tipsmana',
         description: 'Gestion restaurant mobile — inventaire, caisse, pilotage',
-        theme_color: '#1a1a2e',
-        background_color: '#0f0f1a',
+        theme_color: '#059669',
+        background_color: '#06241b',
         display: 'standalone',
         orientation: 'portrait',
+        lang: 'fr',
         scope: '/mobile/',
         start_url: '/mobile/',
         icons: [
