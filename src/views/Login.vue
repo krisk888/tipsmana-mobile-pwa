@@ -59,12 +59,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { login } from '../shared/auth'
 import BrandLogo from '../components/BrandLogo.vue'
 
 const router = useRouter()
+const route = useRoute()
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -98,6 +99,16 @@ async function fillLogin(r) {
   // focus sur le bouton Se connecter pour valider direct
   document.querySelector('.btn-primary')?.focus()
 }
+
+// Lien direct ?role=admin|pilot|cuisine|caisse → identifiants pré-remplis
+onMounted(async () => {
+  const r = roles.find(x => x.role === route.query.role)
+  if (r) {
+    email.value = r.email
+    password.value = r.password
+    error.value = ''
+  }
+})
 </script>
 
 <style scoped>
