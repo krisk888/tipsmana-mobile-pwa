@@ -69,6 +69,11 @@ function timeAgo(iso) {
   return new Date(iso).toLocaleDateString('fr-FR')
 }
 
+const todayISO = (() => {
+  const today = new Date()
+  return [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')].join('-')
+})()
+
 async function load() {
   loading.value = true
   error.value = null
@@ -94,7 +99,10 @@ async function load() {
 
 async function startSession() {
   try {
-    await api.post('/inventory/sessions', {})
+    await api.post('/inventory/sessions', {
+      session_name: `Inventaire ${todayISO}`,
+      session_date: todayISO,
+    })
     await load()
   } catch (e) {
     error.value = e.message || 'Impossible de créer'

@@ -75,6 +75,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../shared/api'
+import { auth } from '../../shared/auth'
 
 const router = useRouter()
 
@@ -142,6 +143,7 @@ async function submit() {
   submitting.value = true
   try {
     const payload = {
+      establishment_id: auth.defaultEstablishmentId || auth.establishments?.[0]?.id,
       date: todayISO,
       shift: shift.value,
       entry_type: 'manual',
@@ -155,7 +157,12 @@ async function submit() {
     await api.post('/sales/entries', payload)
     router.push('/caisse')
   } catch (e) {
-    alert('Erreur: ' + (e.message || 'envoi impossible'))
+    if (e.status === 409) {
+      alert('Un ticket existe déjà pour ce service. Retour à la caisse pour le modifier.')
+      router.push('/caisse')
+    } else {
+      alert('Erreur: ' + (e.message || 'envoi impossible'))
+    }
   } finally {
     submitting.value = false
   }

@@ -41,8 +41,9 @@ function formatEur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency
 async function load() {
   loading.value = true
   try {
-    const res = await api.get('/costs/invoices?status=pending')
-    invoices.value = res.data || res.results || []
+    const res = await api.get('/costs/invoices/list?status=pending&limit=50')
+    const data = res.data || res
+    invoices.value = data.items || data.invoices || data.results || []
   } catch (e) {
     error.value = e.message
     // Demo data
