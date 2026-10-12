@@ -23,6 +23,15 @@ class ApiClient {
     }
   }
 
+  getEstablishmentId() {
+    try {
+      const stored = localStorage.getItem('tipsmana_token')
+      return stored ? JSON.parse(stored).establishment_id || null : null
+    } catch {
+      return null
+    }
+  }
+
   getRefreshToken() {
     try {
       const stored = localStorage.getItem('tipsmana_token')
@@ -38,6 +47,8 @@ class ApiClient {
     const headers = { 'Content-Type': 'application/json', ...options.headers }
 
     if (token) headers['Authorization'] = `Bearer ${token}`
+    const establishmentId = this.getEstablishmentId()
+    if (establishmentId) headers['X-Establishment-ID'] = establishmentId
 
     const url = `${this.baseUrl}${path}`
     const config = { method, headers }
@@ -90,6 +101,8 @@ class ApiClient {
     const token = {
       access_token: data.access_token || data.token,
       refresh_token: data.refresh_token,
+      // /auth/refresh ne renvoie pas l'établissement : conserver celui du login
+      establishment_id: this.getEstablishmentId(),
       expires_at: Date.now() + (data.expires_in || 900) * 1000  // default 15min
     }
     localStorage.setItem('tipsmana_token', JSON.stringify(token))
@@ -121,6 +134,8 @@ class ApiClient {
 
     const headers = {}
     if (token) headers['Authorization'] = `Bearer ${token}`
+    const establishmentId = this.getEstablishmentId()
+    if (establishmentId) headers['X-Establishment-ID'] = establishmentId
 
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',

@@ -75,7 +75,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../shared/api'
-import { auth } from '../../shared/auth'
+import { getEstablishmentId } from '../../shared/auth'
 
 const router = useRouter()
 
@@ -123,16 +123,12 @@ async function loadSuggestions() {
   try {
     const res = await api.get('/products?per_page=100&is_active=true&sort_by=name')
     const data = res.data || res
-    let list = []
-    if (Array.isArray(data)) {
-      list = data
-    } else {
-      if (Array.isArray(data.kitchen)) list = list.concat(data.kitchen)
-      if (Array.isArray(data.dining_room)) list = list.concat(data.dining_room)
-      if (Array.isArray(data.kitchen_dining_room)) list = list.concat(data.kitchen_dining_room)
-      if (Array.isArray(data.products)) list = list.concat(data.products)
-    }
-    suggestions.value = list
+    // GET /products renvoie {kitchen, dining_room, kitchen_dining_room} :
+    // kitchen_dining_room est déjà l'union des deux sections -> dédoublonner par id
+    const list = Array.isArray(data)
+      ? data
+      : [...(data.kitchen || []), ...(data.dining_room || []), ...(data.kitchen_dining_room || [])]
+    suggestions.value = [...new Map(list.map(p => [p.id, p])).values()]
   } catch {
     suggestions.value = []
   }
@@ -143,7 +139,8 @@ async function submit() {
   submitting.value = true
   try {
     const payload = {
-      establishment_id: auth.defaultEstablishmentId || auth.establishments?.[0]?.id,
+      // persistant (localStorage) : survit au rechargement de la page
+      establishment_id: getEstablishmentId(),
       date: todayISO,
       shift: shift.value,
       entry_type: 'manual',
