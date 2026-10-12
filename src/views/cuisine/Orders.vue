@@ -30,7 +30,7 @@
             <span class="shift-badge" :class="o.shift">{{ shiftLabel(o.shift) }}</span>
             <span v-if="o.created_at" class="order-time">{{ formatTimeAgo(o.created_at) }}</span>
             <span>{{ o.total_items != null ? o.total_items + ' lignes' : '' }}</span>
-            <span>{{ o.imported_by_name }}</span>
+            <span>{{ o.imported_by_user_name }}</span>
           </div>
           <button class="btn-ready" @click.stop="markReady(o.id)" :disabled="readyLoading[o.id]">
             {{ readyLoading[o.id] ? '…' : '✅ Prêt' }}
@@ -107,14 +107,10 @@ async function load() {
   error.value = null
   try {
     const res = await api.get(`/sales/entries?date_from=${todayISO}&date_to=${todayISO}&validation_status=pending`)
-    orders.value = res.data || res.results || res || []
+    orders.value = Array.isArray(res.data) ? res.data : []
   } catch (e) {
     error.value = e.message
-    // Fallback demo data
-    orders.value = [
-      { id: 'c1d2e3f4', total_sales_ttc: 2081.40, shift: 'lunch', total_items: 14, imported_by_name: 'Camille' },
-      { id: 'a9b8c7d6', total_sales_ttc: 1489.20, shift: 'dinner', total_items: 11, imported_by_name: 'Bastien' },
-    ]
+    orders.value = []
   } finally {
     loading.value = false
   }

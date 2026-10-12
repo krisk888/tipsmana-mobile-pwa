@@ -55,7 +55,7 @@
         <div class="total-row"><span>Total TTC</span><span class="ttc">{{ formatEur(entry.total_sales_ttc) }}</span></div>
         <div class="total-row"><span>Total HT</span><span>{{ formatEur(entry.total_sales_ht) }}</span></div>
         <div class="total-row" v-if="entry.total_cost"><span>Total coût</span><span>{{ formatEur(entry.total_cost) }}</span></div>
-        <div class="total-row" v-if="entry.margin_percent !== undefined"><span>Marge</span><span>{{ entry.margin_percent.toFixed(1) }}%</span></div>
+        <div class="total-row" v-if="entry.margin_percent != null"><span>Marge</span><span>{{ Number(entry.margin_percent).toFixed(1) }}%</span></div>
       </div>
 
       <!-- Actions -->
@@ -142,7 +142,7 @@ async function deleteEntry() {
   if (!confirm('Supprimer ce ticket ?')) return
   deleting.value = true
   try {
-    await api.delete(`/sales/entries/${route.params.id}`)
+    await api.del(`/sales/entries/${route.params.id}`)
     router.push('/caisse')
   } catch (e) {
     alert('Erreur: ' + (e.message || 'suppression échouée'))

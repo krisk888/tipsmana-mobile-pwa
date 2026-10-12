@@ -56,7 +56,7 @@
               <div class="ticket-meta">
                 <span class="shift-badge" :class="t.shift">{{ shiftLabel(t.shift) }}</span>
                 <span>{{ t.total_items != null ? t.total_items + ' articles' : '' }}</span>
-                <span>{{ t.imported_by_name }}</span>
+                <span>{{ t.imported_by_user_name }}</span>
               </div>
               <div class="ticket-status" :class="t.validation_status">
                 {{ statusLabel(t.validation_status) }}
@@ -115,14 +115,10 @@ async function load() {
   error.value = null
   try {
     const res = await api.get(`/sales/entries/by-date/${todayISO}`)
-    tickets.value = res.data || res.results || res || []
+    tickets.value = Array.isArray(res.data) ? res.data : []
   } catch (e) {
     error.value = e.message
-    // Fallback demo data
-    tickets.value = [
-      { id: 'a1b2c3d4', total_sales_ttc: 2081.40, shift: 'lunch', validation_status: 'pending', total_items: 14, imported_by_name: 'Camille' },
-      { id: 'e5f6a7b8', total_sales_ttc: 1489.20, shift: 'dinner', validation_status: 'pending', total_items: 11, imported_by_name: 'Bastien' },
-    ]
+    tickets.value = []
   } finally {
     loading.value = false
   }
