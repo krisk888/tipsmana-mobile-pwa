@@ -44,8 +44,6 @@ const isLoginPage = computed(() => route.path === '/login')
 const tabs = [
   { path: '/pilot', iconName: 'pilote', label: 'Pilote' },
   { path: '/stock', iconName: 'stock', label: 'Stock' },
-  { path: '/caisse', iconName: 'caisse', label: 'Caisse' },
-  { path: '/cuisine', iconName: 'cuisine', label: 'Cuisine' },
 ]
 
 function handleLogout() {
