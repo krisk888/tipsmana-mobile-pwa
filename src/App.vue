@@ -43,8 +43,8 @@ const isLoginPage = computed(() => route.path === '/login')
 
 const tabs = [
   { path: '/pilot', iconName: 'pilote', label: 'Pilote' },
-  { path: '/stock', iconName: 'stock', label: 'Stock' },
   { path: '/caisse', iconName: 'caisse', label: 'Caisse' },
+  { path: '/stock', iconName: 'stock', label: 'Stock' },
   { path: '/cuisine', iconName: 'cuisine', label: 'Cuisine' },
 ]
 

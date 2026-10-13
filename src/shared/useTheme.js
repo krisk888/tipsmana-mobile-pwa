@@ -2,23 +2,38 @@ import { ref } from 'vue'
 
 const STORAGE_KEY = 'tipsmana-theme'
 
+// Ordre de cycle du toggle : dark → light → auto → dark
+const CYCLE = ['dark', 'light', 'auto']
+
+// Fenêtres horaires du mode auto : 20h–7h = sombre, 7h–20h = clair
+const DARK_START_HOUR = 20
+const LIGHT_START_HOUR = 7
+
 /**
- * Thème initial : localStorage d'abord, sinon préférence système, sinon dark.
+ * Préférence initiale : localStorage d'abord, sinon 'auto'.
  */
-function getInitialTheme() {
+function getInitialPreference() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === 'dark' || stored === 'light') return stored
+    if (CYCLE.includes(stored)) return stored
   } catch (e) {
     // localStorage indisponible (mode privé) → on ignore
   }
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-    return 'light'
-  }
-  return 'dark'
+  return 'auto'
 }
 
-const theme = ref(getInitialTheme())
+/** Vrai si l'heure locale est dans la fenêtre sombre (20h–7h). */
+function isNight() {
+  const h = new Date().getHours()
+  return h >= DARK_START_HOUR || h < LIGHT_START_HOUR
+}
+
+// Préférence stockée : 'dark' | 'light' | 'auto'
+const preference = ref(getInitialPreference())
+
+// Thème effectif réellement appliqué : 'dark' | 'light' uniquement.
+// En mode auto, il dépend de l'heure courante.
+const theme = ref(preference.value === 'auto' ? (isNight() ? 'dark' : 'light') : preference.value)
 
 /** Applique la classe theme-dark/theme-light sur <html> + meta theme-color. */
 function applyTheme(t) {
@@ -29,23 +44,35 @@ function applyTheme(t) {
   if (meta) meta.setAttribute('content', t === 'dark' ? '#0f0f1a' : '#f5f5f0')
 }
 
-/** À appeler au démarrage (main.js) pour éviter le flash avant le mount. */
-export function initTheme() {
-  applyTheme(theme.value)
+/** Resynchronise le thème effectif (préférence + horaire auto) et l'applique. */
+function syncTheme() {
+  const effective = preference.value === 'auto' ? (isNight() ? 'dark' : 'light') : preference.value
+  if (theme.value !== effective) theme.value = effective
+  applyTheme(effective)
 }
 
+// En mode auto, recale le thème quand on franchit 7h ou 20h
+setInterval(syncTheme, 60_000)
+
+/** À appeler au démarrage (main.js) pour éviter le flash avant le mount. */
+export function initTheme() {
+  syncTheme()
+}
+
+/** Cycle la préférence : dark → light → auto → dark. */
 export function toggleTheme() {
-  theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  const idx = CYCLE.indexOf(preference.value)
+  preference.value = CYCLE[(idx + 1) % CYCLE.length]
   try {
-    localStorage.setItem(STORAGE_KEY, theme.value)
+    localStorage.setItem(STORAGE_KEY, preference.value)
   } catch (e) {
-    // localStorage indisponible → thème seulement pour la session
+    // localStorage indisponible → préférence seulement pour la session
   }
-  applyTheme(theme.value)
+  syncTheme()
 }
 
 export function useTheme() {
-  return { theme, toggleTheme }
+  return { theme, preference, toggleTheme }
 }
 
 export default useTheme
