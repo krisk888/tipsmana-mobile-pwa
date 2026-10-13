@@ -28,6 +28,13 @@
     </div>
 
     <div class="quick-links">
+      <router-link to="/stock/express" class="link-card express">
+        <span class="link-icon">⚡</span>
+        <div>
+          <strong>Inventaire express</strong>
+          <p>Comptage par zones, hors-ligne</p>
+        </div>
+      </router-link>
       <router-link to="/scan" class="link-card">
         <span class="link-icon">📷</span>
         <div>
@@ -139,6 +146,8 @@ onMounted(load)
   background: #1e1e32; border-radius: 12px; padding: 14px; text-decoration: none; color: #fff;
 }
 .link-card:active { background: #2a2a40; }
+.link-card.express { border: 1px solid rgba(108,92,231,0.4); }
+.link-card.express strong { color: #a89bf0; }
 .link-icon { font-size: 24px; width: 36px; text-align: center; }
 .link-card strong { font-size: 14px; }
 .link-card p { font-size: 12px; color: #888; margin-top: 2px; }
