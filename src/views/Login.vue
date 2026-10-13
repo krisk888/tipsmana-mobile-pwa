@@ -42,7 +42,7 @@
         <div class="demo-grid">
           <button
             v-for="r in roles"
-            :key="r.email"
+            :key="r.label"
             class="demo-btn"
             @click="fillRole(r)"
           >
@@ -70,12 +70,12 @@ const error = ref('')
 // Comptes de démonstration par rôle
 const roles = [
   { emoji: '👑', label: 'Boss', email: 'boss@restoducoin.fr', password: 'RestoDuCoin2026!' },
-  { emoji: '📊', label: 'Manager', email: 'marie.laurent@legrandcomptoir.fr', password: 'Test2026!' },
-  { emoji: '🍳', label: 'Chef cuisine', email: 'jean-claude.rousseau@legrandcomptoir.fr', password: 'Test2026!' },
-  { emoji: '🧾', label: 'Inventaire', email: 'inventory.manager@legrandcomptoir.fr', password: 'Test2026!' },
-  { emoji: '📦', label: 'Ventes', email: 'sales.manager@legrandcomptoir.fr', password: 'Test2026!' },
-  { emoji: '📊', label: 'Achats', email: 'francois.dumas@legrandcomptoir.fr', password: 'Test2026!' },
-  { emoji: '🍽', label: 'Serveur', email: 'thomas.fournier@legrandcomptoir.fr', password: 'Test2026!' },
+  { emoji: '📊', label: 'Manager', email: 'manager@restoducoin.fr', password: 'RestoDuCoin2026!' },
+  { emoji: '🍳', label: 'Chef cuisine', email: 'cuisinier@restoducoin.fr', password: 'RestoDuCoin2026!' },
+  { emoji: '🧾', label: 'Inventaire', email: 'admin@restoducoin.fr', password: 'RestoDuCoin2026!' },
+  { emoji: '📦', label: 'Ventes', email: 'admin@restoducoin.fr', password: 'RestoDuCoin2026!' },
+  { emoji: '📊', label: 'Achats', email: 'admin@restoducoin.fr', password: 'RestoDuCoin2026!' },
+  { emoji: '🍽', label: 'Serveur', email: 'serveur1@restoducoin.fr', password: 'RestoDuCoin2026!' },
 ]
 
 function fillRole(r) {
