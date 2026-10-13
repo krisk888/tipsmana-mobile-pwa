@@ -1,97 +1,143 @@
 <template>
-  <div class="cuisine-view">
-    <header class="page-header">
-      <h2>🍳 Cuisine</h2>
-      <p class="subtitle">Commandes en attente de préparation</p>
+  <div class="kds-view">
+    <!-- ═══ HEADER ═══ -->
+    <header class="kds-header">
+      <div class="kds-title-row">
+        <h2>🍳 Cuisine</h2>
+        <div class="kds-header-status">
+          <span class="status-dot" :class="{ connected, disconnected: !connected }"></span>
+          <span class="status-text">{{ connected ? 'Connecté' : 'Hors ligne' }}</span>
+        </div>
+      </div>
+      <p class="kds-subtitle">Écran cuisine — commandes en préparation</p>
     </header>
 
-    <!-- KPI strip -->
+    <!-- ═══ KPI STRIP ═══ -->
     <div class="kpi-row">
       <div class="kpi-card">
         <span class="kpi-label">En attente</span>
-        <span class="kpi-value">{{ orders.length }}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Montant total</span>
-        <span class="kpi-value">{{ formatEur(totalPending) }}</span>
+        <span class="kpi-value">{{ pendingOrders.length }}</span>
       </div>
       <div class="kpi-card">
         <span class="kpi-label">Plus ancienne</span>
-        <span class="kpi-value kpi-time">{{ oldestWait }}</span>
+        <span class="kpi-value kpi-time" :class="{ urgent: oldestMinutes > 15 }">{{ oldestDisplay }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Articles</span>
+        <span class="kpi-value">{{ totalItems }}</span>
       </div>
     </div>
 
-    <div class="toolbar">
-      <span class="count-label" :class="{ urgent: orders.length > 0 }">
-        {{ orders.length > 0 ? `${orders.length} commande${orders.length > 1 ? 's' : ''} à préparer` : 'File vide' }}
-      </span>
-      <button class="btn-refresh" @click="load" :disabled="loading">
-        {{ loading ? '…' : '↻ Actualiser' }}
+    <!-- ═══ FILTERS ═══ -->
+    <div class="kds-filters">
+      <button class="filter-btn" :class="{ active: filter === 'all' }" @click="filter = 'all'">
+        En cours ({{ pendingOrders.length }})
+      </button>
+      <button class="filter-btn urgent-btn" :class="{ active: filter === 'urgent' }" @click="filter = 'urgent'">
+        ⏰ Urgents ({{ urgentOrders.length }})
+      </button>
+      <button class="filter-btn served-btn" :class="{ active: filter === 'served' }" @click="filter = 'served'">
+        ✅ Servis ({{ readyOrders.length }})
       </button>
     </div>
 
-    <div v-if="loading && !orders.length" class="loading-state">Chargement des commandes…</div>
-
-    <div v-else-if="error && !orders.length" class="error-state">
-      <p class="error-title">⚠️ {{ error }}</p>
-      <button class="btn-retry" @click="load">↻ Réessayer</button>
+    <!-- ═══ LOADING ═══ -->
+    <div v-if="loading && !orders.length" class="kds-loading">
+      <div class="spinner"></div>
+      <p>Chargement des commandes…</p>
     </div>
 
-    <div v-else-if="!orders.length" class="empty-state">
+    <!-- ═══ ERROR ═══ -->
+    <div v-else-if="error && !orders.length" class="kds-error">
+      <p class="error-icon">⚠️</p>
+      <p class="error-text">{{ error }}</p>
+      <button class="btn-retry" @click="loadOrders">↻ Réessayer</button>
+      <button class="btn-demo" @click="loadDemo">🎮 Mode démo</button>
+    </div>
+
+    <!-- ═══ EMPTY ═══ -->
+    <div v-else-if="!filteredOrders.length" class="kds-empty">
       <p class="empty-icon">🍽️</p>
       <p>Tout est servi, rien en attente</p>
+      <p class="empty-sub">La cuisine respire…</p>
     </div>
 
+    <!-- ═══ ORDER LIST ═══ -->
     <div v-else class="order-list">
-      <div
-        v-for="o in sortedOrders"
-        :key="o.id"
-        class="order-card"
-        :class="'age-' + ageBucket(o.created_at)"
-      >
-        <div class="order-card-header" @click="toggleDetail(o.id)">
-          <div class="order-main">
-            <div class="order-title-row">
-              <strong>Cmd #{{ shortId(o.id) }}</strong>
-              <span class="order-age" :class="'age-' + ageBucket(o.created_at)">
-                {{ formatAge(o.created_at) }}
-              </span>
-            </div>
-            <div class="order-meta">
-              <span class="shift-badge" :class="o.shift">{{ shiftLabel(o.shift) }}</span>
-              <span v-if="o.total_items != null">{{ o.total_items }} art.</span>
-              <span v-if="o.imported_by_user_name">{{ o.imported_by_user_name }}</span>
-            </div>
+      <div v-for="o in filteredOrders" :key="o.id" class="order-card" :class="cardClass(o)">
+        <!-- Header row -->
+        <div class="card-header" @click="toggleOrder(o.id)">
+          <div class="card-header-left">
+            <span class="card-ticket">#{{ shortId(o.ticket_ref || o.id) }}</span>
+            <span class="card-age" :class="ageClass(o)">
+              <span class="age-icon">{{ ageIcon(o) }}</span>
+              {{ ageDisplay(o) }}
+            </span>
           </div>
-          <div class="order-right">
-            <span class="order-amount">{{ formatEur(o.total_sales_ttc) }}</span>
+          <div class="card-header-right">
+            <span
+              class="card-status-badge"
+              :class="(o.status === 'ready' || o.status === 'served') ? 'status-ready' : 'status-pending'"
+            >
+              {{ statusLabel(o.status) }}
+            </span>
             <span class="chevron" :class="{ open: expanded[o.id] }">▾</span>
           </div>
         </div>
 
-        <div v-if="expanded[o.id]" class="order-detail">
-          <div v-if="detailLoading[o.id]" class="detail-hint">Chargement du détail…</div>
-          <div v-else-if="detailError[o.id]" class="detail-hint detail-error">{{ detailError[o.id] }}</div>
-          <ul v-else-if="detailItems[o.id] && detailItems[o.id].length" class="item-list">
-            <li v-for="li in detailItems[o.id]" :key="li.id" class="item-row">
-              <span class="item-qty">×{{ qty(li) }}</span>
-              <span class="item-name">{{ itemName(li) }}</span>
-              <span v-if="li.notes || li.comment" class="item-note">{{ li.notes || li.comment }}</span>
-            </li>
-          </ul>
-          <p v-else class="detail-hint">Aucun article détaillé</p>
+        <!-- Items preview (collapsed) -->
+        <div v-if="!expanded[o.id]" class="items-preview" @click="toggleOrder(o.id)">
+          <span
+            v-for="(item, idx) in previewItems(o)"
+            :key="idx"
+            class="preview-chip"
+            :class="item.status"
+          >{{ item.qty }}× {{ item.name }}</span>
+        </div>
 
-          <button
-            class="btn-ready"
-            :disabled="readyLoading[o.id]"
-            @click.stop="markReady(o.id)"
-          >
-            {{ readyLoading[o.id] ? '…' : '✅ Prêt — servir' }}
-          </button>
+        <!-- Expanded detail -->
+        <div v-if="expanded[o.id]" class="card-detail">
+          <div v-if="o.note || o.notes" class="detail-note">
+            📝 {{ o.note || o.notes }}
+          </div>
+          <div class="detail-items">
+            <div v-for="(item, idx) in o.items" :key="idx" class="detail-item" :class="item.status">
+              <div class="item-main">
+                <span class="item-qty">{{ item.qty }}×</span>
+                <span class="item-name">{{ item.name }}</span>
+                <span v-if="item.status === 'ready'" class="item-ready-badge">✅</span>
+                <span v-if="item.status === 'served'" class="item-ready-badge">☑️</span>
+              </div>
+              <div v-if="item.note" class="item-note">📝 {{ item.note }}</div>
+              <div class="item-actions">
+                <button
+                  v-if="item.status === 'pending' || item.status === 'preparing' || item.status === 'printed' || item.status === 'printing'"
+                  class="item-ready-btn"
+                  @click.stop="markItemReady(o.id, idx)"
+                  :disabled="actionLoading[`${o.id}-${idx}`]"
+                >
+                  {{ actionLoading[`${o.id}-${idx}`] ? '…' : '✅ Prêt' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order-level action -->
+          <div class="detail-actions">
+            <button
+              v-if="canMarkOrderReady(o)"
+              class="order-ready-btn"
+              @click.stop="markOrderReady(o.id)"
+              :disabled="actionLoading[o.id]"
+            >
+              {{ actionLoading[o.id] ? '…' : '✅ Tout prêt — servir' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- ═══ TOAST ═══ -->
     <div v-if="flash" class="toast" :class="flash.type">{{ flash.text }}</div>
   </div>
 </template>
@@ -100,98 +146,225 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
 
-const orders = ref([])
+// ── State ──────────────────────────────────────────────
+const orders = ref([])          // master list from API (pending + ready + served)
 const loading = ref(true)
 const error = ref(null)
 const expanded = ref({})
-const detailLoading = ref({})
-const detailError = ref({})
-const detailItems = ref({})
-const readyLoading = ref({})
+const actionLoading = ref({})
 const flash = ref(null)
+const connected = ref(false)
+const filter = ref('all')       // 'all' | 'urgent' | 'served'
+const knownIds = new Set()      // ids seen on last poll (for new-order detection)
 const now = ref(Date.now())
 
-const today = new Date()
-const todayISO = [
-  today.getFullYear(),
-  String(today.getMonth() + 1).padStart(2, '0'),
-  String(today.getDate()).padStart(2, '0'),
-].join('-')
+// ── Computed ────────────────────────────────────────────
+const pendingOrders = computed(() =>
+  orders.value.filter(o => o.status !== 'served')
+)
 
-function formatEur(v) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(v) || 0)
+const urgentOrders = computed(() =>
+  orders.value.filter(o => {
+    if (o.status === 'served') return false
+    const m = ageMinutes(o.created_at)
+    return m !== null && m > 15
+  })
+)
+
+const readyOrders = computed(() =>
+  orders.value.filter(o => o.status === 'ready' || o.status === 'served')
+)
+
+const sortedOrders = computed(() =>
+  [...pendingOrders.value].sort((a, b) =>
+    (new Date(a.created_at) || 0) - (new Date(b.created_at) || 0)
+  )
+)
+
+const filteredOrders = computed(() => {
+  if (filter.value === 'urgent') return urgentOrders.value
+  if (filter.value === 'served') return readyOrders.value
+  return sortedOrders.value
+})
+
+const totalItems = computed(() =>
+  pendingOrders.value.reduce((sum, o) =>
+    sum + (o.items || []).reduce((s, i) => s + (Number(i.qty) || 0), 0), 0)
+)
+
+const oldestMinutes = computed(() => {
+  const first = sortedOrders.value[0]
+  if (!first) return 0
+  return ageMinutes(first.created_at) || 0
+})
+
+const oldestDisplay = computed(() => {
+  const m = oldestMinutes.value
+  if (m < 1) return "à l'instant"
+  if (m < 60) return `${m} min`
+  return `${Math.floor(m / 60)}h${m % 60 ? ' ' + (m % 60) + 'min' : ''}`
+})
+
+// ── Helpers ─────────────────────────────────────────────
+function shortId(id) {
+  return id ? String(id).slice(-6) : '—'
 }
-function shortId(id) { return id ? String(id).slice(0, 8) : '—' }
-function shiftLabel(s) {
-  return { lunch: 'Midi', dinner: 'Soir', all_day: 'Journée' }[s] || (s || '—')
+
+function statusLabel(s) {
+  const map = {
+    pending: 'En attente',
+    printing: 'Impression',
+    printed: 'Imprimé',
+    preparing: 'En prépa',
+    ready: 'Prêt',
+    served: 'Servi',
+  }
+  return map[s] || s || '—'
 }
-function qty(li) { return li.quantity != null ? Number(li.quantity) : 1 }
-function itemName(li) {
-  return li.item_name_original
-    || li.product_name || li.recipe_name
-    || 'Produit n°' + shortId(li.product_id || li.recipe_id)
-}
+
 function ageMinutes(dateStr) {
   if (!dateStr) return null
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return null
-  return Math.max(0, Math.floor((Date.now() - d.getTime()) / 60000))
+  return Math.max(0, Math.floor((now.value - d.getTime()) / 60000))
 }
-function formatAge(dateStr) {
-  const min = ageMinutes(dateStr)
-  if (min === null) return ''
-  if (min < 1) return "à l'instant"
-  if (min < 60) return `il y a ${min} min`
-  const h = Math.floor(min / 60)
-  const m = min % 60
-  return `il y a ${h}h${m ? ' ' + m + 'min' : ''}`
-}
-function ageBucket(dateStr) {
-  const min = ageMinutes(dateStr)
-  if (min === null) return 'new'
-  if (min < 2) return 'new'      // vert — vient d'arriver
-  if (min < 5) return 'watch'    // jaune — à surveiller
-  return 'late'                  // rouge — en retard
-}
-function firstOrderDate() {
-  for (const o of sortedOrders.value) {
-    const min = ageMinutes(o.created_at)
-    if (min !== null) return min
-  }
-  return null
-}
-const oldestWait = computed(() => {
-  const min = firstOrderDate()
+
+function ageDisplay(o) {
+  const min = ageMinutes(o.created_at)
   if (min === null) return '—'
-  if (min < 1) return "à l'instant"
+  if (min < 1) return "< 1 min"
   if (min < 60) return `${min} min`
-  const h = Math.floor(min / 60)
-  return `${h}h${min % 60 ? ' ' + (min % 60) + 'min' : ''}`
-})
-const totalPending = computed(() =>
-  orders.value.reduce((sum, o) => sum + (Number(o.total_sales_ttc) || 0), 0)
-)
-const sortedOrders = computed(() =>
-  [...orders.value].sort((a, b) =>
-    (new Date(a.created_at) - new Date(b.created_at))
+  return `${Math.floor(min / 60)}h${min % 60}`
+}
+
+function ageIcon(o) {
+  const min = ageMinutes(o.created_at)
+  if (min === null) return '🕐'
+  if (min < 5) return '🟢'
+  if (min < 15) return '🟡'
+  return '🔴'
+}
+
+function ageClass(o) {
+  const min = ageMinutes(o.created_at)
+  if (min === null || o.status === 'ready' || o.status === 'served') return 'age-fresh'
+  if (min < 5) return 'age-fresh'
+  if (min < 15) return 'age-watch'
+  return 'age-late'
+}
+
+function cardClass(o) {
+  const min = ageMinutes(o.created_at)
+  const cls = []
+  if (o.status === 'served') cls.push('card-served')
+  else if (o.status === 'ready') cls.push('card-ready')
+  else if (min !== null && min > 15) cls.push('card-urgent')
+  else if (min !== null && min > 5) cls.push('card-watch')
+  return cls.join(' ')
+}
+
+function previewItems(o) {
+  return (o.items || []).slice(0, 4)
+}
+
+function canMarkOrderReady(o) {
+  if (!o.items || !o.items.length) return false
+  return o.items.some(i =>
+    i.status === 'pending' || i.status === 'preparing' ||
+    i.status === 'printed' || i.status === 'printing'
   )
-)
+}
 
 function showFlash(text, type = 'ok') {
   flash.value = { text, type }
   setTimeout(() => { flash.value = null }, 3000)
 }
 
-async function load() {
+// ── Audio notification (Web Audio API) ─────────────────
+function playNotification() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext
+    if (!Ctx) return
+    const ctx = new Ctx()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(880, ctx.currentTime)
+    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1)
+    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.2)
+    gain.gain.setValueAtTime(0.3, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45)
+    osc.start(ctx.currentTime)
+    osc.stop(ctx.currentTime + 0.45)
+  } catch (e) {
+    // Silently ignore audio errors
+  }
+}
+
+// ── API calls ───────────────────────────────────────────
+function extractList(res) {
+  const data = res?.data?.data || res?.data || res || {}
+  if (Array.isArray(data)) return data
+  if (Array.isArray(data.items)) return data.items
+  return []
+}
+
+async function loadOrders() {
   loading.value = true
   error.value = null
   try {
-    const res = await api.get(
-      `/sales/entries?date_from=${todayISO}&date_to=${todayISO}&validation_status=pending`
-    )
-    const data = res && res.data
-    orders.value = Array.isArray(data) ? data : []
+    const res = await api.get('/cash/kds/cuisine?include_served=true')
+    const items = extractList(res)
+
+    // Detect new orders → audio alert
+    const incoming = items.filter(i => i.status !== 'served')
+    const fresh = incoming.filter(i => !knownIds.has(i.id))
+    if (fresh.length && knownIds.size > 0) playNotification()
+    fresh.forEach(i => knownIds.add(i.id))
+    // Remove ids that no longer exist (order served)
+    const liveIds = new Set(items.map(i => i.id))
+    for (const id of knownIds) if (!liveIds.has(id)) knownIds.delete(id)
+
+    orders.value = items
+    connected.value = true
   } catch (e) {
+    console.warn('[KDS] API /cash/kds indisponible, fallback /sales/entries:', e.message)
+    // Fallback: sales entries "pending" (stub compatible)
+    try {
+      const today = new Date()
+      const iso = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, '0'),
+        String(today.getDate()).padStart(2, '0'),
+      ].join('-')
+      const res = await api.get(`/sales/entries?date_from=${iso}&date_to=${iso}&validation_status=pending`)
+      const data = res?.data || res
+      const entries = Array.isArray(data) ? data : false
+      if (entries) {
+        orders.value = entries.map(entry => ({
+          id: entry.id,
+          ticket_id: entry.id,
+          ticket_ref: entry.ref_number || entry.number || entry.id,
+          station: 'cuisine',
+          items: (entry.line_items || []).map(li => ({
+            name: li.item_name_original || li.product_name || li.recipe_name || 'Produit',
+            qty: Number(li.quantity) || 1,
+            note: li.notes || li.comment || null,
+            status: 'pending',
+          })),
+          status: 'pending',
+          created_at: entry.created_at || entry.date,
+        }))
+        connected.value = true
+        return
+      }
+    } catch (e2) {
+      console.warn('[KDS] Fallback échoué:', e2.message)
+    }
+    connected.value = false
     error.value = e.message || 'Serveur injoignable'
     if (!orders.value.length) orders.value = []
   } finally {
@@ -199,154 +372,468 @@ async function load() {
   }
 }
 
-async function toggleDetail(id) {
-  if (expanded.value[id]) {
-    expanded.value[id] = false
-    return
-  }
-  expanded.value[id] = true
-  if (detailItems.value[id]) return
-  detailLoading.value[id] = true
-  detailError.value[id] = null
+function loadDemo() {
+  error.value = null
+  loading.value = false
+  connected.value = true
+  const nowDate = new Date()
+  orders.value = [
+    {
+      id: 'demo-1',
+      ticket_ref: 'A123',
+      station: 'cuisine',
+      status: 'pending',
+      created_at: new Date(nowDate.getTime() - 18 * 60000).toISOString(),
+      items: [
+        { name: 'Burger Classique', qty: 2, note: 'Sans oignons', status: 'pending' },
+        { name: 'Frites Maison', qty: 2, status: 'pending' },
+        { name: 'Salade Verte', qty: 1, status: 'pending' },
+      ],
+    },
+    {
+      id: 'demo-2',
+      ticket_ref: 'A124',
+      station: 'cuisine',
+      status: 'pending',
+      created_at: new Date(nowDate.getTime() - 8 * 60000).toISOString(),
+      items: [
+        { name: 'Pizza Margherita', qty: 1, note: 'Sans gluten', status: 'pending' },
+        { name: 'Tiramisu', qty: 2, status: 'pending' },
+      ],
+    },
+    {
+      id: 'demo-3',
+      ticket_ref: 'A125',
+      station: 'cuisine',
+      status: 'pending',
+      created_at: new Date(nowDate.getTime() - 3 * 60000).toISOString(),
+      items: [{ name: 'Tagliatelles Carbonara', qty: 1, status: 'pending' }],
+    },
+  ]
+  orders.value.forEach(o => knownIds.add(o.id))
+  playNotification()
+  showFlash('🎮 Mode démonstration activé')
+}
+
+// ── Toggle ─────────────────────────────────────────────
+function toggleOrder(id) {
+  expanded.value[id] = !expanded.value[id]
+}
+
+// ── Mark item ready (line-level) ───────────────────────
+async function markItemReady(orderId, itemIndex) {
+  const key = `${orderId}-${itemIndex}`
+  actionLoading.value[key] = true
   try {
-    const res = await api.get(`/sales/entries/${id}`)
-    const data = (res && res.data) || res
-    detailItems.value[id] = data.line_items || []
+    await api.post(`/cash/kds/cuisine/orders/${orderId}/validate`, { item_index: itemIndex })
+    await loadOrders()
+    showFlash('✅ Article prêt')
   } catch (e) {
-    detailError.value[id] = e.message || 'Détail indisponible'
+    showFlash('❌ ' + (e.message || 'Échec validation'), 'err')
   } finally {
-    detailLoading.value[id] = false
+    actionLoading.value[key] = false
   }
 }
 
-async function markReady(id) {
-  readyLoading.value[id] = true
+// ── Mark whole order ready ────────────────────────────
+async function markOrderReady(orderId) {
+  actionLoading.value[orderId] = true
   try {
-    await api.put(`/sales/entries/${id}`, { validation_status: 'validated' })
-    orders.value = orders.value.filter(o => o.id !== id)
-    expanded.value[id] = false
-    showFlash('✅ Commande servie')
+    await api.post(`/cash/kds/cuisine/orders/${orderId}/validate`, { item_index: null })
+    await loadOrders()
+    showFlash('✅ Commande prête à servir')
   } catch (e) {
-    showFlash('❌ ' + (e.message || 'Mise à jour échouée'), 'err')
+    showFlash('❌ ' + (e.message || 'Échec validation'), 'err')
   } finally {
-    readyLoading.value[id] = false
+    actionLoading.value[orderId] = false
   }
 }
 
+// ── Lifecycle ──────────────────────────────────────────
 let refreshTimer
 let clockTimer
+
+function resumeAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext
+    if (!Ctx) return
+    const ctx = new Ctx()
+    if (ctx.state === 'suspended') ctx.resume()
+  } catch (e) { /* ignore */ }
+  document.removeEventListener('pointerdown', resumeAudio)
+}
+
 onMounted(() => {
-  load()
-  refreshTimer = setInterval(load, 30000)   // re-pull silencieux
-  clockTimer = setInterval(() => { now.value = Date.now() }, 10000) // tick âge
+  loadOrders()
+  refreshTimer = setInterval(loadOrders, 15000) // polling 15s
+  clockTimer = setInterval(() => { now.value = Date.now() }, 5000)
+  document.addEventListener('pointerdown', resumeAudio, { once: true })
 })
+
 onUnmounted(() => {
   clearInterval(refreshTimer)
   clearInterval(clockTimer)
+  document.removeEventListener('pointerdown', resumeAudio)
 })
 </script>
 
 <style scoped>
-.cuisine-view { padding: 16px; padding-bottom: 90px; }
-.page-header { margin-bottom: 14px; }
-.page-header h2 { font-size: 22px; color: var(--text, #fff); margin: 0; }
-.subtitle { font-size: 13px; color: var(--muted, #888); margin-top: 4px; }
+/* ═══ Layout ═══ */
+.kds-view {
+  padding: 12px;
+  padding-bottom: 90px;
+  min-height: 100dvh;
+}
 
-/* KPI */
-.kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+/* ═══ Header ═══ */
+.kds-header { margin-bottom: 12px; }
+.kds-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.kds-title-row h2 {
+  font-size: 20px;
+  color: var(--text, #fff);
+  margin: 0;
+}
+.kds-header-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted, #888);
+}
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  transition: background 0.3s;
+}
+.status-dot.connected { background: #10b981; }
+.status-dot.disconnected { background: #ef4444; }
+.kds-subtitle {
+  font-size: 12px;
+  color: var(--muted, #888);
+  margin-top: 3px;
+}
+
+/* ═══ KPI ═══ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
 .kpi-card {
   background: var(--card-bg, #1e1e32);
   border: 1px solid var(--card-border, #2a2a40);
-  border-radius: 12px; padding: 12px 10px;
-  display: flex; flex-direction: column; min-width: 0;
+  border-radius: 12px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
-.kpi-label { font-size: 10px; color: var(--muted, #888); text-transform: uppercase; letter-spacing: 0.5px; }
-.kpi-value { font-size: 17px; font-weight: 700; color: var(--text, #fff); margin-top: 4px; }
-.kpi-value.kpi-time { font-size: 14px; }
-
-/* Toolbar */
-.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.count-label { font-size: 13px; color: var(--muted, #aaa); font-weight: 600; }
-.count-label.urgent { color: #00d2a0; }
-.btn-refresh {
-  background: var(--card-bg, #1e1e32); color: var(--text, #fff);
-  border: 1px solid var(--card-border, #2a2a40); border-radius: 8px;
-  padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+.kpi-label {
+  font-size: 10px;
+  color: var(--muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
-.btn-refresh:disabled { opacity: 0.4; }
+.kpi-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text, #fff);
+  margin-top: 3px;
+}
+.kpi-value.kpi-time { font-size: 13px; }
+.kpi-value.urgent { color: #ef4444; }
 
-/* States */
-.loading-state, .error-state, .empty-state { color: var(--muted, #666); text-align: center; padding: 40px 16px; }
-.empty-icon { font-size: 48px; margin-bottom: 8px; }
-.error-title { color: #ff6b6b; font-size: 14px; margin-bottom: 12px; }
-.btn-retry {
-  background: #6c5ce7; color: #fff; border: none; border-radius: 8px;
-  padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer;
+/* ═══ Filters ═══ */
+.kds-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.kds-filters::-webkit-scrollbar { display: none; }
+.filter-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--card-border, #2a2a40);
+  background: var(--card-bg, #1e1e32);
+  color: var(--muted, #aaa);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.filter-btn.active {
+  background: #059669;
+  color: #fff;
+  border-color: #059669;
+}
+.filter-btn.urgent-btn.active { background: #ef4444; border-color: #ef4444; }
+.filter-btn.served-btn.active { background: #6366f1; border-color: #6366f1; }
+
+/* ═══ States ═══ */
+.kds-loading,
+.kds-error,
+.kds-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 16px;
+  color: var(--muted, #888);
+  text-align: center;
+}
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--card-border, #2a2a40);
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-icon { font-size: 40px; margin-bottom: 8px; }
+.error-text { font-size: 14px; color: #ef4444; margin-bottom: 16px; }
+.empty-icon { font-size: 48px; margin-bottom: 6px; }
+.empty-sub { font-size: 12px; margin-top: 4px; }
+.btn-retry, .btn-demo {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 4px;
+}
+.btn-retry { background: #6c5ce7; color: #fff; }
+.btn-demo {
+  background: var(--card-bg, #1e1e32);
+  color: var(--text, #ddd);
+  border: 1px solid var(--card-border, #2a2a40);
 }
 
-/* Order cards */
-.order-list { display: flex; flex-direction: column; gap: 10px; }
+/* ═══ Order card ═══ */
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .order-card {
   background: var(--card-bg, #1e1e32);
   border: 1px solid var(--card-border, #2a2a40);
   border-left: 4px solid #10b981;
-  border-radius: 12px; padding: 14px;
-  transition: border-color 0.2s;
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: border-color 0.3s, opacity 0.3s;
 }
-.order-card.age-watch { border-left-color: #f59e0b; }
-.order-card.age-late { border-left-color: #ef4444; }
-.order-card:active { background: var(--hover-bg, #26263c); }
-.order-card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer; }
-.order-main { min-width: 0; flex: 1; }
-.order-title-row { display: flex; align-items: center; gap: 8px; }
-.order-title-row strong { color: var(--text, #fff); font-size: 15px; }
-.order-age { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
-.order-age.age-new { background: rgba(16,185,129,0.15); color: #10b981; }
-.order-age.age-watch { background: rgba(245,158,11,0.15); color: #f59e0b; }
-.order-age.age-late { background: rgba(239,68,68,0.15); color: #ef4444; animation: pulse 1.5s infinite; }
-@keyframes pulse { 50% { opacity: 0.55; } }
-.order-meta {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; color: var(--muted, #888); margin-top: 6px; flex-wrap: wrap;
+.order-card.card-watch { border-left-color: #f59e0b; }
+.order-card.card-urgent { border-left-color: #ef4444; }
+.order-card.card-ready { border-left-color: #6366f1; opacity: 0.85; }
+.order-card.card-served { border-left-color: #6b7280; opacity: 0.5; }
+
+/* ═══ Card header ═══ */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 2px 0;
 }
-.shift-badge { padding: 2px 8px; border-radius: 6px; font-weight: 600; }
-.shift-badge.lunch { background: rgba(255,193,7,0.15); color: #ffc107; }
-.shift-badge.dinner { background: rgba(108,92,231,0.2); color: #a29bfe; }
-.order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.order-amount { color: #00d2a0; font-weight: 700; font-size: 16px; }
-.chevron { color: var(--muted, #666); font-size: 12px; transition: transform 0.2s; }
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.card-ticket {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text, #fff);
+  white-space: nowrap;
+}
+.card-age {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.card-age.age-fresh { background: rgba(16,185,129,0.15); color: #10b981; }
+.card-age.age-watch { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.card-age.age-late {
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 50% { opacity: 0.5; } }
+.age-icon { font-size: 12px; line-height: 1; }
+
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.card-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+.card-status-badge.status-pending { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.card-status-badge.status-ready { background: rgba(99,102,241,0.15); color: #818cf8; }
+.chevron {
+  color: var(--muted, #555);
+  font-size: 12px;
+  transition: transform 0.2s;
+}
 .chevron.open { transform: rotate(180deg); }
 
-/* Detail */
-.order-detail { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--card-border, #2a2a40); }
-.detail-hint { font-size: 12px; color: var(--muted, #888); }
-.detail-error { color: #ff6b6b; }
-.item-list { list-style: none; margin: 0 0 12px; padding: 0; }
-.item-row {
-  display: flex; gap: 8px; align-items: baseline; padding: 7px 0;
-  font-size: 13.5px; color: var(--text, #ddd);
-  border-bottom: 1px solid var(--card-border, #2a2a40);
+/* ═══ Items preview ═══ */
+.items-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+  cursor: pointer;
 }
-.item-row:last-child { border-bottom: none; }
-.item-qty { color: #6c5ce7; font-weight: 700; min-width: 30px; }
-.item-name { flex: 1; }
-.item-note { font-size: 11px; color: #f59e0b; font-style: italic; }
-.btn-ready {
-  width: 100%; padding: 13px; border: none; border-radius: 10px;
-  background: #00d2a0; color: #0f0f1a;
-  font-size: 14px; font-weight: 700; cursor: pointer;
-  margin-top: 4px;
+.preview-chip {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  color: var(--muted, #aaa);
+  white-space: nowrap;
+  border: 1px solid transparent;
 }
-.btn-ready:disabled { opacity: 0.5; }
+.preview-chip.ready, .preview-chip.served {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
 
-/* Toast */
+/* ═══ Detail ═══ */
+.card-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--card-border, #2a2a40);
+}
+.detail-note {
+  font-size: 12px;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.detail-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  border-left: 3px solid #f59e0b;
+  transition: background 0.2s;
+}
+.detail-item.ready { border-left-color: #6366f1; opacity: 0.7; }
+.detail-item.served { border-left-color: #6b7280; opacity: 0.4; }
+.item-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.item-qty {
+  font-weight: 700;
+  color: #6c5ce7;
+  font-size: 14px;
+  min-width: 28px;
+}
+.item-name {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text, #ddd);
+}
+.item-ready-badge { font-size: 14px; }
+.item-note { font-size: 11px; color: #f59e0b; font-style: italic; }
+.item-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.item-ready-btn {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #059669;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.item-ready-btn:disabled { opacity: 0.4; }
+.item-ready-btn:active { background: #047857; }
+
+.detail-actions {
+  margin-top: 10px;
+}
+.order-ready-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #6366f1;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.order-ready-btn:disabled { opacity: 0.4; }
+.order-ready-btn:active { background: #4f46e5; }
+
+/* ═══ Toast ═══ */
 .toast {
-  position: fixed; left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom));
-  background: #059669; color: #fff; text-align: center;
-  padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 300;
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  background: #059669;
+  color: #fff;
+  text-align: center;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  z-index: 300;
   animation: toast-in 0.25s ease-out;
 }
 .toast.err { background: #ef4444; }
-@keyframes toast-in { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes toast-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
 </style>

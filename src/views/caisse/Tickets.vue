@@ -489,42 +489,55 @@ async function loadPosConfig() {
   }
 }
 
-/* ═══ Chargement Menu ═══ */
+/* ═══ Chargement Menu ═══
+   Le backend renvoie {success, data: {kitchen: [...], dining_room: [...]}}
+   ou un tableau direct selon la route. On normalise les 3 formes. */
+function normalizeSectionData(obj) {
+  if (Array.isArray(obj)) return obj
+  if (obj?.kitchen || obj?.dining_room || obj?.kitchen_dining_room) {
+    return [...(obj.kitchen || []), ...(obj.dining_room || []), ...(obj.kitchen_dining_room || [])]
+  }
+  if (Array.isArray(obj?.data)) return obj.data
+  return null
+}
+
 async function loadMenu() {
   try {
     const res = await api.get('/catalog/tree')
-    const data = res?.data || res
-    if (Array.isArray(data)) {
-      // Tree [{id, name, icon, color, products: [...]}]
-      const cats = data.filter(c => c.active !== false)
+    // res = {success, message, data} depuis _handleResponse
+    const body = res?.data || res
+    // body peut être : {kitchen:[], dining_room:[]} | tableau direct | {categories:[], products:[]}
+    if (!Array.isArray(body) && body?.categories && body?.products) {
+      const cats = normalizeSectionData(body.categories) || []
+      const prods = normalizeSectionData(body.products) || []
       if (cats.length) categories.value = cats
+      if (prods.length) products.value = prods
+      return
+    }
+    // {kitchen:[], dining_room:[]} ou tableau direct — essayer de détecter un arbre
+    // catégorie → produits (champ products sur chaque catégorie)
+    const cats = normalizeSectionData(body)
+    if (cats && cats.length) {
       const allProds = []
-      for (const cat of data) {
+      for (const cat of cats) {
         if (Array.isArray(cat.products)) {
           cat.products.forEach(p => { allProds.push({ ...p, category_id: p.category_id || cat.id }) })
         }
       }
       if (allProds.length) products.value = allProds
+      categories.value = cats.filter(c => c.active !== false)
       return
     }
-    if (Array.isArray(data?.categories) && Array.isArray(data?.products)) {
-      if (data.categories.length) categories.value = data.categories
-      if (data.products.length) products.value = data.products
-      return
-    }
-    // Fallback: try legacy endpoints
+    // Fallback: les vraies routes legacy (section_grouped inclus)
     const catRes = await api.get('/categories?per_page=50&is_active=true')
-    const catData = catRes?.data || catRes
-    if (Array.isArray(catData) && catData.length) {
-      categories.value = catData
-    }
+    const catBody = catRes?.data || catRes
+    const catData = normalizeSectionData(catBody?.data ?? catBody)
+    if (catData && catData.length) categories.value = catData
     const prodRes = await api.get('/products?per_page=200&is_active=true')
-    const prodData = prodRes?.data || prodRes
-    if (Array.isArray(prodData)) {
-      products.value = prodData
-    } else if (prodData?.kitchen || prodData?.dining_room) {
-      const list = [...(prodData.kitchen || []), ...(prodData.dining_room || [])]
-      products.value = [...new Map(list.map(p => [p.id, p])).values()]
+    const prodBody = prodRes?.data || prodRes
+    const prodData = normalizeSectionData(prodBody?.data ?? prodBody)
+    if (prodData && prodData.length) {
+      products.value = [...new Map(prodData.map(p => [p.id, p])).values()]
     }
   } catch (e) {
     console.warn('[Caisse] Menu load error:', e.message)
