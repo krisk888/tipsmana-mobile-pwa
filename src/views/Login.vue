@@ -2,7 +2,7 @@
   <div class="login-screen">
     <div class="login-card">
       <div class="login-logo">
-        <BrandLogo :size="96" :dark="true" />
+        <img src="/images/logo_horizontal.jpg" class="login-logo-img" alt="Tipsmana" />
         <p class="subtitle">L'App du Boss</p>
       </div>
 
@@ -60,7 +60,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login } from '../shared/auth'
-import BrandLogo from '../components/BrandLogo.vue'
 
 const router = useRouter()
 const email = ref('boss@restoducoin.fr')
@@ -118,6 +117,7 @@ async function handleLogin() {
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
 .login-logo { text-align: center; margin-bottom: 32px; }
+.login-logo-img { max-width: 280px; height: auto; display: block; margin: 0 auto; }
 .subtitle { font-size: 14px; color: var(--nav-inactive, #6b6b7b); margin: 8px 0 0; }
 .field { margin-bottom: 16px; }
 label { display: block; font-size: 13px; color: var(--nav-inactive, #6b6b7b); margin-bottom: 6px; }
