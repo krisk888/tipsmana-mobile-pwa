@@ -53,7 +53,6 @@
         <router-link to="/validations" class="action-btn">✅ Validations</router-link>
         <router-link to="/scan" class="action-btn">📷 Scanner</router-link>
         <router-link to="/stock" class="action-btn">📦 Inventaire</router-link>
-        <router-link to="/caisse" class="action-btn">💳 Caisse</router-link>
       </div>
     </div>
   </div>
