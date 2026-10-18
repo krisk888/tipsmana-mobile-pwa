@@ -33,23 +33,20 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { logout } from './shared/auth'
+import { useAuthStore } from './stores/authStore'
 import TipsIcon from './components/TipsIcon.vue'
 import ThemeToggle from './shared/ThemeToggle.vue'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const isLoginPage = computed(() => route.path === '/login')
 
-const tabs = [
-  { path: '/pilot', iconName: 'pilote', label: 'Pilote' },
-  { path: '/caisse', iconName: 'caisse', label: 'Caisse' },
-  { path: '/stock', iconName: 'stock', label: 'Stock' },
-  { path: '/cuisine', iconName: 'cuisine', label: 'Cuisine' },
-]
+// Navigation dynamique basée sur le rôle
+const tabs = computed(() => authStore.navTabs)
 
 function handleLogout() {
-  logout()
+  authStore.logout()
   router.push('/login')
 }
 </script>

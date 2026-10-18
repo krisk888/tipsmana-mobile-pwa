@@ -36,7 +36,7 @@
         </button>
       </form>
 
-      <!-- Quick-login par rôles -->
+      <!-- Quick-login par rôles — un clic = connexion directe -->
       <div class="demo-section">
         <p class="demo-title">Connexion rapide — choisir un rôle</p>
         <div class="demo-grid">
@@ -44,10 +44,13 @@
             v-for="r in roles"
             :key="r.label"
             class="demo-btn"
-            @click="fillRole(r)"
+            :class="{ loading: authStore.loading && loadingRole === r.role }"
+            :disabled="authStore.loading"
+            @click="quickLoginAs(r)"
           >
             <span class="demo-emoji">{{ r.emoji }}</span>
             <span class="demo-label">{{ r.label }}</span>
+            <span v-if="r.role === 'OWNER'" class="demo-role-badge">Démo</span>
           </button>
         </div>
       </div>
@@ -59,42 +62,42 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { login } from '../shared/auth'
+import { useAuthStore } from '../stores/authStore'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const email = ref('boss@restoducoin.fr')
-const password = ref('RestoDuCoin2026!')
-const loading = ref(false)
-const error = ref('')
+const password = ref('Boss2026!X')
+const loadingRole = ref(null)
 
-// Comptes de démonstration par rôle
+// Rôles avec leur route de redirection dédiée
 const roles = [
-  { emoji: '👑', label: 'Boss', email: 'boss@restoducoin.fr', password: 'RestoDuCoin2026!' },
-  { emoji: '📊', label: 'Manager', email: 'manager@restoducoin.fr', password: 'RestoDuCoin2026!' },
-  { emoji: '🍳', label: 'Chef cuisine', email: 'cuisinier@restoducoin.fr', password: 'RestoDuCoin2026!' },
-  { emoji: '🧾', label: 'Inventaire', email: 'admin@restoducoin.fr', password: 'RestoDuCoin2026!' },
-  { emoji: '📦', label: 'Ventes', email: 'admin@restoducoin.fr', password: 'RestoDuCoin2026!' },
-  { emoji: '📊', label: 'Achats', email: 'admin@restoducoin.fr', password: 'RestoDuCoin2026!' },
-  { emoji: '🍽', label: 'Serveur', email: 'serveur1@restoducoin.fr', password: 'RestoDuCoin2026!' },
+  { emoji: '👑', label: 'Boss',        role: 'OWNER',     route: '/pilot' },
+  { emoji: '📊', label: 'Manager',     role: 'MANAGER',   route: '/pilot' },
+  { emoji: '🍳', label: 'Chef cuisine',role: 'CUISINE',   route: '/cuisine' },
+  { emoji: '🧾', label: 'Inventaire',  role: 'INVENTAIRE',route: '/stock' },
+  { emoji: '📦', label: 'Ventes',      role: 'VENTES',    route: '/caisse' },
+  { emoji: '📊', label: 'Achats',      role: 'ACHATS',    route: '/stock/receptions' },
+  { emoji: '🍽', label: 'Serveur',     role: 'SERVEUR',   route: '/caisse' },
 ]
 
-function fillRole(r) {
-  email.value = r.email
-  password.value = r.password
-  error.value = ''
+async function quickLoginAs(r) {
+  loadingRole.value = r.role
+  authStore.error = null
+  try {
+    const ok = await authStore.quickLogin(r.role)
+    if (ok) router.push(r.route)
+  } finally {
+    loadingRole.value = null
+  }
 }
 
 async function handleLogin() {
-  loading.value = true
-  error.value = ''
+  authStore.error = null
   try {
-    await login(email.value, password.value)
-    router.push('/pilot')
-  } catch (e) {
-    error.value = e.data?.message || e.message || 'Email ou mot de passe incorrect'
-  } finally {
-    loading.value = false
-  }
+    const ok = await authStore.login(email.value, password.value, 'OWNER')
+    if (ok) router.push('/pilot')
+  } catch (e) { /* erreur dans le store */ }
 }
 </script>
 
@@ -152,4 +155,8 @@ input:focus { outline: none; border-color: #059669; }
 .demo-btn:hover { border-color: #059669; background: #1a2a1e; }
 .demo-emoji { font-size: 16px; }
 .demo-label { font-weight: 500; }
+.demo-role-badge {
+  font-size: 9px; background: #059669; color: #fff;
+  padding: 1px 5px; border-radius: 6px; font-weight: 600;
+}
 </style>

@@ -158,6 +158,16 @@ const filter = ref('all')       // 'all' | 'urgent' | 'served'
 const knownIds = new Set()      // ids seen on last poll (for new-order detection)
 const now = ref(Date.now())
 
+// ── WebSocket state ────────────────────────────────────
+let ws = null                   // WebSocket instance
+let reconnectAttempt = 0        // exponential backoff counter
+let reconnectTimer = null       // scheduled reconnect timeout
+let fallbackTimer = null        // HTTP polling fallback interval
+let fallbackActive = false      // true when WS is down and HTTP fallback is running
+const WS_RECONNECT_MAX = 30000  // max backoff 30s
+const WS_RECONNECT_BASE = 1000  // initial backoff 1s
+const FALLBACK_INTERVAL = 30000 // 30s HTTP polling fallback
+
 // ── Computed ────────────────────────────────────────────
 const pendingOrders = computed(() =>
   orders.value.filter(o => o.status !== 'served')
@@ -304,6 +314,179 @@ function playNotification() {
   }
 }
 
+// ── WebSocket ──────────────────────────────────────────
+function getWsUrl() {
+  const token = api.getToken()
+  const establishmentId = api.getEstablishmentId()
+  if (!token || !establishmentId) return null
+
+  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
+  const host = window.location.hostname
+  return `${protocol}${host}/ws/kds/${establishmentId}?token=${encodeURIComponent(token)}`
+}
+
+function connectWebSocket() {
+  // Close any existing connection cleanly
+  if (ws) {
+    try { ws.close() } catch (e) { /* ignore */ }
+    ws = null
+  }
+
+  const url = getWsUrl()
+  if (!url) {
+    console.warn('[KDS] Cannot connect WS: missing token or establishment_id')
+    scheduleReconnect()
+    return
+  }
+
+  try {
+    ws = new WebSocket(url)
+  } catch (e) {
+    console.warn('[KDS] WS creation failed:', e.message)
+    scheduleReconnect()
+    return
+  }
+
+  ws.onopen = () => {
+    console.log('[KDS] WS connected')
+    connected.value = true
+    reconnectAttempt = 0
+    stopFallbackPolling()
+  }
+
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data)
+      handleWsMessage(msg)
+    } catch (e) {
+      console.warn('[KDS] WS parse error:', e.message)
+    }
+  }
+
+  ws.onerror = (err) => {
+    console.warn('[KDS] WS error')
+    // onerror fires before onclose, so we handle cleanup in onclose
+  }
+
+  ws.onclose = (event) => {
+    console.log(`[KDS] WS closed (code=${event.code})`)
+    connected.value = false
+    ws = null
+    startFallbackPolling()
+    scheduleReconnect()
+  }
+}
+
+function handleWsMessage(msg) {
+  switch (msg.type) {
+    case 'new_order':
+      // Upsert the new order into the list
+      upsertOrder(msg.data)
+      playNotification()
+      knownIds.add(msg.data.id)
+      showFlash('📦 Nouvelle commande !')
+      break
+
+    case 'status_update':
+      // Update an order's status in-place
+      updateOrderStatus(msg.data.order_id, msg.data.status)
+      break
+
+    case 'validate_order':
+      // Another device validated this order — update items locally
+      handleValidateOrder(msg.data)
+      break
+
+    default:
+      console.log('[KDS] Unknown message type:', msg.type, msg)
+  }
+}
+
+function upsertOrder(orderData) {
+  const idx = orders.value.findIndex(o => o.id === orderData.id)
+  if (idx >= 0) {
+    // Update existing
+    orders.value[idx] = { ...orders.value[idx], ...orderData }
+    // Force reactivity
+    orders.value = [...orders.value]
+  } else {
+    // Insert new
+    orders.value = [orderData, ...orders.value]
+  }
+}
+
+function updateOrderStatus(orderId, newStatus) {
+  const order = orders.value.find(o => o.id === orderId)
+  if (!order) return
+  order.status = newStatus
+  // Also update items if the whole order is ready/served
+  if (newStatus === 'ready' || newStatus === 'served') {
+    ;(order.items || []).forEach(item => {
+      if (item.status !== 'served') item.status = newStatus === 'served' ? 'served' : 'ready'
+    })
+  }
+  // Force reactivity
+  orders.value = [...orders.value]
+}
+
+function handleValidateOrder(data) {
+  const { order_id, item_index } = data
+  const order = orders.value.find(o => o.id === order_id)
+  if (!order) return
+
+  if (item_index === null || item_index === undefined) {
+    // Whole order validated
+    order.status = 'ready'
+    ;(order.items || []).forEach(item => { item.status = 'ready' })
+  } else {
+    // Single item validated
+    const item = (order.items || [])[item_index]
+    if (item) item.status = 'ready'
+    // If all items are now ready, mark order ready
+    if ((order.items || []).every(i => i.status === 'ready' || i.status === 'served')) {
+      order.status = 'ready'
+    }
+  }
+  // Force reactivity
+  orders.value = [...orders.value]
+}
+
+function scheduleReconnect() {
+  // Clear any pending reconnect
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+
+  const delay = Math.min(
+    WS_RECONNECT_BASE * Math.pow(2, reconnectAttempt),
+    WS_RECONNECT_MAX
+  )
+  reconnectAttempt++
+
+  console.log(`[KDS] Reconnecting in ${delay}ms (attempt ${reconnectAttempt})`)
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null
+    connectWebSocket()
+  }, delay)
+}
+
+function startFallbackPolling() {
+  if (fallbackTimer) return // already running
+  fallbackActive = true
+  console.log('[KDS] Starting HTTP polling fallback (30s)')
+  loadOrders() // immediate first fetch
+  fallbackTimer = setInterval(loadOrders, FALLBACK_INTERVAL)
+}
+
+function stopFallbackPolling() {
+  if (fallbackTimer) {
+    clearInterval(fallbackTimer)
+    fallbackTimer = null
+  }
+  fallbackActive = false
+}
+
 // ── API calls ───────────────────────────────────────────
 function extractList(res) {
   const data = res?.data?.data || res?.data || res || {}
@@ -313,23 +496,25 @@ function extractList(res) {
 }
 
 async function loadOrders() {
-  loading.value = true
+  // Don't set loading on fallback polls to avoid flicker
+  if (!fallbackActive) loading.value = true
   error.value = null
   try {
     const res = await api.get('/cash/kds/cuisine?include_served=true')
     const items = extractList(res)
 
-    // Detect new orders → audio alert
-    const incoming = items.filter(i => i.status !== 'served')
-    const fresh = incoming.filter(i => !knownIds.has(i.id))
-    if (fresh.length && knownIds.size > 0) playNotification()
-    fresh.forEach(i => knownIds.add(i.id))
+    // Detect new orders → audio alert (only when fallback is active)
+    if (fallbackActive) {
+      const incoming = items.filter(i => i.status !== 'served')
+      const fresh = incoming.filter(i => !knownIds.has(i.id))
+      if (fresh.length && knownIds.size > 0) playNotification()
+      fresh.forEach(i => knownIds.add(i.id))
+    }
     // Remove ids that no longer exist (order served)
     const liveIds = new Set(items.map(i => i.id))
     for (const id of knownIds) if (!liveIds.has(id)) knownIds.delete(id)
 
     orders.value = items
-    connected.value = true
   } catch (e) {
     console.warn('[KDS] API /cash/kds indisponible, fallback /sales/entries:', e.message)
     // Fallback: sales entries "pending" (stub compatible)
@@ -358,13 +543,11 @@ async function loadOrders() {
           status: 'pending',
           created_at: entry.created_at || entry.date,
         }))
-        connected.value = true
         return
       }
     } catch (e2) {
       console.warn('[KDS] Fallback échoué:', e2.message)
     }
-    connected.value = false
     error.value = e.message || 'Serveur injoignable'
     if (!orders.value.length) orders.value = []
   } finally {
@@ -450,7 +633,6 @@ async function markOrderReady(orderId) {
 }
 
 // ── Lifecycle ──────────────────────────────────────────
-let refreshTimer
 let clockTimer
 
 function resumeAudio() {
@@ -463,15 +645,39 @@ function resumeAudio() {
   document.removeEventListener('pointerdown', resumeAudio)
 }
 
+function cleanupWebSocket() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+  stopFallbackPolling()
+  if (ws) {
+    // Remove handlers so onclose doesn't trigger reconnect during cleanup
+    ws.onopen = null
+    ws.onmessage = null
+    ws.onerror = null
+    ws.onclose = null
+    try { ws.close() } catch (e) { /* ignore */ }
+    ws = null
+  }
+}
+
 onMounted(() => {
+  // Initial data load
   loadOrders()
-  refreshTimer = setInterval(loadOrders, 15000) // polling 15s
+
+  // Connect WebSocket for real-time updates
+  connectWebSocket()
+
+  // Clock tick for age calculations
   clockTimer = setInterval(() => { now.value = Date.now() }, 5000)
+
+  // Unlock audio on first user gesture
   document.addEventListener('pointerdown', resumeAudio, { once: true })
 })
 
 onUnmounted(() => {
-  clearInterval(refreshTimer)
+  cleanupWebSocket()
   clearInterval(clockTimer)
   document.removeEventListener('pointerdown', resumeAudio)
 })

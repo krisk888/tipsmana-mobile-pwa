@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { isAuthenticated } from './shared/auth'
@@ -8,6 +9,7 @@ import { initTheme } from './shared/useTheme'
 initTheme()
 
 const app = createApp(App)
+app.use(createPinia())
 app.use(router)
 
 // Check auth on startup
