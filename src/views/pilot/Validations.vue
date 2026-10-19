@@ -15,13 +15,13 @@
     <div v-else class="invoice-list">
       <div v-for="inv in invoices" :key="inv.id" class="invoice-card">
         <div class="inv-header">
-          <strong>{{ inv.supplier_name }}</strong>
+          <strong>{{ inv.supplier?.name || inv.invoice_number || 'Fournisseur inconnu' }}</strong>
           <span class="inv-amount">{{ formatEur(inv.total_ttc) }}</span>
         </div>
-        <p class="inv-meta">{{ inv.date }} • {{ inv.items_count }} lignes</p>
+        <p class="inv-meta">{{ inv.date }} • {{ inv.counts?.lines ?? 0 }} lignes</p>
         <div class="inv-actions">
-          <button class="btn-approve" @click="validate(inv.id, 'approved')">Approuver</button>
-          <button class="btn-reject" @click="validate(inv.id, 'rejected')">Rejeter</button>
+          <button class="btn-approve" :disabled="busy[inv.id] || inv.workflow?.can_validate === false" @click="approve(inv.id)">Approuver</button>
+          <button class="btn-reject" :disabled="busy[inv.id]" @click="reject(inv.id)">Rejeter</button>
         </div>
       </div>
     </div>
@@ -35,34 +35,45 @@ import api from '../../shared/api'
 const invoices = ref([])
 const loading = ref(true)
 const error = ref(null)
+const busy = ref({})
 
 function formatEur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v || 0) }
 
 async function load() {
   loading.value = true
   try {
-    const res = await api.get('/costs/invoices?status=pending')
-    invoices.value = res.data || res.results || []
+    // InvoiceStatus backend : pending_ocr | pending_validation | validated | rejected | paid
+    const res = await api.get('/costs/invoices/list?status=pending_validation&limit=50')
+    const data = res.data || res
+    invoices.value = data.items || []
   } catch (e) {
     error.value = e.message
-    // Demo data
-    invoices.value = [
-      { id: '1', supplier_name: 'France Boissons', total_ttc: 1240.50, date: '2026-10-09', items_count: 12 },
-      { id: '2', supplier_name: 'Metro', total_ttc: 845.30, date: '2026-10-08', items_count: 8 },
-      { id: '3', supplier_name: 'Bret\'s Fraîcheur', total_ttc: 312.00, date: '2026-10-07', items_count: 5 },
-    ]
+    invoices.value = []
   } finally {
     loading.value = false
   }
 }
 
-async function validate(id, status) {
+async function run(id, call) {
+  busy.value[id] = true
   try {
-    await api.post(`/costs/invoices/${id}/validate`, { status })
+    await call()
     invoices.value = invoices.value.filter(i => i.id !== id)
   } catch (e) {
     alert('Erreur: ' + e.message)
+  } finally {
+    busy.value[id] = false
   }
+}
+
+function approve(id) {
+  return run(id, () => api.post(`/costs/invoices/${id}/validate`, { apply_price_changes: true }))
+}
+
+function reject(id) {
+  const reason = prompt('Motif du rejet ?')
+  if (!reason?.trim()) return
+  return run(id, () => api.post(`/costs/invoices/${id}/reject`, { reason: reason.trim() }))
 }
 
 onMounted(load)
@@ -89,4 +100,5 @@ onMounted(load)
 }
 .btn-approve { background: #00d2a0; color: #0f0f1a; }
 .btn-reject { background: #ff6b6b; color: #fff; }
+.inv-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

@@ -21,9 +21,12 @@ export async function login(email, password) {
     // Le token est dans establishments[0].access_token, pas à la racine
     const token = data.access_token || data.token ||
       (data.establishments?.[0]?.access_token)
+    // Le JWT est émis pour establishments[0] : c'est l'établissement courant
+    const establishmentId = data.establishments?.[0]?.id || data.default_establishment_id || null
     if (token) {
       saveToken({
         access_token: token,
+        establishment_id: establishmentId,
         refresh_token: data.refresh_token || data.establishments?.[0]?.refresh_token,
         expires_in: data.expires_in || data.establishments?.[0]?.expires_in || 900
       })
@@ -32,7 +35,7 @@ export async function login(email, password) {
     auth.token = token
     auth.user = data.user || data.profile
     auth.establishments = data.establishments || []
-    auth.defaultEstablishmentId = data.default_establishment_id
+    auth.defaultEstablishmentId = establishmentId
 
     return auth
   } catch (err) {
@@ -47,6 +50,7 @@ export function saveToken(tokenData) {
   const token = {
     access_token: tokenData.access_token || tokenData.token,
     refresh_token: tokenData.refresh_token,
+    establishment_id: tokenData.establishment_id || null,
     expires_at: Date.now() + (tokenData.expires_in || 900) * 1000
   }
   localStorage.setItem('tipsmana_token', JSON.stringify(token))
@@ -65,6 +69,10 @@ export function loadToken() {
   } catch {
     return null
   }
+}
+
+export function getEstablishmentId() {
+  return auth.defaultEstablishmentId || loadToken()?.establishment_id || null
 }
 
 export function logout() {
