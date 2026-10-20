@@ -537,7 +537,7 @@ function normalizeSectionData(obj) {
 
 async function loadMenu() {
   try {
-    const res = await api.get('/catalog/tree')
+    const res = await api.get('/products/categories/tree')
     // res = {success, message, data} depuis _handleResponse
     const body = res?.data || res
     // body peut être : {kitchen:[], dining_room:[]} | tableau direct | {categories:[], products:[]}
@@ -563,7 +563,7 @@ async function loadMenu() {
       return
     }
     // Fallback: les vraies routes legacy (section_grouped inclus)
-    const catRes = await api.get('/categories?per_page=50&is_active=true')
+    const catRes = await api.get('/products/categories?per_page=50&is_active=true')
     const catBody = catRes?.data || catRes
     const catData = normalizeSectionData(catBody?.data ?? catBody)
     if (catData && catData.length) categories.value = catData
