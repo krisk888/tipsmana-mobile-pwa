@@ -763,6 +763,7 @@ async function dispatchCurrentCourse() {
       table: selectedTable.value,
       courses: items.map(item => ({
         product_id: item.id,
+        product_name: item.name,
         qty: item.qty,
         course_number: courseKey,
       })),
@@ -794,6 +795,7 @@ async function sendToKitchen() {
           table: selectedTable.value,
           courses: remaining.map(item => ({
             product_id: item.id,
+            product_name: item.name,
             qty: item.qty,
             course_number: cur.key,
           })),
