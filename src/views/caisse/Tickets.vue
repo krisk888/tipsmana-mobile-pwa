@@ -314,6 +314,17 @@ const DEFAULT_PAYMENT_METHODS = [
   { key: 'amex',         label: 'AMEX',         icon: '🅰️' },
 ]
 
+/* Mapping icônes backend → emoji PWA (surcharge pour les codes connus) */
+const PAYMENT_ICON_MAP = {
+  cash: '💶',
+  card: '💳',
+  nfc: '📱',
+  ticket_resto: '🎟️',
+  amex: '🅰️',
+  voucher: '🎁',
+  online: '🌐',
+}
+
 const DEFAULT_CATEGORIES = [
   { id: 'entrees',     name: 'Entrées',     icon: '🥗', color: '#34d399' },
   { id: 'plats',       name: 'Plat',        icon: '🍽', color: '#fbbf24' },
@@ -486,6 +497,29 @@ async function loadPosConfig() {
     if (typeof cfg.coversEnabled === 'boolean') coversEnabled.value = cfg.coversEnabled
   } catch (e) {
     // 404 → default config
+  }
+}
+
+/* ═══ Chargement méthodes de paiement depuis le backend ═══ */
+async function fetchPaymentMethods() {
+  try {
+    const estId = getEstablishmentId()
+    if (!estId) return
+    const res = await api.get(`/settings/payment-methods?establishment_id=${estId}`)
+    const list = res?.data?.data ?? res?.data ?? []
+    if (!Array.isArray(list) || !list.length) return
+    const mapped = list
+      .filter(m => m.is_active !== false)
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map(m => ({
+        key: m.method_code,
+        label: m.method_name || m.method_code,
+        icon: PAYMENT_ICON_MAP[m.method_code] || m.icon || '💳',
+        active: true,
+      }))
+    if (mapped.length) paymentMethods.value = mapped
+  } catch (e) {
+    // Backend indisponible → conserver la config locale (défauts ou pos_config)
   }
 }
 
@@ -852,6 +886,7 @@ function formatEur(v) {
 onMounted(() => {
   loadPosConfig()
   loadMenu()
+  fetchPaymentMethods()
   updateClock()
   clockTimer = setInterval(updateClock, 1000)
 })
