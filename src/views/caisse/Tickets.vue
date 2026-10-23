@@ -852,22 +852,51 @@ function openPayment() {
 async function pay(method) {
   if (cart.value.length === 0) return
   paying.value = true
-  // Simulate payment — in real env this would call the API
   const meta = paymentMethods.value.find(m => m.key === method) || { label: method, icon: '💳' }
-  paymentResult.value = {
-    icon: method === 'cash' ? '💶' : meta.icon,
-    title: `Paiement ${meta.label}`,
-    message: method === 'cash'
-      ? 'Rendu monnaie sur ' + formatEur(cartTotal.value)
-      : 'Paiement accepté',
+  try {
+    // Build SalesEntry payload pour le backend
+    const now = new Date()
+    const dateStr = now.toISOString().slice(0, 10) // YYYY-MM-DD
+    const hour = now.getHours()
+    const shift = hour < 15 ? 'lunch' : 'dinner'
+    const line_items = cart.value.map(item => ({
+      item_name_original: item.options ? `${item.name} (${item.options})` : item.name,
+      quantity: item.qty,
+      unit_price_ttc: item.price,
+      product_id: item.id || undefined,
+    }))
+    await api.post('/sales/entries', {
+      establishment_id: getEstablishmentId(),
+      date: dateStr,
+      shift,
+      entry_type: 'pos_integration',
+      notes: `Table ${selectedTable.value} — ${meta.label}${method === 'cash' ? '' : ''}`,
+      line_items,
+    })
+    paymentResult.value = {
+      icon: method === 'cash' ? '💶' : meta.icon,
+      title: `Paiement ${meta.label}`,
+      message: method === 'cash'
+        ? 'Rendu monnaie sur ' + formatEur(cartTotal.value)
+        : 'Paiement accepté',
+    }
+    paymentModal.value = false
+    if (selectedTable.value !== null) {
+      tableStates.value[selectedTable.value] = 'libre'
+      tableTotals.value[selectedTable.value] = 0
+      cartsByTable.value[selectedTable.value] = []
+    }
+  } catch (e) {
+    const errMsg = e?.data?.message || e?.response?.data?.detail || e.message || 'Erreur lors du paiement'
+    paymentResult.value = {
+      icon: '❌',
+      title: 'Paiement refusé',
+      message: errMsg,
+    }
+    paymentModal.value = false
+  } finally {
+    paying.value = false
   }
-  paymentModal.value = false
-  if (selectedTable.value !== null) {
-    tableStates.value[selectedTable.value] = 'libre'
-    tableTotals.value[selectedTable.value] = 0
-    cartsByTable.value[selectedTable.value] = []
-  }
-  paying.value = false
 }
 
 function finishPayment() {

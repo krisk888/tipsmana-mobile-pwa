@@ -10,7 +10,6 @@
       </main>
 
       <nav class="bottom-nav">
-        <ThemeToggle />
         <router-link
           v-for="tab in tabs"
           :key="tab.path"
@@ -20,6 +19,17 @@
         >
           <TipsIcon :name="tab.iconName" :size="22" class="nav-icon" />
           <span class="nav-label">{{ tab.label }}</span>
+        </router-link>
+        <router-link to="/notifications" class="nav-item" :class="{ active: $route.path === '/notifications' }">
+          <span class="nav-icon notif-icon">
+            🔔
+            <span v-if="notifCount > 0" class="notif-badge">{{ notifCount > 99 ? '99+' : notifCount }}</span>
+          </span>
+          <span class="nav-label">Alertes</span>
+        </router-link>
+        <router-link to="/profile" class="nav-item" :class="{ active: $route.path === '/profile' }">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">Profil</span>
         </router-link>
         <button class="nav-item nav-logout" @click="handleLogout">
           <TipsIcon name="quitter" :size="22" class="nav-icon" />
@@ -31,11 +41,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
 import TipsIcon from './components/TipsIcon.vue'
-import ThemeToggle from './shared/ThemeToggle.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -44,11 +53,27 @@ const isLoginPage = computed(() => route.path === '/login')
 
 // Navigation dynamique basée sur le rôle
 const tabs = computed(() => authStore.navTabs)
+const notifCount = computed(() => authStore.notificationCount)
+
+let notifInterval = null
 
 function handleLogout() {
   authStore.logout()
   router.push('/login')
 }
+
+onMounted(() => {
+  // Poll notification count every 30s when authenticated
+  notifInterval = setInterval(() => {
+    if (authStore.isAuthenticated) {
+      authStore.fetchNotificationCount()
+    }
+  }, 30000)
+})
+
+onUnmounted(() => {
+  if (notifInterval) clearInterval(notifInterval)
+})
 </script>
 
 <style>
@@ -108,6 +133,23 @@ body {
   color: var(--nav-inactive); transition: color 0.2s;
 }
 .nav-logout:active { color: var(--logout-hover); }
+
+/* Notification badge */
+.notif-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
+.notif-badge {
+  position: absolute; top: -6px; right: -8px;
+  background: #ff6b6b; color: #fff;
+  font-size: 9px; font-weight: 700;
+  min-width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; padding: 0 4px;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* Override nav-item for profile/notif — always visible regardless of role */
+.bottom-nav .nav-item:not(.nav-logout) { flex-shrink: 0; }
+.bottom-nav .nav-item .nav-icon { font-size: 20px; }
 .theme-toggle {
   background: none; border: none; cursor: pointer; font-family: inherit;
   color: var(--nav-inactive); transition: color 0.2s;

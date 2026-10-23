@@ -39,17 +39,21 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../../shared/api'
 
+const router = useRouter()
 const fileInput = ref(null)
 const manualCode = ref('')
 const result = ref(null)
 const error = ref(null)
 const busy = ref(false)
+const navigatingToTable = ref(false)
 
 // Le backend n'a pas d'endpoint de décodage d'image : le code est lu côté
 // navigateur (BarcodeDetector, Chrome/Android) puis recherché par
 // GET /inventory/products/lookup/barcode/{code}.
+// Détection spéciale : les QR codes "table:N" redirigent vers la caisse.
 async function decodeImage(file) {
   if (!('BarcodeDetector' in window)) return null
   const bitmap = await createImageBitmap(file)
@@ -83,6 +87,17 @@ async function lookup(rawCode) {
   busy.value = true
   error.value = null
   result.value = null
+
+  // Détection QR table de restaurant
+  const tableMatch = code.match(/^table[:\s]?(\d+)$/i)
+  if (tableMatch) {
+    const tableNum = tableMatch[1]
+    navigatingToTable.value = true
+    busy.value = false
+    router.push({ name: 'Caisse', query: { table: tableNum } })
+    return
+  }
+
   try {
     const res = await api.get(`/inventory/products/lookup/barcode/${encodeURIComponent(code)}`)
     const data = res.data || {}

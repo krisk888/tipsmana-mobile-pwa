@@ -11,6 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref(null)
   const loading = ref(false)
   const error = ref(null)
+  const notificationCount = ref(0)
 
   const isAuthenticated = computed(() => !!token.value || !!loadToken())
 
@@ -66,12 +67,48 @@ export const useAuthStore = defineStore('auth', () => {
       // Si un rôle spécifique est demandé, on l'utilise (pour le boss multi-role)
       roleCode.value = selectedRole || establishment.value?.role_code || 'OWNER'
       roleName.value = establishment.value?.role_name || 'Boss'
+      // Fetch notification count after login
+      fetchNotificationCount()
       return true
     } catch (e) {
       error.value = e.message || 'Erreur de connexion'
       return false
     } finally {
       loading.value = false
+    }
+  }
+
+  async function fetchProfile() {
+    try {
+      const res = await api.get('/auth/me')
+      const data = res.data || {}
+      user.value = data.user || user.value
+      establishment.value = data.establishment || establishment.value
+      return data
+    } catch {
+      return null
+    }
+  }
+
+  async function updateProfile(body) {
+    try {
+      const res = await api.put('/auth/profile', body)
+      const data = res.data || {}
+      if (data.user) user.value = data.user
+      return true
+    } catch (e) {
+      error.value = e.message || 'Erreur de mise à jour'
+      return false
+    }
+  }
+
+  async function fetchNotificationCount() {
+    try {
+      const res = await api.get('/notifications/unread-count')
+      const data = res.data || {}
+      notificationCount.value = data.unread_count || 0
+    } catch {
+      notificationCount.value = 0
     }
   }
 
@@ -90,7 +127,7 @@ export const useAuthStore = defineStore('auth', () => {
     return login('boss@restoducoin.fr', 'Boss2026!X', role)
   }
 
-  return { user, establishment, roleCode, roleName, token, loading, error,
+  return { user, establishment, roleCode, roleName, token, loading, error, notificationCount,
            isAuthenticated, roleLabel, homeRoute, navTabs,
-           login, logout, quickLogin }
+           login, logout, quickLogin, fetchProfile, updateProfile, fetchNotificationCount }
 })
