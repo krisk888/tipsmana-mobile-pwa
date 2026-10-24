@@ -65,8 +65,8 @@ describe('Notifications.vue', () => {
       const wrapper = mount(NotificationsView)
       // Attend que l'appel API soit fait puis que le DOM se mette à jour
       await vi.waitUntil(() => api.get.mock.calls.length > 0, { timeout: 2000 })
-      // Laisse le temps à Vue de traiter les mises à jour asynchrones
-      await new Promise(r => setTimeout(r, 50))
+      // Attend que le empty-state apparaisse après résolution de l'API + mise à jour Vue
+      await vi.waitUntil(() => wrapper.find('.empty-state').exists(), { timeout: 2000 })
       await wrapper.vm.$nextTick()
       expect(wrapper.text()).toContain('Aucune notification pour le moment')
     })
