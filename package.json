@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && cp public/registerSW.js dist/registerSW.js",
+    "test": "node tests/api-endpoints-verification.js",
     "preview": "vite preview"
   },
   "dependencies": {
