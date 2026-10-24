@@ -10,7 +10,7 @@ import path from 'path'
 const EXPECTED = [
   // Settings — mobile calls /general-settings/{key} which resolves to /settings/general-settings/{key}
   { method: 'GET',    pattern: '/general-settings/{id}', exist: true, note: 'GET /api/v1/settings/general-settings/{key}' },
-  { method: 'GET',    pattern: '/settings/payment-methods', exist: false, note: 'NOT in backend' },
+  { method: 'GET',    pattern: '/settings/payment-methods', exist: true, note: 'list payment methods' },
   // Products
   { method: 'GET',    pattern: '/products/categories/tree', exist: true, note: 'list category tree' },
   { method: 'GET',    pattern: '/products/categories', exist: true, note: 'list flat categories' },
@@ -22,7 +22,7 @@ const EXPECTED = [
   { method: 'GET',    pattern: '/inventory/products/lookup/barcode/{id}', exist: false, note: 'NOT in backend — use /inventory/barcode/lookup?code=...' },
   { method: 'GET',    pattern: '/inventory/barcode/lookup', exist: true, note: 'barcode lookup (query param)' },
   // Cash / dispatch
-  { method: 'POST',   pattern: '/cash/dispatch', exist: false, note: 'NOT in backend — use /cash/tickets/{id}/dispatch-kitchen' },
+  { method: 'POST',   pattern: '/cash/dispatch', exist: true, note: 'mobile PWA dispatch without ticket' },
   { method: 'POST',   pattern: '/cash/tickets/{id}/dispatch-kitchen', exist: true, note: 'backend dispatch with ticket_id' },
   // Sales
   { method: 'POST',   pattern: '/sales/entries', exist: true, note: 'create sales entry' },

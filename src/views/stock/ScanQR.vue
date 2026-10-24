@@ -102,7 +102,7 @@ async function lookup(rawCode) {
   }
 
   try {
-    const res = await api.get(`/inventory/products/lookup/barcode/${encodeURIComponent(code)}`)
+    const res = await api.get(`/inventory/barcode/lookup?code=${encodeURIComponent(code)}`)
     const data = res.data || {}
     result.value = {
       code,
