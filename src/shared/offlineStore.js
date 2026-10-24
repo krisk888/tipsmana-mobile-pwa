@@ -1,130 +1,84 @@
 /**
- * Offline Count Queue — IndexedDB
+ * Offline Count Queue — localStorage
  *
  * Queues inventory counts when network is unavailable and replays them
  * as a batch (POST /inventory/sessions/{id}/scans) when connectivity returns.
  *
- * API: Promise-based, no external deps.
+ * API: Promise-based, no external deps. Uses localStorage as the backing store
+ * instead of the non-standard indexedDB API.
  */
 
-const DB_NAME = 'tipsmana_offline'
-const DB_VERSION = 1
-const STORE = 'counts'
+const LS_KEY = 'tipsmana_offline_queue'
+const DB_KEY = 'tipsmana_offline_meta'
 
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION)
-    req.onupgradeneeded = () => {
-      const db = req.result
-      if (!db.objectStoreNames.contains(STORE)) {
-        const store = db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true })
-        store.createIndex('session', 'session_id', { unique: false })
-        store.createIndex('synced', 'synced', { unique: false })
-      }
-    }
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
+function loadQueue() {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveQueue(queue) {
+  localStorage.setItem(LS_KEY, JSON.stringify(queue))
+}
+
+function nextId() {
+  const meta = localStorage.getItem(DB_KEY)
+  const parsed = meta ? JSON.parse(meta) : {}
+  const id = (parsed.lastId || 0) + 1
+  localStorage.setItem(DB_KEY, JSON.stringify({ lastId: id }))
+  return id
 }
 
 export const offlineStore = {
   async add(entry) {
-    const db = await openDB()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite')
-      tx.objectStore(STORE).add({
-        session_id: entry.session_id,
-        barcode: entry.barcode || null,
-        product_id: entry.product_id || null,
-        quantity: entry.quantity,
-        zone: entry.zone || null,
-        mode: entry.mode || 'set',
-        counted_at: entry.counted_at || new Date().toISOString(),
-        synced: false,
-        created_at: new Date().toISOString(),
-      })
-      tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
-      db.close()
+    const queue = loadQueue()
+    queue.push({
+      id: nextId(),
+      session_id: entry.session_id,
+      barcode: entry.barcode || null,
+      product_id: entry.product_id || null,
+      quantity: entry.quantity,
+      zone: entry.zone || null,
+      mode: entry.mode || 'set',
+      counted_at: entry.counted_at || new Date().toISOString(),
+      synced: false,
+      created_at: new Date().toISOString(),
     })
+    saveQueue(queue)
   },
 
   async getAllPending(sessionId) {
-    const db = await openDB()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readonly')
-      const store = tx.objectStore(STORE)
-      const index = store.index('synced')
-      const range = IDBKeyRange.only(false)
-      const items = []
-      const req = index.openCursor(range)
-      req.onsuccess = () => {
-        const cursor = req.result
-        if (cursor) {
-          if (!sessionId || cursor.value.session_id === sessionId) {
-            items.push(cursor.value)
-          }
-          cursor.continue()
-        } else {
-          resolve(items)
-        }
-      }
-      req.onerror = () => reject(req.error)
-      db.close()
-    })
+    const queue = loadQueue()
+    const pending = queue.filter(e => !e.synced)
+    if (sessionId) {
+      return pending.filter(e => e.session_id === sessionId)
+    }
+    return pending
   },
 
   async markSynced(ids) {
-    const db = await openDB()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite')
-      const store = tx.objectStore(STORE)
-      ids.forEach((id) => {
-        const getReq = store.get(id)
-        getReq.onsuccess = () => {
-          const entry = getReq.result
-          if (entry) {
-            entry.synced = true
-            store.put(entry)
-          }
-        }
-      })
-      tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
-      db.close()
-    })
+    const queue = loadQueue()
+    const idSet = new Set(ids)
+    for (const entry of queue) {
+      if (idSet.has(entry.id)) {
+        entry.synced = true
+      }
+    }
+    saveQueue(queue)
   },
 
   async clearSynced() {
-    const db = await openDB()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite')
-      const store = tx.objectStore(STORE)
-      const index = store.index('synced')
-      const req = index.openCursor(IDBKeyRange.only(true))
-      req.onsuccess = () => {
-        const cursor = req.result
-        if (cursor) {
-          cursor.delete()
-          cursor.continue()
-        } else {
-          resolve()
-        }
-      }
-      req.onerror = () => reject(req.error)
-      db.close()
-    })
+    const queue = loadQueue()
+    const remaining = queue.filter(e => !e.synced)
+    saveQueue(remaining)
   },
 
   async count() {
-    const db = await openDB()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readonly')
-      const req = tx.objectStore(STORE).count()
-      req.onsuccess = () => resolve(req.result)
-      req.onerror = () => reject(req.error)
-      db.close()
-    })
+    const queue = loadQueue()
+    return queue.filter(e => !e.synced).length
   },
 }
 

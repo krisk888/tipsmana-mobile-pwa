@@ -694,6 +694,7 @@ async function flushQueue() {
 }
 
 function onOnline() { online.value = true; flushQueue() }
+window.__flushOfflineQueue = flushQueue
 function onOffline() { online.value = false }
 
 // ---------------------------------------------------------------- zone / session

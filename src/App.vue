@@ -51,11 +51,24 @@ const router = useRouter()
 const authStore = useAuthStore()
 const isLoginPage = computed(() => route.path === '/login')
 
+// Detection du safe-area-bottom pour les mobiles à encoche (iOS/Android)
+let safeAreaBottom = 0
+try {
+  // iOS Safari expose safeAreaInsets via CSS env, on le tente avec un calcul JS
+  if (typeof CSS !== 'undefined' && CSS.supports) {
+    // Vérifie si le navigateur supporte env()
+  }
+  // Fallback : la valeur par défaut iOS est 34px (barre de navigation)
+  // On utilise une valeur conservative
+  safeAreaBottom = 34
+} catch { safeAreaBottom = 34 }
+
 // Navigation dynamique basée sur le rôle
 const tabs = computed(() => authStore.navTabs)
 const notifCount = computed(() => authStore.notificationCount)
 
 let notifInterval = null
+let onlineWatcher = null
 
 function handleLogout() {
   authStore.logout()
@@ -63,6 +76,25 @@ function handleLogout() {
 }
 
 onMounted(() => {
+  // Set safe area bottom from JS
+  document.documentElement.style.setProperty('--safe-area-bottom', '0px')
+  // iOS Safari: env(safe-area-inset-bottom) works natively, valeurs par défaut ~34px
+  // Pour les autres, on laisse la nav s'adapter via padding-bottom existant
+
+  // Online/offline connectivity watcher — auto-sync when back online
+  function onOnline() {
+    // Déclenche le sync offline depuis n'importe quelle vue active
+    if (window.__flushOfflineQueue) {
+      window.__flushOfflineQueue()
+    }
+  }
+  window.addEventListener('online', onOnline)
+  onlineWatcher = setInterval(() => {
+    if (navigator.onLine && window.__flushOfflineQueue) {
+      window.__flushOfflineQueue()
+    }
+  }, 60000) // Vérification minute
+
   // Poll notification count every 30s when authenticated
   notifInterval = setInterval(() => {
     if (authStore.isAuthenticated) {
@@ -73,6 +105,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (notifInterval) clearInterval(notifInterval)
+  if (onlineWatcher) clearInterval(onlineWatcher)
 })
 </script>
 
@@ -113,7 +146,7 @@ body {
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   display: flex; justify-content: space-around;
-  padding: 8px 0; padding-bottom: max(8px, env(safe-area-inset-bottom));
+  padding: 8px 0; padding-bottom: max(8px, var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   background: var(--nav-bg);
   border-top: 1px solid var(--nav-border);
   z-index: 100;

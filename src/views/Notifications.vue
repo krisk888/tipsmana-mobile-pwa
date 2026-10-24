@@ -11,6 +11,13 @@
         >
           Tout lu
         </button>
+        <button
+          v-if="unreadCount > 0 && newNotifIndicator"
+          class="new-notif-btn"
+          @click="refreshNow"
+        >
+          ⬇️ Nouvelles notifications
+        </button>
       </div>
       <p class="subtitle">
         {{ unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? 's' : ''}` : 'Aucune notification non lue' }}
@@ -75,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../shared/api'
 
 const notifications = ref([])
@@ -85,6 +92,9 @@ const error = ref(null)
 const page = ref(1)
 const total = ref(0)
 const unreadCount = ref(0)
+const polling = ref(true)
+const newNotifIndicator = ref(false)
+let pollTimer = null
 
 // Pull-to-refresh
 const pulling = ref(false)
@@ -198,8 +208,43 @@ function timeAgo(iso) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
+// Real-time polling
+async function refreshNow() {
+  newNotifIndicator.value = false
+  page.value = 1
+  await fetchNotifications(false)
+}
+
+async function pollNotifications() {
+  if (!polling.value) return
+  // Lightweight count check before full fetch
+  try {
+    const oldUnread = unreadCount.value
+    const res = await api.get('/notifications?page=1&per_page=1')
+    const data = res.data || {}
+    const latestUnread = data.unread_count || 0
+    if (latestUnread > oldUnread) {
+      // New notifications detected — show indicator
+      newNotifIndicator.value = true
+    }
+    // Sync unread count
+    unreadCount.value = latestUnread
+  } catch {
+    // Silently fail during polling
+  }
+}
+
 onMounted(() => {
   fetchNotifications(false)
+  // Start 30s polling for real-time notifications
+  pollTimer = setInterval(pollNotifications, 30000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
 })
 </script>
 
@@ -214,6 +259,16 @@ onMounted(() => {
   border-radius: 8px; padding: 6px 14px; cursor: pointer; font-weight: 500;
 }
 .mark-all-btn:disabled { opacity: 0.5; }
+.new-notif-btn {
+  font-size: 13px; color: #f7b731; background: rgba(247,183,49,0.15);
+  border: 1px solid #f7b731; border-radius: 8px;
+  padding: 6px 14px; cursor: pointer; font-weight: 500;
+  animation: pulse-notif 2s ease-in-out infinite;
+}
+@keyframes pulse-notif {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
 .pull-indicator {
   text-align: center; padding: 8px; color: #888; font-size: 13px;
 }

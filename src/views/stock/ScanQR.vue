@@ -50,15 +50,18 @@ const error = ref(null)
 const busy = ref(false)
 const navigatingToTable = ref(false)
 
-// Le backend n'a pas d'endpoint de décodage d'image : le code est lu côté
-// navigateur (BarcodeDetector, Chrome/Android) puis recherché par
-// GET /inventory/products/lookup/barcode/{code}.
-// Détection spéciale : les QR codes "table:N" redirigent vers la caisse.
+// Le backend n'a pas d'endpoint de décodage d'image
 async function decodeImage(file) {
   if (!('BarcodeDetector' in window)) return null
-  const bitmap = await createImageBitmap(file)
-  const codes = await new window.BarcodeDetector().detect(bitmap)
-  return codes[0]?.rawValue || null
+  if (typeof createImageBitmap !== 'function') return null
+  try {
+    const bitmap = await createImageBitmap(file)
+    if (!bitmap) return null
+    const codes = await new window.BarcodeDetector().detect(bitmap)
+    return (codes && codes.length > 0 && codes[0]?.rawValue) ? codes[0].rawValue : null
+  } catch {
+    return null
+  }
 }
 
 async function onFileCapture(e) {
