@@ -100,6 +100,32 @@ describe('Notifications.vue', () => {
       expect(wrapper.text()).toContain('Aucune notification non lue')
     })
 
+    it('affiche les controles de filtre et tri', async () => {
+      const wrapper = mount(NotificationsView)
+      await vi.waitUntil(() => wrapper.find('.filter-chip').exists())
+      const chips = wrapper.findAll('.filter-chip')
+      expect(chips.length).toBe(5)
+      expect(chips[0].text()).toContain('Toutes')
+      expect(chips[1].text()).toContain('Urgente')
+      expect(chips[2].text()).toContain('Haute')
+      expect(chips[3].text()).toContain('Moyenne')
+      expect(chips[4].text()).toContain('Basse')
+      expect(wrapper.find('.sort-btn').exists()).toBe(true)
+    })
+
+    it('le chip Toutes est actif par defaut', async () => {
+      const wrapper = mount(NotificationsView)
+      await vi.waitUntil(() => wrapper.find('.filter-chip').exists())
+      const allChip = wrapper.findAll('.filter-chip')[0]
+      expect(allChip.classes()).toContain('active')
+    })
+
+    it('le tri affiche ↓ Date par defaut (decroissant)', async () => {
+      const wrapper = mount(NotificationsView)
+      await vi.waitUntil(() => wrapper.find('.sort-btn').exists())
+      expect(wrapper.find('.sort-btn').text()).toContain('↓')
+    })
+
     it('affiche un message en cas d erreur', async () => {
       api.get.mockRejectedValue(new Error('Erreur reseau'))
       const wrapper = mount(NotificationsView)
@@ -145,6 +171,33 @@ describe('Notifications.vue', () => {
       await vi.waitUntil(() => api.get.mock.calls.length >= 2)
       const secondCallUrl = api.get.mock.calls[1][0]
       expect(secondCallUrl).toContain('page=2')
+    })
+
+    it('setFilter re-fetch avec le bon priorite', async () => {
+      api.get.mockResolvedValue(defaultApiResponse(2, 2))
+      const wrapper = mount(NotificationsView)
+      await vi.waitUntil(() => wrapper.find('.filter-chip').exists())
+      const chips = wrapper.findAll('.filter-chip')
+      // Click "Haute" (index 2)
+      api.get.mockClear()
+      api.get.mockResolvedValue(defaultApiResponse(2, 2))
+      await chips[2].trigger('click')
+      await vi.waitUntil(() => api.get.mock.calls.length >= 1)
+      const url = api.get.mock.calls[0][0]
+      expect(url).toContain('page=1')
+      expect(url).toContain('priority=high')
+    })
+
+    it('toggleSort change l ordre et re-fetch', async () => {
+      api.get.mockResolvedValue(defaultApiResponse(2, 2))
+      const wrapper = mount(NotificationsView)
+      await vi.waitUntil(() => wrapper.find('.sort-btn').exists())
+      api.get.mockClear()
+      api.get.mockResolvedValue(defaultApiResponse(2, 2))
+      await wrapper.find('.sort-btn').trigger('click')
+      await vi.waitUntil(() => api.get.mock.calls.length >= 1)
+      const url = api.get.mock.calls[0][0]
+      expect(url).toContain('page=1')
     })
   })
 

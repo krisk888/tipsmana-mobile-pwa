@@ -24,6 +24,26 @@
       </p>
     </header>
 
+    <div class="filter-bar">
+        <div class="priority-filters">
+          <button
+            v-for="p in priorityOptions"
+            :key="p.value"
+            class="filter-chip"
+            :class="{ active: filterPriority === p.value }"
+            @click="setFilter(p.value)"
+          >
+            <span class="chip-dot" :class="p.value || 'all'"></span>
+            {{ p.label }}
+          </button>
+        </div>
+        <button class="sort-btn" @click="toggleSort">
+          <span v-if="sortAscending">↑</span>
+          <span v-else>↓</span>
+          Date
+        </button>
+      </div>
+
     <!-- Pull-to-refresh indicator -->
     <div v-if="pulling" class="pull-indicator">
       <span>{{ pullState }}</span>
@@ -47,7 +67,7 @@
     <!-- Liste des notifications -->
     <div v-else ref="listRef" class="notification-list" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
       <div
-        v-for="n in notifications"
+        v-for="n in filteredNotifications"
         :key="n.id"
         class="notification-item"
         :class="{ unread: !n.is_read, [n.priority || 'medium']: true }"
@@ -96,6 +116,17 @@ const polling = ref(true)
 const newNotifIndicator = ref(false)
 let pollTimer = null
 
+// Filtres et tri
+const filterPriority = ref('')
+const sortAscending = ref(false)
+const priorityOptions = [
+  { value: '', label: 'Toutes' },
+  { value: 'urgent', label: 'Urgente' },
+  { value: 'high', label: 'Haute' },
+  { value: 'medium', label: 'Moyenne' },
+  { value: 'low', label: 'Basse' },
+]
+
 // Pull-to-refresh
 const pulling = ref(false)
 const pullState = ref('')
@@ -104,11 +135,25 @@ const listRef = ref(null)
 
 const hasMore = computed(() => notifications.value.length < total.value)
 
+const filteredNotifications = computed(() => {
+  let items = notifications.value
+  if (filterPriority.value) {
+    items = items.filter(n => (n.priority || 'medium') === filterPriority.value)
+  }
+  return [...items].sort((a, b) => {
+    const da = new Date(a.created_at).getTime()
+    const db = new Date(b.created_at).getTime()
+    return sortAscending.value ? da - db : db - da
+  })
+})
+
 async function fetchNotifications(append = false) {
   loading.value = true
   error.value = null
   try {
-    const res = await api.get(`/notifications?page=${page.value}&per_page=20`)
+    let url = `/notifications?page=${page.value}&per_page=20`
+    if (filterPriority.value) url += `&priority=${filterPriority.value}`
+    const res = await api.get(url)
     const data = res.data || {}
     const items = data.notifications || []
     total.value = data.total || 0
@@ -131,6 +176,18 @@ async function loadMore() {
     page.value++
     await fetchNotifications(true)
   }
+}
+
+function setFilter(priority) {
+  filterPriority.value = priority
+  page.value = 1
+  fetchNotifications(false)
+}
+
+function toggleSort() {
+  sortAscending.value = !sortAscending.value
+  page.value = 1
+  fetchNotifications(false)
 }
 
 async function markRead(n) {
@@ -339,4 +396,38 @@ onUnmounted(() => {
 }
 .btn-more:disabled { opacity: 0.5; }
 .error-msg { color: #ff6b6b; text-align: center; margin-top: 12px; font-size: 13px; }
+
+/* Filtre et tri */
+.filter-bar {
+  display: flex; gap: 8px; margin: 8px 0 12px; align-items: center;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.priority-filters { display: flex; gap: 6px; flex-shrink: 0; }
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; background: #1e1e32; color: #aaa;
+  border: 1px solid transparent; border-radius: 14px;
+  padding: 4px 10px; cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.filter-chip.active {
+  background: #2a2a40; border-color: #6c5ce7; color: #fff;
+  font-weight: 500;
+}
+.chip-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+}
+.chip-dot.urgent { background: #ff6b6b; }
+.chip-dot.high { background: #ffa502; }
+.chip-dot.medium { background: #6c5ce7; }
+.chip-dot.low { background: #888; }
+.chip-dot.all { background: #aaa; opacity: 0.5; }
+.chip-dot.all + .chip-dot { display: none; }
+.sort-btn {
+  font-size: 12px; background: #1e1e32; color: #aaa;
+  border: 1px solid #2a2a40; border-radius: 14px;
+  padding: 4px 10px; cursor: pointer; white-space: nowrap;
+  transition: all 0.15s; display: inline-flex; align-items: center; gap: 2px;
+}
+.sort-btn:hover { background: #2a2a40; color: #fff; }
 </style>
