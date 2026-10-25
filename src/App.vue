@@ -95,10 +95,14 @@ onMounted(() => {
     }
   }, 60000) // Vérification minute
 
-  // Poll notification count every 30s when authenticated
+  // Poll notification count every 30s when authenticated + auto-logout if token expired
   notifInterval = setInterval(() => {
     if (authStore.isAuthenticated) {
       authStore.fetchNotificationCount()
+    } else if (authStore.user) {
+      // Token expired while sitting on a page → force logout
+      authStore.logout()
+      router.push('/login')
     }
   }, 30000)
 })

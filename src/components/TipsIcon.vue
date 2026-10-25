@@ -26,6 +26,7 @@ const { theme } = useTheme()
 // Noms d'usage → noms officiels du dépôt d'icônes Tipsmana
 const NAME_MAP = {
   pilote: 'dashboard',
+  orders: 'dashboard',
   stock: 'stock_overview',
   caisse: 'sales_overview',
   cuisine: 'products_recipes',

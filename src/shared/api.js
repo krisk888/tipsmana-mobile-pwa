@@ -67,6 +67,12 @@ class ApiClient {
         }
       }
 
+      // Token expired & refresh failed → force logout
+      if (res.status === 401) {
+        this._forceLogout()
+        throw new Error('Session expirée. Veuillez vous reconnecter.')
+      }
+
       return this._handleResponse(res)
     } catch (err) {
       // Offline queue
@@ -106,6 +112,14 @@ class ApiClient {
       expires_at: Date.now() + (data.expires_in || 900) * 1000  // default 15min
     }
     localStorage.setItem('tipsmana_token', JSON.stringify(token))
+  }
+
+  _forceLogout() {
+    localStorage.removeItem('tipsmana_token')
+    // Redirect to login if we're in a browser context
+    if (typeof window !== 'undefined' && window.location) {
+      window.location.href = '/mobile/login'
+    }
   }
 
   async _handleResponse(res) {

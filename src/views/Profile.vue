@@ -202,15 +202,27 @@ async function saveProfile() {
     if (Object.keys(body).length === 0) {
       profileSuccess.value = 'Aucune modification'
       saving.value = false
+      setTimeout(() => { profileSuccess.value = '' }, 3000)
       return
     }
 
     const res = await api.put('/auth/profile', body)
-    const data = res.data || {}
-    authStore.user = data.user || body
+    // Handle both { user: {...} } and { data: { user: {...} } } response formats
+    const payload = res.data ? res.data : res
+    const updatedUser = payload.user || payload
+
+    // Merge to preserve fields not returned by API (e.g. email, role)
+    const merged = { ...(user.value || {}), ...updatedUser }
+    authStore.user = merged
+
+    // Re-sync editForm with merged data so next diff is clean
+    editForm.first_name = merged.first_name || ''
+    editForm.last_name = merged.last_name || ''
+    editForm.phone = merged.phone || ''
+
     profileSuccess.value = 'Profil mis à jour ✓'
   } catch (e) {
-    profileError.value = e.message || 'Erreur de mise à jour'
+    profileError.value = e.message || e.data?.message || 'Erreur de mise à jour'
   } finally {
     saving.value = false
     setTimeout(() => { profileSuccess.value = ''; profileError.value = '' }, 3000)
