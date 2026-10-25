@@ -67,7 +67,7 @@ import { useAuthStore } from '../stores/authStore'
 const router = useRouter()
 const authStore = useAuthStore()
 const email = ref('boss@restoducoin.fr')
-const password = ref('Boss2026!X')
+const password = ref('RestoDuCoin2026!')
 const loadingRole = ref(null)
 
 // Rôles avec leur route de redirection dédiée

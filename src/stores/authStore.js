@@ -124,7 +124,7 @@ export const useAuthStore = defineStore('auth', () => {
   function quickLogin(role) {
     // Tous les rôles utilisent le même compte pour la démo
     // le rôle est stocké côté frontend uniquement
-    return login('boss@restoducoin.fr', 'Boss2026!X', role)
+    return login('boss@restoducoin.fr', 'RestoDuCoin2026!', role)
   }
 
   return { user, establishment, roleCode, roleName, token, loading, error, notificationCount,
