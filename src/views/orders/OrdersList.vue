@@ -177,7 +177,9 @@ function itemCount(o) {
 }
 
 function toggleOrder(id) {
-  expanded.value[id] = !expanded.value[id]
+  const next = { ...expanded.value }
+  next[id] = !next[id]
+  expanded.value = next
 }
 
 // ── API ─────────────────────────────────────────────────

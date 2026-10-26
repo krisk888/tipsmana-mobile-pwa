@@ -28,6 +28,20 @@
         📡 Données hors ligne — dernière synchro : {{ lastSyncLabel }}
       </div>
 
+      <!-- ═══ Widget récapitulatif : commandes en cours + CA du jour ═══ -->
+      <div class="summary-widget">
+        <div class="summary-card">
+          <span class="summary-label">Commandes en cours</span>
+          <span class="summary-value">{{ pendingOrdersCount }}</span>
+          <span class="summary-delta">{{ pendingOrdersLabel }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Chiffre d'affaires du jour</span>
+          <span class="summary-value">{{ formatEur(dayRevenue) }}</span>
+          <span class="summary-delta">{{ dayTransactions }} transactions</span>
+        </div>
+      </div>
+
       <div class="kpi-grid">
         <div class="kpi-card">
           <span class="kpi-label">CA aujourd'hui</span>
@@ -95,6 +109,15 @@ const dashboard = ref({
   avg_ticket: 0, margin: 0, margin_pct: 0,
   active_products: 0, low_stock_items: 0
 })
+const pendingOrdersCount = ref(0)
+const dayRevenue = ref(0)
+const dayTransactions = ref(0)
+const pendingOrdersLabel = computed(() => {
+  const n = pendingOrdersCount.value
+  if (n === 0) return 'Aucune commande en attente'
+  if (n === 1) return '1 commande en attente'
+  return `${n} commandes en attente`
+})
 const alerts = ref([])
 const activities = ref([])
 const loading = ref(true)
@@ -141,6 +164,12 @@ function applyData(data, fromCache) {
     margin_pct: (m.profit_margin || {}).current_value || 0,
     active_products: qs.active_products || 0,
     low_stock_items: qs.low_stock_items || 0
+  }
+  // Also populate the summary widget from the same data
+  dayRevenue.value = qs.today_revenue || 0
+  dayTransactions.value = qs.today_transactions || 0
+  if (qs.pending_orders !== undefined) {
+    pendingOrdersCount.value = qs.pending_orders
   }
   alerts.value = (data.active_alerts || []).map(a => ({
     id: a.id || Math.random(),
@@ -206,6 +235,20 @@ async function loadDashboard() {
   }
 }
 
+// Fetch orders count independently (fallback si l'API dashboard ne le fournit pas)
+async function loadOrdersCount() {
+  try {
+    const res = await api.get('/cash/kds/cuisine')
+    const data = res?.data?.data || res?.data || res || {}
+    const orders = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : [])
+    const pending = orders.filter(o => o.status !== 'served').length
+    // Only override if the dashboard response didn't already provide pending_orders
+    if (pendingOrdersCount.value === 0 && pending > 0) {
+      pendingOrdersCount.value = pending
+    }
+  } catch { /* silencieux — widget reste à 0 */ }
+}
+
 let refreshTimer
 onMounted(() => {
   // Affiche immédiatement le cache s'il existe (stale-while-revalidate)
@@ -216,6 +259,7 @@ onMounted(() => {
     cacheAvailable.value = true
   }
   loadDashboard()
+  loadOrdersCount()
   refreshTimer = setInterval(loadDashboard, 30000)
 })
 onUnmounted(() => {
@@ -228,6 +272,27 @@ onUnmounted(() => {
 .page-header { margin-bottom: 20px; }
 .page-header h2 { font-size: 22px; color: #fff; margin: 0; }
 .date { font-size: 13px; color: #888; margin: 4px 0 0; }
+
+/* ═══ Widget récapitulatif — Commandes en cours + CA du jour ═══ */
+.summary-widget {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;
+}
+.summary-card {
+  background: linear-gradient(135deg, #1a1a2e, #15152a);
+  border: 1px solid #2a2a40; border-radius: 14px; padding: 16px 14px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.summary-card:first-child {
+  border-left: 4px solid #f59e0b;
+}
+.summary-card:last-child {
+  border-left: 4px solid #10b981;
+}
+.summary-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.summary-value { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+.summary-card:last-child .summary-value { color: #10b981; }
+.summary-delta { font-size: 11px; font-weight: 600; color: #888; }
+
 .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 .kpi-card {
   background: #1e1e32; border-radius: 12px; padding: 16px;

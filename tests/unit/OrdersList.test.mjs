@@ -19,6 +19,8 @@ function makeOrder(overrides = {}) {
     ticket_ref: overrides.ticket_ref || 'MOB-A1B2C3',
     station: 'cuisine',
     status: overrides.status || 'pending',
+    note: overrides.note || null,
+    notes: overrides.notes || null,
     created_at: overrides.created_at || new Date().toISOString(),
     items: overrides.items || [
       { name: 'Burger', qty: 2, note: null, status: 'pending' },
@@ -165,6 +167,72 @@ describe('OrdersList.vue', () => {
       const wrapper = mountComponent()
       await vi.waitUntil(() => wrapper.find('.empty-state').exists(), { timeout: 3000 })
       expect(wrapper.text()).toContain('Aucune commande')
+    })
+  })
+
+  describe('status badges', () => {
+    it('affiche le bon badge de statut pour chaque commande', async () => {
+      const wrapper = mountComponent()
+      await vi.waitUntil(() => wrapper.find('.order-card').exists(), { timeout: 3000 })
+      const cards = wrapper.findAll('.order-card')
+      // pending, preparing, ready — each should show its status label
+      expect(wrapper.text()).toContain('En attente')
+      expect(wrapper.text()).toContain('En prépa')
+      expect(wrapper.text()).toContain('Prêt')
+    })
+
+    it.each([
+      ['pending', 'En attente'],
+      ['preparing', 'En prépa'],
+      ['ready', 'Prêt'],
+      ['served', 'Servi'],
+    ])('affiche le label %s pour le statut %s', async (_status, _label) => {
+      // Test through rendering a single order with this status
+      api.get.mockResolvedValue({
+        success: true,
+        data: {
+          station: 'cuisine',
+          items: [makeOrder({ id: 'test-order', status: _status })],
+        },
+      })
+      const wrapper = mountComponent()
+      await vi.waitUntil(() => wrapper.find('.order-card').exists(), { timeout: 3000 })
+      expect(wrapper.text()).toContain(_label)
+    })
+  })
+
+  describe('item details', () => {
+    it('affiche le nombre d articles dans l en-tete de la carte', async () => {
+      const wrapper = mountComponent()
+      await vi.waitUntil(() => wrapper.find('.card-items-count').exists(), { timeout: 3000 })
+      const countText = wrapper.find('.card-items-count').text()
+      expect(countText).toMatch(/\d+ art\./)
+    })
+
+    it('affiche le compteur d elements et la note dans le detail etendu', async () => {
+      // Override data with a single order with 'served' status to avoid auto-expand
+      api.get.mockResolvedValue({
+        success: true,
+        data: {
+          station: 'cuisine',
+          items: [makeOrder({
+            id: 'note-order',
+            status: 'served',
+            note: 'Sans gluten SVP',
+            items: [
+              { name: 'Pizza', qty: 1, note: 'Sans oignons', status: 'pending' },
+              { name: 'Salade', qty: 2, note: null, status: 'pending' },
+            ],
+          })],
+        },
+      })
+      const wrapper = mountComponent()
+      await vi.waitUntil(() => wrapper.find('.order-card').exists(), { timeout: 3000 })
+      const cards = wrapper.findAll('.order-card')
+      await cards[0].trigger('click')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('Pizza')
+      expect(wrapper.text()).toContain('Sans gluten')
     })
   })
 })

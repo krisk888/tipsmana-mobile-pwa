@@ -75,8 +75,11 @@
           @click="pickProduct(prod)"
         >
           <span class="prod-name">{{ prod.name || prod.label }}</span>
-          <span class="prod-price">{{ formatEur(prodPrice(prod)) }}</span>
-          <span v-if="hasOptions(prod)" class="prod-opt-hint">⚙️ options</span>
+          <span v-if="prod.description || prod.desc" class="prod-desc">{{ prod.description || prod.desc }}</span>
+          <span class="prod-price-row">
+            <span class="prod-price">{{ formatEur(prodPrice(prod)) }}</span>
+            <span v-if="hasOptions(prod)" class="prod-opt-hint">⚙️</span>
+          </span>
         </button>
         <div v-if="!filteredProducts.length" class="empty-state">Aucun article</div>
       </div>
@@ -1159,6 +1162,8 @@ transition: border-color 0.15s, transform 0.1s;
 
 .prod-btn:active { border-color: var(--primary, #10b981); transform: scale(0.95); }
 .prod-name { font-size: 13px; font-weight: 700; text-align: center; }
+.prod-desc { font-size: 10px; color: var(--muted, #8a8aa0); text-align: center; margin-top: 2px; }
+.prod-price-row { display: flex; align-items: center; gap: 4px; justify-content: center; margin-top: auto; }
 .prod-price { font-size: 16px; font-weight: 800; color: var(--success, #10b981); }
 .prod-opt-hint { font-size: 10px; background: rgba(16,185,129,0.15); color: var(--success, #10b981); padding: 2px 8px; border-radius: 6px; }
 .empty-state { grid-column: 1 / -1; text-align: center; padding: 30px; color: var(--muted, #8a8aa0); font-size: 14px; }
