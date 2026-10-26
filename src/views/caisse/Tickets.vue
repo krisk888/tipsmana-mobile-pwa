@@ -11,6 +11,9 @@
       </div>
       <div class="header-right">
         <span class="header-user">{{ displayName }}</span>
+        <button class="header-logout-btn" @click="handleLogout" title="Déconnexion">
+          <TipsIcon name="quitter" :size="18" />
+        </button>
         <button v-if="selectedTable !== null" class="table-badge" @click="openFloorPlan">
           Table {{ selectedTable }}
           <span class="table-badge-chevron">🪑</span>
@@ -105,6 +108,18 @@
       @decrement="decrementQty"
       @remove="removeItem"
     />
+
+    <!-- ═══ PERSISTENT TOTAL BAR — toujours visible ═══ -->
+    <div v-if="selectedTable !== null" class="caisse-total-bar">
+      <div class="total-bar-info">
+        <span class="total-bar-table">Table {{ selectedTable }}</span>
+        <span class="total-bar-count">{{ cart.length }} article{{ cart.length !== 1 ? 's' : '' }}</span>
+      </div>
+      <div class="total-bar-amount">
+        <span class="total-bar-label">Total</span>
+        <span class="total-bar-value">{{ formatEur(cartTotal) }}</span>
+      </div>
+    </div>
 
     <!-- ═══════════ MODALS ═══════════ -->
 
@@ -299,9 +314,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../../shared/api'
 import { auth, getEstablishmentId } from '../../shared/auth'
 import CaisseCart from './CaisseCart.vue'
+import TipsIcon from '../../components/TipsIcon.vue'
 
 /* ─── Defaults ─── */
 const DEFAULT_COURSES = [
@@ -359,6 +376,13 @@ const DEFAULT_CATEGORY_OPTIONS = {
 }
 
 /* ═══ State ═══ */
+
+/* Router pour déconnexion */
+const router = useRouter()
+function handleLogout() {
+  auth.logout()
+  router.push('/login')
+}
 
 /* Config */
 const courses = ref([...DEFAULT_COURSES])
@@ -969,6 +993,23 @@ onUnmounted(() => {
 }
 .header-user { font-size: 12px; font-weight: 700; color: var(--primary, #10b981); }
 
+.header-logout-btn {
+  background: none;
+  border: 1px solid rgba(239,68,68,0.25);
+  color: var(--danger, #ef4444);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s, background 0.2s;
+  font-size: 16px;
+}
+.header-logout-btn:active { opacity: 1; background: rgba(239,68,68,0.12); }
+
 .table-badge {
   display: flex;
   align-items: center;
@@ -1167,6 +1208,61 @@ transition: border-color 0.15s, transform 0.1s;
 .prod-price { font-size: 16px; font-weight: 800; color: var(--success, #10b981); }
 .prod-opt-hint { font-size: 10px; background: rgba(16,185,129,0.15); color: var(--success, #10b981); padding: 2px 8px; border-radius: 6px; }
 .empty-state { grid-column: 1 / -1; text-align: center; padding: 30px; color: var(--muted, #8a8aa0); font-size: 14px; }
+
+/* ─── Persistent Total Bar ─── */
+.caisse-total-bar {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  z-index: 85;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #059669, #047857);
+  border-radius: 14px;
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.3);
+  color: #fff;
+  pointer-events: none;
+}
+
+.total-bar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.total-bar-table {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.total-bar-count {
+  font-size: 10px;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.total-bar-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.total-bar-label {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.total-bar-value {
+  font-size: 20px;
+  font-weight: 800;
+}
 
 /* ─── Modals ─── */
 .modal-overlay {

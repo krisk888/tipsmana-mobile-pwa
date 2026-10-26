@@ -5,6 +5,11 @@
 
     <!-- Main app with bottom nav -->
     <div v-else class="app-layout">
+      <!-- Top logout button -->
+      <button class="top-logout-btn" @click="handleLogout" title="Déconnexion">
+        <TipsIcon name="quitter" :size="16" />
+      </button>
+
       <main class="app-content">
         <router-view />
       </main>
@@ -201,4 +206,26 @@ body {
   color: var(--nav-inactive); transition: color 0.2s;
 }
 .theme-toggle:active { color: var(--nav-active); }
+
+/* Top logout button */
+.top-logout-btn {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 200;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--nav-bg);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: var(--danger, #ef4444);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.top-logout-btn:active { opacity: 1; background: rgba(239,68,68,0.12); }
 </style>
