@@ -37,7 +37,11 @@
         </div>
         <div class="field">
           <label>Téléphone</label>
-          <input v-model="editForm.phone" type="tel" placeholder="+33612345678" />
+          <input v-model="editForm.phone" type="tel" placeholder="+336****5678" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input v-model="editForm.email" type="email" placeholder="email@exemple.fr" />
         </div>
         <p v-if="profileError" class="field-error">{{ profileError }}</p>
         <p v-if="profileSuccess" class="field-success">{{ profileSuccess }}</p>
@@ -138,6 +142,7 @@ const editForm = reactive({
   first_name: '',
   last_name: '',
   phone: '',
+  email: '',
 })
 
 const notifPrefs = reactive({
@@ -163,6 +168,7 @@ async function loadProfile() {
     editForm.first_name = u.first_name || ''
     editForm.last_name = u.last_name || ''
     editForm.phone = u.phone || ''
+    editForm.email = u.email || ''
     
     // Store full user data
     authStore.user = u
@@ -173,6 +179,7 @@ async function loadProfile() {
       editForm.first_name = authStore.user.first_name || ''
       editForm.last_name = authStore.user.last_name || ''
       editForm.phone = authStore.user.phone || ''
+      editForm.email = authStore.user.email || ''
     }
   } finally {
     loading.value = false
@@ -198,6 +205,7 @@ async function saveProfile() {
     if (editForm.first_name !== (user.value?.first_name || '')) body.first_name = editForm.first_name
     if (editForm.last_name !== (user.value?.last_name || '')) body.last_name = editForm.last_name
     if (editForm.phone !== (user.value?.phone || '')) body.phone = editForm.phone || null
+    if (editForm.email !== (user.value?.email || '')) body.email = editForm.email || null
 
     if (Object.keys(body).length === 0) {
       profileSuccess.value = 'Aucune modification'
@@ -219,6 +227,7 @@ async function saveProfile() {
     editForm.first_name = merged.first_name || ''
     editForm.last_name = merged.last_name || ''
     editForm.phone = merged.phone || ''
+    editForm.email = merged.email || ''
 
     profileSuccess.value = 'Profil mis à jour ✓'
   } catch (e) {

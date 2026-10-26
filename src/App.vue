@@ -17,7 +17,10 @@
           class="nav-item"
           :class="{ active: $route.path.startsWith(tab.path) }"
         >
-          <TipsIcon :name="tab.iconName" :size="22" class="nav-icon" />
+          <span class="nav-icon-wrap">
+            <TipsIcon :name="tab.iconName" :size="22" class="nav-icon" />
+            <span v-if="tab.showNotifDot && notifCount > 0" class="nav-notif-dot"></span>
+          </span>
           <span class="nav-label">{{ tab.label }}</span>
         </router-link>
         <router-link to="/notifications" class="nav-item" :class="{ active: $route.path === '/notifications' }">
@@ -164,6 +167,12 @@ body {
 }
 .nav-item.active { color: var(--nav-active); }
 .nav-icon { font-size: 22px; line-height: 1; }
+.nav-icon-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.nav-notif-dot {
+  position: absolute; top: -2px; right: -4px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #ff6b6b; border: 2px solid var(--nav-bg);
+}
 .nav-label { font-size: 10px; font-weight: 500; }
 .nav-logout {
   background: none; border: none; cursor: pointer; font-family: inherit;

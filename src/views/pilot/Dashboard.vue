@@ -42,6 +42,44 @@
         </div>
       </div>
 
+      <!-- ═══ Graphique : CA horaire et commandes/h ═══ -->
+      <div class="chart-section">
+        <h3>Activité horaire</h3>
+        <div v-if="chartLoading" class="chart-loading">Chargement...</div>
+        <div v-else-if="chartError" class="chart-error">{{ chartError }}</div>
+        <svg v-else class="hourly-chart" :viewBox="'0 0 ' + chartWidth + ' ' + chartHeight" preserveAspectRatio="xMidYMid meet">
+          <!-- Axe Y : lignes horizontales + labels -->
+          <line v-for="(y, yi) in yGridLines" :key="'g'+yi"
+            :x1="marginLeft" :y1="y" :x2="chartWidth - marginRight" :y2="y"
+            stroke="#2a2a40" stroke-width="1" />
+          <text v-for="(y, yi) in yGridLines" :key="'yl'+yi"
+            :x="marginLeft - 6" :y="y + 4" text-anchor="end" fill="#666" font-size="9">
+            {{ yLabel(yi) }}
+          </text>
+          <!-- Barres CA (bleues) -->
+          <rect v-for="(h, i) in hourlyStats" :key="'ca'+i"
+            :x="barX(i)" :y="barCAY(h.ca)" :width="barWidth" :height="barCAH(h.ca)"
+            fill="#6366f1" rx="3" opacity="0.85">
+            <title>{{ h.label }} — CA: {{ formatEur(h.ca) }}</title>
+          </rect>
+          <!-- Barres commandes (vertes) -->
+          <rect v-for="(h, i) in hourlyStats" :key="'co'+i"
+            :x="barX(i) + barWidth + 2" :y="barOrdersY(h.orders)" :width="barWidth"
+            :height="barOrdersH(h.orders)" fill="#10b981" rx="3" opacity="0.85">
+            <title>{{ h.label }} — {{ h.orders }} commande(s)</title>
+          </rect>
+          <!-- Axe X : heures -->
+          <text v-for="(h, i) in hourlyStats" :key="'xl'+i"
+            :x="barX(i) + barWidth" :y="chartHeight - marginBottom + 14"
+            text-anchor="middle" fill="#666" font-size="8">
+            {{ h.shortLabel }}
+          </text>
+        </svg>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-dot ca"></span> CA</span>
+          <span class="legend-item"><span class="legend-dot orders"></span> Commandes</span>
+        </div>
+      </div>
       <div class="kpi-grid">
         <div class="kpi-card">
           <span class="kpi-label">CA aujourd'hui</span>
@@ -125,6 +163,82 @@ const error = ref(null)
 const usingCache = ref(false)
 const cacheAvailable = ref(false)
 const lastSync = ref(null)
+
+// ── Graphique horaire ────────────────────────────────────
+const hourlyStats = ref([])
+const chartLoading = ref(false)
+const chartError = ref(null)
+const marginLeft = 36
+const marginRight = 8
+const marginTop = 8
+const marginBottom = 24
+const chartWidth = 320
+const chartHeight = 160
+
+const yGridLines = computed(() => {
+  const lines = []
+  const steps = 4
+  for (let i = 0; i <= steps; i++) {
+    const y = marginTop + (chartHeight - marginTop - marginBottom) * (1 - i / steps)
+    lines.push(y)
+  }
+  return lines
+})
+
+function yLabel(index) {
+  const maxCA = Math.max(...hourlyStats.value.map(h => h.ca || 0), 1)
+  const steps = 4
+  return formatEur((maxCA / steps) * index)
+}
+
+const barWidth = computed(() => {
+  const n = hourlyStats.value.length || 1
+  const avail = chartWidth - marginLeft - marginRight
+  return Math.max(6, Math.floor(avail / n / 2.5))
+})
+
+function barX(i) { return marginLeft + i * (barWidth.value * 2.5 + 3) }
+
+function barCAY(val) {
+  const maxCA = Math.max(...hourlyStats.value.map(h => h.ca || 0), 1)
+  const h = chartHeight - marginTop - marginBottom
+  return marginTop + h - (val / maxCA) * h
+}
+function barCAH(val) {
+  const maxCA = Math.max(...hourlyStats.value.map(h => h.ca || 0), 1)
+  return (val / maxCA) * (chartHeight - marginTop - marginBottom)
+}
+function barOrdersY(val) {
+  const maxOrders = Math.max(...hourlyStats.value.map(h => h.orders || 0), 1)
+  const h = chartHeight - marginTop - marginBottom
+  return marginTop + h - (val / maxOrders) * h
+}
+function barOrdersH(val) {
+  const maxOrders = Math.max(...hourlyStats.value.map(h => h.orders || 0), 1)
+  return (val / maxOrders) * (chartHeight - marginTop - marginBottom)
+}
+
+async function loadHourlyStats() {
+  chartLoading.value = true
+  chartError.value = null
+  try {
+    const res = await api.get('/dashboard/hourly-stats')
+    const data = res?.data || res || {}
+    const raw = data.hourly || data.stats || []
+    hourlyStats.value = raw.map(h => ({
+      label: `${h.hour || '?'}h`,
+      shortLabel: `${h.hour || '?'}h`,
+      ca: h.revenue || h.ca || 0,
+      orders: h.orders || h.count || 0,
+    }))
+  } catch {
+    // Fallback: generate placeholder data from the day's revenue split
+    chartError.value = 'Données horaires non disponibles'
+    // Keep empty — user sees the error message
+  } finally {
+    chartLoading.value = false
+  }
+}
 
 // Cache localStorage des derniers KPI, isolé par établissement
 function cacheKey() {
@@ -260,7 +374,11 @@ onMounted(() => {
   }
   loadDashboard()
   loadOrdersCount()
-  refreshTimer = setInterval(loadDashboard, 30000)
+  loadHourlyStats()
+  refreshTimer = setInterval(() => {
+    loadDashboard()
+    loadHourlyStats()
+  }, 30000)
 })
 onUnmounted(() => {
   clearInterval(refreshTimer)
@@ -372,4 +490,19 @@ onUnmounted(() => {
   transition: background 0.2s;
 }
 .action-btn:active { background: #2a2a40; }
+
+/* ═══ Graphique horaire ═══ */
+.chart-section {
+  background: #1a1a2e; border: 1px solid #2a2a40; border-radius: 14px;
+  padding: 14px; margin-bottom: 14px;
+}
+.chart-section h3 { font-size: 13px; color: #aaa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.hourly-chart { width: 100%; height: auto; max-height: 170px; }
+.chart-loading, .chart-error { text-align: center; padding: 24px; color: #888; font-size: 13px; }
+.chart-error { color: #ff6b6b; }
+.chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 8px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.legend-dot.ca { background: #6366f1; }
+.legend-dot.orders { background: #10b981; }
 </style>
