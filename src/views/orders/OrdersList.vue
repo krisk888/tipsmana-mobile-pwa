@@ -79,6 +79,32 @@
               <span class="item-qty">{{ item.qty }}×</span>
               <span class="item-name">{{ item.name }}</span>
               <span v-if="item.note" class="item-note">📝 {{ item.note }}</span>
+              <button
+                v-if="item.status === 'pending'"
+                class="item-action item-action-prep"
+                @click="validateItem(o, idx)"
+                :disabled="actionLoading[o.id + '-' + idx]"
+              >
+                <span v-if="actionLoading[o.id + '-' + idx]" class="action-spinner"></span>
+                <span v-else>🔥 En prépa</span>
+              </button>
+              <button
+                v-else-if="item.status === 'preparing'"
+                class="item-action item-action-ready"
+                @click="validateItem(o, idx)"
+                :disabled="actionLoading[o.id + '-' + idx]"
+              >
+                <span v-if="actionLoading[o.id + '-' + idx]" class="action-spinner"></span>
+                <span v-else>✅ Prêt</span>
+              </button>
+              <span
+                v-else-if="item.status === 'ready'"
+                class="item-status-badge item-status-ready"
+              >Prêt</span>
+              <span
+                v-else-if="item.status === 'served'"
+                class="item-status-badge item-status-served"
+              >Servi</span>
             </div>
           </div>
         </div>
@@ -98,6 +124,7 @@ const error = ref(null)
 const expanded = ref({})
 const filter = ref('all')
 
+const actionLoading = ref({})
 const now = ref(Date.now())
 
 // ── Filter definitions ──────────────────────────────────
@@ -206,6 +233,35 @@ async function loadOrders() {
     if (!orders.value.length) orders.value = []
   } finally {
     loading.value = false
+  }
+}
+
+// ── Item validation (pending → preparing → ready → served) ──
+async function validateItem(order, itemIndex) {
+  const key = order.id + '-' + itemIndex
+  actionLoading.value = { ...actionLoading.value, [key]: true }
+  try {
+    const station = order.station || 'cuisine'
+    await api.post(`/cash/kds/${station}/orders/${order.id}/validate`, {
+      item_index: itemIndex,
+    })
+    // Update local state immediately for responsiveness
+    const items = [...order.items]
+    const statusFlow = { pending: 'preparing', preparing: 'ready', ready: 'served' }
+    items[itemIndex] = { ...items[itemIndex], status: statusFlow[items[itemIndex].status] || items[itemIndex].status }
+    order.items = items
+    // Recompute order status
+    const statuses = items.map(i => i.status)
+    const allServed = statuses.filter(s => s === 'served').length === statuses.length
+    const allReady = statuses.filter(s => s === 'ready' || s === 'served').length === statuses.length
+    const anyPreparing = statuses.filter(s => s === 'preparing').length > 0
+    if (allServed) order.status = 'served'
+    else if (allReady) order.status = 'ready'
+    else if (anyPreparing) order.status = 'preparing'
+  } catch (e) {
+    console.error('Validation échouée:', e.message || e)
+  } finally {
+    actionLoading.value = { ...actionLoading.value, [key]: false }
   }
 }
 
@@ -397,4 +453,39 @@ onUnmounted(() => {
 .item-qty { font-weight: 700; color: #6c5ce7; font-size: 16px; min-width: 28px; }
 .item-name { flex: 1; font-size: 15px; font-weight: 600; color: #ddd; }
 .item-note { font-size: 12px; color: #f59e0b; font-style: italic; }
+
+/* Item action buttons */
+.item-action {
+  flex-shrink: 0; padding: 6px 14px; border: none; border-radius: 20px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s; min-width: 80px;
+}
+.item-action:active { transform: scale(0.95); }
+.item-action-prep {
+  background: linear-gradient(135deg, #f97316, #f59e0b); color: #fff;
+}
+.item-action-ready {
+  background: linear-gradient(135deg, #10b981, #059669); color: #fff;
+}
+.item-action:disabled {
+  opacity: 0.6; cursor: not-allowed;
+}
+.item-status-badge {
+  flex-shrink: 0; padding: 4px 10px; border-radius: 10px;
+  font-size: 11px; font-weight: 700;
+}
+.item-status-ready {
+  background: rgba(16,185,129,0.15); color: #10b981;
+}
+.item-status-served {
+  background: rgba(107,114,128,0.15); color: #9ca3af;
+}
+.action-spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff; border-radius: 50%;
+  animation: action-spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+@keyframes action-spin { to { transform: rotate(360deg); } }
 </style>
