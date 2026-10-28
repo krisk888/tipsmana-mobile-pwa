@@ -209,18 +209,69 @@ async function loadOrders() {
   }
 }
 
-// ── Lifecycle ──────────────────────────────────────────
+// ── Auto-refresh + Sound ──────────────────────────────
 let refreshTimer
+let pollTimer
+
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const o = ctx.createOscillator()
+    const g = ctx.createGain()
+    o.type = 'sine'
+    o.frequency.setValueAtTime(880, ctx.currentTime)
+    o.frequency.setValueAtTime(1100, ctx.currentTime + 0.1)
+    g.gain.setValueAtTime(0.3, ctx.currentTime)
+    g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+    o.connect(g).connect(ctx.destination)
+    o.start(ctx.currentTime)
+    o.stop(ctx.currentTime + 0.3)
+    // Second chime
+    const o2 = ctx.createOscillator()
+    const g2 = ctx.createGain()
+    o2.type = 'sine'
+    o2.frequency.setValueAtTime(1100, ctx.currentTime + 0.2)
+    g2.gain.setValueAtTime(0.25, ctx.currentTime + 0.2)
+    g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45)
+    o2.connect(g2).connect(ctx.destination)
+    o2.start(ctx.currentTime + 0.2)
+    o2.stop(ctx.currentTime + 0.45)
+  } catch (_) { /* AudioContext not available */ }
+}
+
+async function pollOrders() {
+  try {
+    const res = await api.get('/cash/kds/cuisine?include_served=true')
+    const newOrders = extractList(res)
+    const prevCount = orders.value.length
+    const prevPending = orders.value.filter(o => o.status === 'pending').length
+    orders.value = newOrders
+    const newPending = newOrders.filter(o => o.status === 'pending').length
+    // Son si nouvelle commande en attente
+    if (newPending > prevPending) {
+      playNotificationSound()
+    }
+    // Auto-expand first pending
+    const firstPending = newOrders.find(o => o.status === 'pending')
+    if (firstPending && prevCount === 0) {
+      expanded.value = { [firstPending.id]: true }
+    }
+  } catch (_) { /* silent poll fail */ }
+}
 
 onMounted(() => {
   loadOrders()
+  // Age clock
   refreshTimer = setInterval(() => {
     now.value = Date.now()
   }, 5000)
+  // Poll orders every 15s
+  pollTimer = setInterval(pollOrders, 15000)
 })
 
 onUnmounted(() => {
   if (refreshTimer) clearInterval(refreshTimer)
+  if (pollTimer) clearInterval(pollTimer)
 })
 </script>
 
