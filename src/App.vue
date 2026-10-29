@@ -29,14 +29,16 @@
           <span class="nav-label">{{ tab.label }}</span>
         </router-link>
         <router-link to="/notifications" class="nav-item" :class="{ active: $route.path === '/notifications' }">
-          <span class="nav-icon notif-icon">
-            🔔
+          <span class="nav-icon-wrap">
+            <TipsIcon name="notifications_overview" :size="20" class="nav-icon" />
             <span v-if="notifCount > 0" class="notif-badge">{{ notifCount > 99 ? '99+' : notifCount }}</span>
           </span>
           <span class="nav-label">Alertes</span>
         </router-link>
         <router-link to="/profile" class="nav-item" :class="{ active: $route.path === '/profile' }">
-          <span class="nav-icon">👤</span>
+          <span class="nav-icon-wrap">
+            <TipsIcon name="users_edit_users" :size="20" class="nav-icon" />
+          </span>
           <span class="nav-label">Profil</span>
         </router-link>
         <button class="nav-item nav-logout" @click="handleLogout">

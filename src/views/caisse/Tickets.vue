@@ -7,7 +7,8 @@
         <div class="clock-time">{{ clock.time }}</div>
       </div>
       <div class="header-center">
-        <span class="header-brand">🧾 Caisse</span>
+        <TipsIcon name="sales_overview" :size="20" class="header-brand-icon" />
+        <span class="header-brand">Caisse</span>
       </div>
       <div class="header-right">
         <span class="header-user">{{ displayName }}</span>
@@ -15,8 +16,8 @@
           <TipsIcon name="quitter" :size="18" />
         </button>
         <button v-if="selectedTable !== null" class="table-badge" @click="openFloorPlan">
+          <TipsIcon name="dashboard" :size="14" class="table-badge-icon" />
           Table {{ selectedTable }}
-          <span class="table-badge-chevron">🪑</span>
         </button>
         <button v-else class="table-badge none" @click="openFloorPlan">
           Aucune table
@@ -43,7 +44,7 @@
       <!-- Bouton plan de salle + pavé numérique -->
       <div class="home-actions">
         <button class="floor-btn" @click="openFloorPlan">
-          <span>🪑</span>
+          <TipsIcon name="dashboard" :size="22" />
           <span class="floor-label">Plan de salle</span>
           <span v-if="occupiedCount > 0" class="floor-badge">{{ occupiedCount }}</span>
         </button>
@@ -208,6 +209,7 @@
       <div class="modal-card">
         <div class="modal-title">💶 Solder la table</div>
         <p v-if="selectedTable !== null" class="modal-text">Table {{ selectedTable }} · {{ cart.length }} article(s)</p>
+        <p v-if="currentTicketId" class="modal-ticket-ref">🎫 Ticket #MOB-{{ currentTicketId.toString().slice(0,5).toUpperCase() }}</p>
         <div class="modal-total">{{ formatEur(cartTotal) }}</div>
         <div class="pay-methods">
           <button
@@ -328,10 +330,12 @@ const DEFAULT_COURSES = [
 ]
 
 const DEFAULT_PAYMENT_METHODS = [
-  { key: 'cash',         label: 'Espèces',      icon: '💶' },
-  { key: 'card',         label: 'Carte bleue',  icon: '💳' },
-  { key: 'ticket_resto', label: 'Ticket resto', icon: '🎟️' },
-  { key: 'amex',         label: 'AMEX',         icon: '🅰️' },
+  { key: 'cash',         label: 'Espèces',        icon: '💶' },
+  { key: 'card',         label: 'Carte bancaire', icon: '💳' },
+  { key: 'sumup',        label: 'SumUp',          icon: '📱' },
+  { key: 'ticket_resto', label: 'Ticket resto',   icon: '🎟️' },
+  { key: 'amex',         label: 'AMEX',           icon: '🅰️' },
+  { key: 'bank_transfer',label: 'Virement',       icon: '🏦' },
 ]
 
 /* Mapping icônes backend → emoji PWA (surcharge pour les codes connus) */
@@ -339,8 +343,10 @@ const PAYMENT_ICON_MAP = {
   cash: '💶',
   card: '💳',
   nfc: '📱',
+  sumup: '📱',
   ticket_resto: '🎟️',
   amex: '🅰️',
+  bank_transfer: '🏦',
   voucher: '🎁',
   online: '🌐',
 }
@@ -437,6 +443,7 @@ const reclaimModal = ref(false)
 const additionModal = ref(false)
 const paymentModal = ref(false)
 const paymentResult = ref(null)
+const currentTicketId = ref(null) // ID du ticket ouvert côté API table-tickets
 const floorModal = ref(false)
 const floorView = ref('plan')
 const activeArea = ref(floorAreas.value[0].id)
