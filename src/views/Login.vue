@@ -2,7 +2,7 @@
   <div class="login-screen">
     <div class="login-card">
       <div class="login-logo">
-        <BrandLogo :size="96" :dark="true" />
+        <img src="/images/logo_horizontal.jpg" class="login-logo-img" alt="Tipsmana" />
         <p class="subtitle">L'App du Boss</p>
       </div>
 
@@ -36,79 +36,69 @@
         </button>
       </form>
 
-      <!-- ═══ Connexion rapide (DEV) ═══ -->
-      <div class="quick-login" v-if="!loading">
-        <div class="quick-divider">
-          <span>⏺ Test rapide</span>
-        </div>
-        <div class="quick-grid">
+      <!-- Quick-login par rôles — un clic = connexion directe -->
+      <div class="demo-section">
+        <p class="demo-title">Connexion rapide — choisir un rôle</p>
+        <div class="demo-grid">
           <button
             v-for="r in roles"
             :key="r.label"
-            class="quick-btn"
-            :class="r.role"
-            @click="fillLogin(r)"
+            class="demo-btn"
+            :class="{ loading: authStore.loading && loadingRole === r.role }"
+            :disabled="authStore.loading"
+            @click="quickLoginAs(r)"
           >
-            <span class="quick-label">{{ r.label }}</span>
-            <span class="quick-email">{{ r.email }}</span>
+            <span class="demo-emoji">{{ r.emoji }}</span>
+            <span class="demo-label">{{ r.label }}</span>
+            <span v-if="r.role === 'OWNER'" class="demo-role-badge">Démo</span>
           </button>
         </div>
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { login } from '../shared/auth'
-import BrandLogo from '../components/BrandLogo.vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/authStore'
 
 const router = useRouter()
-const route = useRoute()
-const email = ref('')
-const password = ref('')
-const loading = ref(false)
-const error = ref('')
+const authStore = useAuthStore()
+const email = ref('boss@restoducoin.fr')
+const password = ref('Boss2026!X')
+const loadingRole = ref(null)
 
+// Rôles avec leur route de redirection dédiée
 const roles = [
-  { label: 'Admin',   role: 'admin',   email: 'admin@tipsmana.com',     password: 'test1234',        route: '/pilot' },
-  { label: 'Pilote',  role: 'pilot',   email: 'associe@tipsmana.com',   password: 'test1234',        route: '/pilot' },
-  { label: 'Cuisine', role: 'cuisine', email: 'pierre.dubois@legrandcomptoir.fr', password: 'test1234', route: '/cuisine' },
-  { label: 'Caisse',  role: 'caisse',  email: 'boss@restoducoin.fr',    password: 'RestoDuCoin2026!', route: '/caisse' },
+  { emoji: '👑', label: 'Boss',        role: 'OWNER',     route: '/pilot' },
+  { emoji: '📊', label: 'Manager',     role: 'MANAGER',   route: '/pilot' },
+  { emoji: '🍳', label: 'Chef cuisine',role: 'CUISINE',   route: '/cuisine' },
+  { emoji: '🧾', label: 'Inventaire',  role: 'INVENTAIRE',route: '/stock' },
+  { emoji: '📦', label: 'Ventes',      role: 'VENTES',    route: '/caisse' },
+  { emoji: '📊', label: 'Achats',      role: 'ACHATS',    route: '/stock/receptions' },
+  { emoji: '🍽', label: 'Serveur',     role: 'SERVEUR',   route: '/caisse' },
 ]
 
-async function handleLogin() {
-  loading.value = true
-  error.value = ''
+async function quickLoginAs(r) {
+  loadingRole.value = r.role
+  authStore.error = null
   try {
-    await login(email.value, password.value)
-    const m = roles.find(r => r.email === email.value)
-    router.push(m ? m.route : '/pilot')
-  } catch (e) {
-    error.value = e.data?.message || e.message || 'Email ou mot de passe incorrect'
+    const ok = await authStore.quickLogin(r.role)
+    if (ok) router.push(r.route)
   } finally {
-    loading.value = false
+    loadingRole.value = null
   }
 }
 
-async function fillLogin(r) {
-  email.value = r.email
-  password.value = r.password
-  error.value = ''
-  // focus sur le bouton Se connecter pour valider direct
-  document.querySelector('.btn-primary')?.focus()
+async function handleLogin() {
+  authStore.error = null
+  try {
+    const ok = await authStore.login(email.value, password.value, 'OWNER')
+    if (ok) router.push('/pilot')
+  } catch (e) { /* erreur dans le store */ }
 }
-
-// Lien direct ?role=admin|pilot|cuisine|caisse → identifiants pré-remplis
-onMounted(async () => {
-  const r = roles.find(x => x.role === route.query.role)
-  if (r) {
-    email.value = r.email
-    password.value = r.password
-    error.value = ''
-  }
-})
 </script>
 
 <style scoped>
@@ -130,6 +120,7 @@ onMounted(async () => {
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
 .login-logo { text-align: center; margin-bottom: 32px; }
+.login-logo-img { max-width: 280px; height: auto; display: block; margin: 0 auto; }
 .subtitle { font-size: 14px; color: var(--nav-inactive, #6b6b7b); margin: 8px 0 0; }
 .field { margin-bottom: 16px; }
 label { display: block; font-size: 13px; color: var(--nav-inactive, #6b6b7b); margin-bottom: 6px; }
@@ -151,27 +142,21 @@ input:focus { outline: none; border-color: #059669; }
 }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-primary:not(:disabled):hover { opacity: 0.9; }
-/* ═══ Quick login — DEV ═══ */
-.quick-divider {
-  display: flex; align-items: center; gap: 12px;
-  margin: 20px 0 12px; font-size: 12px; color: #555;
-}
-.quick-divider::after { content: ''; flex: 1; height: 1px; background: #333; }
-.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.quick-btn {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 10px 8px; border: 1px solid var(--nav-border, #2a2a40); border-radius: 10px;
-  background: var(--bg, #0f0f1a); cursor: pointer; text-align: left;
+.demo-section { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--nav-border,#2a2a40); }
+.demo-title { font-size: 12px; color: var(--nav-inactive,#6b6b7b); text-align: center; margin-bottom: 10px; }
+.demo-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.demo-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; background: var(--bg,#0f0f1a);
+  border: 1px solid var(--nav-border,#2a2a40); border-radius: 10px;
+  color: var(--text,#fff); font-size: 13px; cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
 }
-.quick-btn:hover { border-color: #059669; }
-.quick-btn:active { transform: scale(0.97); }
-.quick-btn.admin { border-color: #00d2a0; }
-.quick-btn.pilot { border-color: #059669; }
-.quick-btn.cuisine { border-color: #ff6b6b; }
-.quick-btn.caisse { border-color: #fbbf24; }
-.quick-label { font-size: 13px; font-weight: 700; color: var(--text, #fff); }
-.quick-email { font-size: 10px; color: var(--nav-inactive, #6b6b7b); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.quick-hint { font-size: 11px; color: #444; text-align: center; margin-top: 8px; }
-.quick-hint code { color: #888; }
+.demo-btn:hover { border-color: #059669; background: #1a2a1e; }
+.demo-emoji { font-size: 16px; }
+.demo-label { font-weight: 500; }
+.demo-role-badge {
+  font-size: 9px; background: #059669; color: #fff;
+  padding: 1px 5px; border-radius: 6px; font-weight: 600;
+}
 </style>

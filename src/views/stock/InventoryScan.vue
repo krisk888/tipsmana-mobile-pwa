@@ -17,17 +17,24 @@
       </div>
       <div v-for="s in sessions" :key="s.id" class="session-card" @click="$router.push('/stock/' + s.id)">
         <div class="session-header">
-          <strong>{{ s.name || 'Session #' + shortId(s.id) }}</strong>
+          <strong>{{ s.session_name || 'Session #' + shortId(s.id) }}</strong>
           <span class="session-status" :class="s.status">{{ statusLabel(s.status) }}</span>
         </div>
         <div class="session-meta">
-          <span>Créée {{ timeAgo(s.created_at) }}</span>
+          <span>Démarrée {{ timeAgo(s.started_at) }}</span>
           <span v-if="s.product_count != null">{{ s.product_count }} produits</span>
         </div>
       </div>
     </div>
 
     <div class="quick-links">
+      <router-link to="/stock/express" class="link-card express">
+        <span class="link-icon">⚡</span>
+        <div>
+          <strong>Inventaire express</strong>
+          <p>Comptage par zones, hors-ligne</p>
+        </div>
+      </router-link>
       <router-link to="/scan" class="link-card">
         <span class="link-icon">📷</span>
         <div>
@@ -56,7 +63,8 @@ const error = ref(null)
 
 function shortId(id) { return id ? String(id).slice(0, 8) : '—' }
 function statusLabel(s) {
-  return { active: 'Active', completed: 'Terminée', cancelled: 'Annulée' }[s] || (s || '—')
+  // SessionStatus backend : in_progress | completed | validated | cancelled
+  return { in_progress: 'En cours', completed: 'Terminée', validated: 'Validée', cancelled: 'Annulée' }[s] || (s || '—')
 }
 function timeAgo(iso) {
   if (!iso) return ''
@@ -80,15 +88,12 @@ async function load() {
   try {
     const res = await api.get('/inventory/sessions')
     const data = res.data || res.results || res || {}
-    // API renvoie {kitchen: {items}, dining_room: {items}} — on fusionne
-    if (Array.isArray(data)) {
-      sessions.value = data
-    } else {
-      sessions.value = [
-        ...(data.kitchen?.items || []),
-        ...(data.dining_room?.items || []),
-      ]
-    }
+    // API renvoie {kitchen: {items}, dining_room: {items}} avec les mêmes
+    // sessions dans les deux sections — on fusionne en dédoublonnant par id
+    const list = Array.isArray(data)
+      ? data
+      : [...(data.kitchen?.items || []), ...(data.dining_room?.items || [])]
+    sessions.value = [...new Map(list.map(s => [s.id, s])).values()]
   } catch (e) {
     error.value = e.message
     sessions.value = []
@@ -128,7 +133,7 @@ onMounted(load)
 .session-header { display: flex; justify-content: space-between; align-items: center; }
 .session-header strong { color: #fff; font-size: 14px; }
 .session-status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
-.session-status.active { background: rgba(0,210,160,0.15); color: #00d2a0; }
+.session-status.in_progress { background: rgba(0,210,160,0.15); color: #00d2a0; }
 .session-status.completed { color: #888; }
 .session-meta { font-size: 12px; color: #888; margin-top: 6px; display: flex; gap: 12px; }
 .btn-primary {
@@ -141,6 +146,8 @@ onMounted(load)
   background: #1e1e32; border-radius: 12px; padding: 14px; text-decoration: none; color: #fff;
 }
 .link-card:active { background: #2a2a40; }
+.link-card.express { border: 1px solid rgba(108,92,231,0.4); }
+.link-card.express strong { color: #a89bf0; }
 .link-icon { font-size: 24px; width: 36px; text-align: center; }
 .link-card strong { font-size: 14px; }
 .link-card p { font-size: 12px; color: #888; margin-top: 2px; }

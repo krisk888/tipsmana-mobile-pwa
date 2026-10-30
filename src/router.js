@@ -8,42 +8,32 @@ const routes = [
     path: '/pilot',
     name: 'Pilot',
     component: () => import('./views/pilot/Dashboard.vue'),
-    meta: { title: 'Pilote', icon: '📊', auth: true }
+    meta: { title: 'Pilote', icon: '📊', auth: true, roles: ['OWNER', 'MANAGER'] }
   },
   {
     path: '/stock',
     name: 'Stock',
     component: () => import('./views/stock/InventoryScan.vue'),
-    meta: { title: 'Stock', icon: '📦', auth: true }
+    meta: { title: 'Stock', icon: '📦', auth: true, roles: ['OWNER', 'MANAGER', 'INVENTAIRE'] }
   },
+  
+  { path: '/validations', name: 'Validations', component: () => import('./views/pilot/Validations.vue'), meta: { auth: true } },
+  { path: '/scan', name: 'ScanQR', component: () => import('./views/stock/ScanQR.vue'), meta: { auth: true } },
+  { path: '/stock/receptions', name: 'Receptions', component: () => import('./views/stock/Receptions.vue'), meta: { title: 'Réceptions', auth: true, roles: ['OWNER', 'MANAGER', 'ACHATS'] } },
+  { path: '/stock/express', name: 'ExpressScan', component: () => import('./views/stock/ExpressScan.vue'), meta: { title: 'Inventaire express', auth: true } },
+  { path: '/stock/:id', name: 'StockDetail', component: () => import('./views/stock/StockDetail.vue'), meta: { title: 'Session stock', auth: true } },
   {
     path: '/caisse',
     name: 'Caisse',
     component: () => import('./views/caisse/Tickets.vue'),
-    meta: { title: 'Caisse', icon: '💳', auth: true }
-  },
-  {
-    path: '/caisse/new',
-    name: 'NewTicket',
-    component: () => import('./views/caisse/NewTicket.vue'),
-    meta: { title: 'Nouveau ticket', auth: true }
-  },
-  {
-    path: '/caisse/:id',
-    name: 'TicketDetail',
-    component: () => import('./views/caisse/TicketDetail.vue'),
-    meta: { title: 'Détail ticket', auth: true }
+    meta: { title: 'Caisse', icon: 'caisse', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
   },
   {
     path: '/cuisine',
     name: 'Cuisine',
     component: () => import('./views/cuisine/Orders.vue'),
-    meta: { title: 'Cuisine', icon: '🍳', auth: true }
+    meta: { title: 'Cuisine', icon: 'cuisine', auth: true, roles: ['OWNER', 'MANAGER', 'CUISINE'] }
   },
-  { path: '/validations', name: 'Validations', component: () => import('./views/pilot/Validations.vue'), meta: { auth: true } },
-  { path: '/scan', name: 'ScanQR', component: () => import('./views/stock/ScanQR.vue'), meta: { auth: true } },
-  { path: '/stock/receptions', name: 'Receptions', component: () => import('./views/stock/Receptions.vue'), meta: { title: 'Réceptions', auth: true } },
-  { path: '/stock/:id', name: 'StockDetail', component: () => import('./views/stock/StockDetail.vue'), meta: { title: 'Session stock', auth: true } },
 ]
 
 const router = createRouter({
@@ -58,6 +48,18 @@ router.beforeEach((to, from, next) => {
   }
   if (to.meta.guest && isAuthenticated()) {
     return next('/pilot')
+  }
+  // Vérification rôles — si la route restreint et que le store est chargé
+  if (to.meta.roles && isAuthenticated()) {
+    try {
+      const store = window.__PINIA__?.state?._auth
+      const roleCode = store?.roleCode
+      if (roleCode && !to.meta.roles.includes(roleCode)) {
+        const homeMap = { OWNER:'/pilot', MANAGER:'/pilot', CUISINE:'/cuisine',
+                          INVENTAIRE:'/stock', VENTES:'/caisse', ACHATS:'/stock/receptions', SERVEUR:'/caisse' }
+        return next(homeMap[roleCode] || '/pilot')
+      }
+    } catch (e) { /* store pas prêt, on laisse passer */ }
   }
   next()
 })
