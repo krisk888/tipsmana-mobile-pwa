@@ -47,7 +47,7 @@
         v-for="o in filteredOrders"
         :key="o.id"
         class="order-card"
-        :class="'card-' + o.status"
+        :class="['card-' + o.status, ageClass(o)]"
         @click="toggleOrder(o.id)"
       >
         <div class="card-header">
@@ -126,6 +126,22 @@ const filter = ref('all')
 
 const actionLoading = ref({})
 const now = ref(Date.now())
+
+// ── Urgency helpers ──────────────────────────────────────
+function ageMinutes(dateStr) {
+  if (!dateStr) return null
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return null
+  return Math.max(0, Math.floor((now.value - d.getTime()) / 60000))
+}
+
+function ageClass(o) {
+  const min = ageMinutes(o.created_at)
+  if (min === null || o.status === 'ready' || o.status === 'served') return ''
+  if (min < 5) return ''
+  if (min < 15) return 'order-watch'
+  return 'order-late'
+}
 
 // ── Filter definitions ──────────────────────────────────
 const filterOptions = computed(() => [
@@ -271,27 +287,22 @@ let pollTimer
 
 function playNotificationSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const o = ctx.createOscillator()
-    const g = ctx.createGain()
-    o.type = 'sine'
-    o.frequency.setValueAtTime(880, ctx.currentTime)
-    o.frequency.setValueAtTime(1100, ctx.currentTime + 0.1)
-    g.gain.setValueAtTime(0.3, ctx.currentTime)
-    g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
-    o.connect(g).connect(ctx.destination)
-    o.start(ctx.currentTime)
-    o.stop(ctx.currentTime + 0.3)
-    // Second chime
-    const o2 = ctx.createOscillator()
-    const g2 = ctx.createGain()
-    o2.type = 'sine'
-    o2.frequency.setValueAtTime(1100, ctx.currentTime + 0.2)
-    g2.gain.setValueAtTime(0.25, ctx.currentTime + 0.2)
-    g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45)
-    o2.connect(g2).connect(ctx.destination)
-    o2.start(ctx.currentTime + 0.2)
-    o2.stop(ctx.currentTime + 0.45)
+    const Ctx = window.AudioContext || window.webkitAudioContext
+    if (!Ctx) return
+    const ctx = new Ctx()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(880, ctx.currentTime)
+    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1)
+    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.2)
+    gain.gain.setValueAtTime(0.3, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45)
+    osc.start(ctx.currentTime)
+    osc.stop(ctx.currentTime + 0.45)
   } catch (_) { /* AudioContext not available */ }
 }
 
@@ -366,6 +377,7 @@ onUnmounted(() => {
   animation: spin 0.8s linear infinite; margin-bottom: 16px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes order-late-pulse { 50% { opacity: 0.5; } }
 .error-icon, .empty-icon { font-size: 48px; margin-bottom: 10px; }
 .error-text { font-size: 16px; color: #ef4444; margin-bottom: 18px; }
 .btn-retry {
@@ -400,6 +412,12 @@ onUnmounted(() => {
 .order-card.card-preparing { border-left-color: #6366f1; }
 .order-card.card-ready { border-left-color: #10b981; opacity: 0.85; }
 .order-card.card-served { border-left-color: #6b7280; opacity: 0.5; }
+.order-card.order-watch { border-left-color: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.15); }
+.order-card.order-late {
+  border-left-color: #ef4444;
+  box-shadow: 0 0 12px rgba(239,68,68,0.25);
+  animation: order-late-pulse 1.5s infinite;
+}
 
 .card-header {
   display: flex; justify-content: space-between; align-items: center; gap: 10px;

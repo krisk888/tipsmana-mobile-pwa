@@ -234,10 +234,10 @@ const FALLBACK_INTERVAL = 30000
 // ── Filter definitions ──────────────────────────────────
 const filterOptions = computed(() => [
   { key: 'all',      label: 'Toutes',       count: pendingOrders.value.length },
-  { key: 'pending',  label: 'En attente',   count: ordersBySta.value('pending').length + ordersBySta.value('printing').length + ordersBySta.value('printed').length },
-  { key: 'preparing',label: 'En prépa',     count: ordersBySta.value('preparing').length },
-  { key: 'ready',    label: 'Prêt',         count: ordersBySta.value('ready').length },
-  { key: 'served',   label: 'Servi',        count: ordersBySta.value('served').length },
+  { key: 'pending',  label: 'En attente',   count: ordersByStatus('pending').length + ordersByStatus('printing').length + ordersByStatus('printed').length },
+  { key: 'preparing',label: 'En prépa',     count: ordersByStatus('preparing').length },
+  { key: 'ready',    label: 'Prêt',         count: ordersByStatus('ready').length },
+  { key: 'served',   label: 'Servi',        count: ordersByStatus('served').length },
 ])
 
 // ── Helpers for computed ────────────────────────────────
@@ -707,6 +707,17 @@ async function loadOrders() {
         showIncomingPulse()
         showFlash('📦 Nouvelle commande !')
       }
+      // Mark fresh items with _new for slide-in animation
+      fresh.forEach(i => { i._new = true })
+      // Clear _new after animation completes (do nothing if orders already replaced)
+      setTimeout(() => {
+        const current = orders.value
+        let changed = false
+        for (const o of current) {
+          if (o._new) { o._new = false; changed = true }
+        }
+        if (changed) orders.value = [...current]
+      }, 2500)
       fresh.forEach(i => knownIds.add(i.id))
     }
 
