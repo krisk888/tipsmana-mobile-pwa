@@ -229,7 +229,7 @@ let fallbackTimer = null
 let fallbackActive = false
 const WS_RECONNECT_MAX = 30000
 const WS_RECONNECT_BASE = 1000
-const FALLBACK_INTERVAL = 30000
+const FALLBACK_INTERVAL = 5000
 
 // ── Filter definitions ──────────────────────────────────
 const filterOptions = computed(() => [
@@ -670,7 +670,7 @@ function scheduleReconnect() {
 function startFallbackPolling() {
   if (fallbackTimer) return
   fallbackActive = true
-  console.log('[KDS] Starting HTTP polling fallback (30s)')
+  console.log('[KDS] Starting HTTP polling fallback (5s)')
   loadOrders()
   fallbackTimer = setInterval(loadOrders, FALLBACK_INTERVAL)
 }
