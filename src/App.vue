@@ -75,6 +75,7 @@ import { useOffline } from './shared/useOffline'
 import TipsIcon from './components/TipsIcon.vue'
 import OfflineBanner from './components/OfflineBanner.vue'
 import api from './shared/api'
+import { offlineStore } from './shared/offlineStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -152,6 +153,19 @@ onMounted(() => {
       router.push('/login')
     }
   }, 30000)
+
+  // Restore PWA badge count from offline cache
+  offlineStore.getBadgeCount().then(saved => {
+    if (saved > 0) {
+      try {
+        if (navigator.setAppBadge) {
+          navigator.setAppBadge(saved)
+        } else if (navigator.setClientBadge) {
+          navigator.setClientBadge(saved)
+        }
+      } catch { /* badge non supporté */ }
+    }
+  }).catch(() => {})
 })
 
 onUnmounted(() => {
