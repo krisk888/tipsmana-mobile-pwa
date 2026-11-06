@@ -69,6 +69,9 @@ function _saveRequestQueue(queue) {
   localStorage.setItem(REQ_KEY, JSON.stringify(queue))
 }
 
+// ═══ Badge (PWA app badge + cache) ═══
+const BADGE_KEY = 'tipsmana_pwa_badge'
+
 export const offlineStore = {
   // ── Cache IndexedDB ──
   async setCached(key, data) {
@@ -218,6 +221,45 @@ export const offlineStore = {
   async count() {
     const queue = _loadQueue()
     return queue.filter(e => !e.synced).length
+  },
+
+  // ── Badge count (PWA badge, offline cache) ──
+  async setBadgeCount(count) {
+    try {
+      const db = await _getDB()
+      const tx = db.transaction(CACHE_STORE, 'readwrite')
+      tx.objectStore(CACHE_STORE).put(count, BADGE_KEY)
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve
+        tx.onerror = () => reject(tx.error)
+      })
+    } catch { /* silencieux */ }
+  },
+
+  async getBadgeCount() {
+    try {
+      const db = await _getDB()
+      const tx = db.transaction(CACHE_STORE, 'readonly')
+      const store = tx.objectStore(CACHE_STORE)
+      const req = store.get(BADGE_KEY)
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve
+        tx.onerror = () => reject(tx.error)
+      })
+      return req.result || 0
+    } catch { return 0 }
+  },
+
+  async clearBadge() {
+    try {
+      const db = await _getDB()
+      const tx = db.transaction(CACHE_STORE, 'readwrite')
+      tx.objectStore(CACHE_STORE).delete(BADGE_KEY)
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve
+        tx.onerror = () => reject(tx.error)
+      })
+    } catch { /* silencieux */ }
   },
 }
 

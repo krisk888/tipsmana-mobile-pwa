@@ -6,6 +6,12 @@
       <span class="pulse-text">Nouvelle commande !</span>
     </div>
 
+    <!-- ═══ URGENCY OVERLAY ═══ -->
+    <div v-if="showUrgencyFlash" class="urgency-overlay">
+      <span class="urgency-icon">🚨</span>
+      <span class="urgency-text">Urgence !</span>
+    </div>
+
     <!-- ═══ HEADER ═══ -->
     <header class="kds-header">
       <div class="kds-title-row">
@@ -16,6 +22,14 @@
             <span class="status-dot" :class="{ connected, disconnected: !connected }"></span>
             <span class="status-text">{{ connected ? 'En ligne' : 'Hors ligne' }}</span>
           </div>
+          <button
+            v-if="newOrdersCount > 0"
+            class="header-btn new-order-counter"
+            @click="resetNewOrdersCounter"
+            title="Nouvelles commandes non lues"
+          >
+            🆕<span class="counter-badge">{{ newOrdersCount > 99 ? '99+' : newOrdersCount }}</span>
+          </button>
         </div>
       </div>
       <p class="kds-subtitle">Écran cuisine — commandes en préparation</p>
@@ -207,6 +221,30 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
+import { offlineStore } from '../../shared/offlineStore'
+
+// ── PWA Badge helper ────────────────────────────────────
+async function updateBadge(count) {
+  await offlineStore.setBadgeCount(count)
+  try {
+    if (navigator.setAppBadge) {
+      await navigator.setAppBadge(count)
+    } else if (navigator.setClientBadge) {
+      await navigator.setClientBadge(count)
+    }
+  } catch { /* silencieux — badges non supportés */ }
+}
+
+async function clearBadge() {
+  await offlineStore.clearBadge()
+  try {
+    if (navigator.clearAppBadge) {
+      await navigator.clearAppBadge()
+    } else if (navigator.clearClientBadge) {
+      await navigator.clearClientBadge()
+    }
+  } catch { /* silencieux */ }
+}
 
 // ── State ──────────────────────────────────────────────
 const orders = ref([])
@@ -220,6 +258,24 @@ const filter = ref('all')
 const knownIds = new Set()
 const now = ref(Date.now())
 const incomingPulse = ref(false)
+const newOrdersCount = ref(0)
+const showUrgencyFlash = ref(false)
+const urgencyFlashOrders = ref(new Set())
+
+// ── Audio context lazy singleton ────────────────────────
+let audioCtx = null
+function getAudioContext() {
+  if (!audioCtx) {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext
+      if (Ctx) audioCtx = new Ctx()
+    } catch { /* silencieux */ }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {})
+  }
+  return audioCtx
+}
 
 // ── WebSocket state ────────────────────────────────────
 let ws = null
@@ -417,25 +473,52 @@ function showIncomingPulse() {
   setTimeout(() => { incomingPulse.value = false }, 2000)
 }
 
+function resetNewOrdersCounter() {
+  newOrdersCount.value = 0
+  clearBadge()
+}
+
 // ── Audio notification (Web Audio API) ─────────────────
-function playNotification() {
+function playNote(freq, startTime, duration, type = 'sine', gainVal = 0.3) {
+  const ctx = getAudioContext()
+  if (!ctx) return
   try {
-    const Ctx = window.AudioContext || window.webkitAudioContext
-    if (!Ctx) return
-    const ctx = new Ctx()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.connect(gain)
     gain.connect(ctx.destination)
+    osc.type = type
+    osc.frequency.setValueAtTime(freq, startTime)
+    gain.gain.setValueAtTime(gainVal, startTime)
+    gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration)
+    osc.start(startTime)
+    osc.stop(startTime + duration)
+  } catch { /* silencieux */ }
+}
 
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(880, ctx.currentTime)
-    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1)
-    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.2)
-    gain.gain.setValueAtTime(0.3, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.45)
+function playNotification() {
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+    const t = ctx.currentTime
+    playNote(880, t, 0.4)
+    playNote(1108.73, t + 0.15, 0.3)
+  } catch (e) {
+    // Silently ignore audio errors
+  }
+}
+
+function playUrgencySound() {
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+    const t = ctx.currentTime
+    // Descending alarm: three short buzzy pulses
+    playNote(660, t, 0.15, 'square', 0.25)
+    playNote(440, t + 0.2, 0.15, 'square', 0.25)
+    playNote(330, t + 0.4, 0.2, 'square', 0.25)
+    // One high alert note on top
+    playNote(1320, t + 0.1, 0.35, 'sawtooth', 0.15)
   } catch (e) {
     // Silently ignore audio errors
   }
@@ -502,14 +585,35 @@ function connectWebSocket() {
   }
 }
 
+// ── Urgency detection ──────────────────────────────────
+function checkUrgency() {
+  const urgentOrders = orders.value.filter(o =>
+    o.status !== 'ready' && o.status !== 'served' && ageMinutes(o.created_at) > 15
+  )
+  if (urgentOrders.length > 0) {
+    if (!showUrgencyFlash.value) {
+      // First time becoming urgent — play urgency sound
+      playUrgencySound()
+    }
+    urgencyFlashOrders.value = new Set(urgentOrders.map(o => o.id))
+    showUrgencyFlash.value = true
+  } else {
+    urgencyFlashOrders.value = new Set()
+    showUrgencyFlash.value = false
+  }
+}
+
 function handleWsMessage(msg) {
   switch (msg.type) {
     case 'new_order':
       upsertOrder(msg.data)
+      newOrdersCount.value++
       playNotification()
       showIncomingPulse()
       knownIds.add(msg.data.id)
+      updateBadge(newOrdersCount.value)
       showFlash('📦 Nouvelle commande !')
+      checkUrgency()
       break
 
     case 'status_update': {
@@ -703,9 +807,11 @@ async function loadOrders() {
       const incoming = items.filter(i => i.status !== 'served')
       const fresh = incoming.filter(i => !knownIds.has(i.id))
       if (fresh.length && knownIds.size > 0) {
+        newOrdersCount.value += fresh.length
         playNotification()
         showIncomingPulse()
-        showFlash('📦 Nouvelle commande !')
+        updateBadge(newOrdersCount.value)
+        showFlash(`📦 ${fresh.length} nouvelle${fresh.length > 1 ? 's' : ''} commande${fresh.length > 1 ? 's' : ''} !`)
       }
       // Mark fresh items with _new for slide-in animation
       fresh.forEach(i => { i._new = true })
@@ -725,6 +831,7 @@ async function loadOrders() {
     for (const id of knownIds) if (!liveIds.has(id)) knownIds.delete(id)
 
     orders.value = items
+    checkUrgency()
   } catch (e) {
     console.warn('[KDS] API /cash/kds indisponible, fallback /sales/entries:', e.message)
     try {
@@ -958,6 +1065,59 @@ onUnmounted(() => {
   100% { opacity: 0; }
 }
 
+/* ═══ Urgency Flash Overlay ═══ */
+.urgency-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+  z-index: 499;
+  font-size: 16px;
+  font-weight: 800;
+  animation: urgency-slide-in 0.3s ease-out, urgency-fade 4s ease-in forwards;
+  pointer-events: none;
+}
+.urgency-overlay .urgency-icon { font-size: 24px; }
+.urgency-overlay .urgency-text { font-size: 18px; }
+@keyframes urgency-slide-in {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes urgency-fade {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ═══ New order counter badge ═══ */
+.new-order-counter {
+  position: relative;
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+.counter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 4px;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(239,68,68,0.4);
+}
+
 /* ═══ Header ═══ */
 .kds-header { margin-bottom: 14px; }
 .kds-title-row {
@@ -1149,6 +1309,12 @@ onUnmounted(() => {
 .order-card.card-urgent {
   border-left-color: #ef4444;
   box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+  animation: urgent-pulse 2s ease-in-out infinite;
+}
+
+@keyframes urgent-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.25); border-left-color: #ef4444; }
+  50% { box-shadow: 0 0 24px rgba(239, 68, 68, 0.5), inset 0 0 12px rgba(239, 68, 68, 0.1); border-left-color: #ff6b6b; }
 }
 
 /* New order animation */
