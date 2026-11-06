@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
 import { useOffline } from './shared/useOffline'
@@ -76,6 +76,7 @@ import TipsIcon from './components/TipsIcon.vue'
 import OfflineBanner from './components/OfflineBanner.vue'
 import api from './shared/api'
 import { offlineStore } from './shared/offlineStore'
+import { initPushSubscription } from './shared/push'
 
 const route = useRoute()
 const router = useRouter()
@@ -92,6 +93,15 @@ const tabs = computed(() => authStore.navTabs)
 const notifCount = computed(() => authStore.notificationCount)
 
 let notifInterval = null
+
+// Push : une seule tentative par session — ne re-demande pas la permission à chaque login
+const pushRequested = ref(false)
+watch(() => authStore.isAuthenticated, (isAuth) => {
+  if (isAuth && !pushRequested.value) {
+    pushRequested.value = true
+    initPushSubscription()
+  }
+}, { immediate: true })
 
 function handleLogout() {
   authStore.logout()

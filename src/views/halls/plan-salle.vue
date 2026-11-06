@@ -9,6 +9,9 @@
         <h1 class="ps-title">🪑 Plan de salle</h1>
       </div>
       <div class="ps-header-right">
+        <span class="ps-ws-status" :class="{ connected }" :title="connected ? 'Temps réel connecté' : 'Temps réel déconnecté'">
+          <span class="ps-ws-dot"></span>
+        </span>
         <button class="ps-refresh-btn" @click="loadSpaces" :disabled="loading" title="Rafraîchir">
           <span :class="{ spinning: loading }">⟳</span>
         </button>
@@ -110,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../shared/api'
 import TipsIcon from '../../components/TipsIcon.vue'
@@ -122,6 +125,7 @@ const spaces = ref([])
 const activeSpaceId = ref(null)
 const loading = ref(false)
 const error = ref(null)
+const connected = ref(false) // état du temps réel (WebSocket KDS)
 
 const canvasRef = ref(null)
 
@@ -170,6 +174,129 @@ async function loadSpaces() {
     error.value = e.message || 'Erreur de chargement du plan de salle'
   } finally {
     loading.value = false
+  }
+}
+
+/* ═══ Rafraîchissement silencieux (temps réel) ═══ */
+// Met à jour les états des tables (libre/occupée/addition/réservée) depuis les
+// autres terminaux SANS afficher le spinner ni écraser un drag en cours.
+async function refreshSpacesSilent() {
+  if (isDragging.value) return // ne pas écraser la position pendant un drag
+  try {
+    const res = await api.get('/floorplan/spaces')
+    const list = res?.data || []
+    if (list.length) {
+      // Conserve l'onglet actif ; ne remplace que si l'espace existe encore
+      const stillExists = list.some(s => s.id === activeSpaceId.value)
+      spaces.value = list
+      if (!stillExists && list.length) activeSpaceId.value = list[0].id
+    }
+  } catch {
+    // silencieux — le rafraîchissement manuel reste disponible
+  }
+}
+
+/* ═══ Temps réel — WebSocket KDS (même pattern que Orders.vue) ═══ */
+let ws = null
+let reconnectAttempt = 0
+let reconnectTimer = null
+let pollTimer = null
+const WS_RECONNECT_MAX = 30000
+const WS_RECONNECT_BASE = 1000
+const POLL_INTERVAL = 10000 // polling 10s : les changements de tables ne passent pas tous par le WS
+
+function getWsUrl() {
+  const token = api.getToken()
+  const establishmentId = api.getEstablishmentId()
+  if (!token || !establishmentId) return null
+  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
+  const host = window.location.hostname
+  return `${protocol}${host}/ws/kds/${establishmentId}?token=${encodeURIComponent(token)}`
+}
+
+function connectWebSocket() {
+  if (ws) {
+    try { ws.close() } catch (e) { /* ignore */ }
+    ws = null
+  }
+  const url = getWsUrl()
+  if (!url) {
+    console.warn('[PlanSalle] Impossible de connecter le WS (token/établissement manquant)')
+    scheduleReconnect()
+    return
+  }
+  try {
+    ws = new WebSocket(url)
+  } catch (e) {
+    console.warn('[PlanSalle] Échec création WS:', e.message)
+    scheduleReconnect()
+    return
+  }
+  ws.onopen = () => {
+    console.log('[PlanSalle] WS connecté')
+    connected.value = true
+    reconnectAttempt = 0
+  }
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data)
+      handleWsMessage(msg)
+    } catch (e) {
+      console.warn('[PlanSalle] Erreur parse WS:', e.message)
+    }
+  }
+  ws.onerror = () => {
+    console.warn('[PlanSalle] Erreur WS')
+  }
+  ws.onclose = (event) => {
+    console.log(`[PlanSalle] WS fermé (code=${event.code})`)
+    connected.value = false
+    ws = null
+    scheduleReconnect()
+  }
+}
+
+function handleWsMessage(msg) {
+  // Les évènements commandes (new_order / status_update / course_called) changent
+  // l'état des tables (occupée / addition) — on resynchronise le plan.
+  switch (msg.type) {
+    case 'new_order':
+    case 'status_update':
+    case 'course_called':
+    case 'validate_order':
+      refreshSpacesSilent()
+      break
+    default:
+      break
+  }
+}
+
+function scheduleReconnect() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+  const delay = Math.min(WS_RECONNECT_BASE * Math.pow(2, reconnectAttempt), WS_RECONNECT_MAX)
+  reconnectAttempt++
+  console.log(`[PlanSalle] Reconnexion WS dans ${delay}ms (tentative ${reconnectAttempt})`)
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null
+    connectWebSocket()
+  }, delay)
+}
+
+function cleanupWebSocket() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+  if (ws) {
+    ws.onopen = null
+    ws.onmessage = null
+    ws.onerror = null
+    ws.onclose = null
+    try { ws.close() } catch (e) { /* ignore */ }
+    ws = null
   }
 }
 
@@ -310,6 +437,18 @@ function navigateToCaisse(table) {
 
 onMounted(() => {
   loadSpaces()
+  connectWebSocket()
+  // Polling 10s : synchronise les états de tables (libre/occupée/addition)
+  // venus des autres terminaux, même sans évènement WS.
+  pollTimer = setInterval(refreshSpacesSilent, POLL_INTERVAL)
+})
+
+onUnmounted(() => {
+  cleanupWebSocket()
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
 })
 </script>
 
@@ -341,6 +480,22 @@ onMounted(() => {
 .ps-refresh-btn:active { background: rgba(255,255,255,0.1); }
 .spinning { display: inline-block; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══ Indicateur temps réel ═══ */
+.ps-ws-status { display: inline-flex; align-items: center; padding: 6px 8px; }
+.ps-ws-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #666; transition: background 0.3s;
+}
+.ps-ws-status.connected .ps-ws-dot {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34,197,94,0.6);
+  animation: ps-ws-pulse 2s ease-in-out infinite;
+}
+@keyframes ps-ws-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
 
 /* ═══ Onglets ═══ */
 .ps-tabs {

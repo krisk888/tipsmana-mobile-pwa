@@ -1,35 +1,36 @@
-// registerSW.js — auto-update PWA version forcée
-// Unregister tout SW existant d'abord, puis register le nouveau
-// Évite les conflits entre versions et les pages cassées après déploiement
+// registerSW.js — registration PWA compatible vite-plugin-pwa generateSW (autoUpdate)
+// v2 : NE PAS unregister / NE PAS vider les caches au chargement (cassait le mode
+// hors-ligne : le precache workbox était détruit à chaque chargement, puis le SW
+// ré-enregistré sans cache → rafraîchissement hors-ligne KO).
+// Le SW est généré par le build à dist/sw.js et servi sous /mobile/sw.js.
+// autoUpdate : quand une nouvelle version est détectée (updatefound), on demande
+// le SKIP_WAITING pour que le nouveau SW prenne le contrôle sans double chargement.
 (async () => {
   if (!('serviceWorker' in navigator)) return
 
-  // 1. Unregister tout SW existant sous /mobile/
-  const existing = await navigator.serviceWorker.getRegistration('/mobile/')
-  if (existing) {
-    // Forcer l'ancien SW à libérer les clients
-    if (existing.active) {
-      existing.active.postMessage({ type: 'SKIP_WAITING' })
-    }
-    await existing.unregister()
-  }
-
-  // 2. Forcer le reload complet des caches
-  if (window.caches) {
-    const keys = await caches.keys()
-    await Promise.all(keys.map(k => caches.delete(k)))
-  }
-
-  // 3. Register le nouveau SW
   try {
-    const reg = await navigator.serviceWorker.register('/mobile/sw.js', { scope: '/mobile/', updateViaCache: 'none' })
-    console.log('SW registered:', reg.scope)
+    const reg = await navigator.serviceWorker.register('/mobile/sw.js', {
+      scope: '/mobile/',
+      updateViaCache: 'none',
+    })
+    console.log('[PWA] SW registered:', reg.scope)
 
-    // 4. Si le nouveau SW est en attente, le faire prendre le contrôle
+    // autoUpdate : pousser un SW en attente à prendre immédiatement le contrôle
     if (reg.waiting) {
       reg.waiting.postMessage({ type: 'SKIP_WAITING' })
     }
+
+    // Nouvelle version détectée pendant la session : skipWaiting dès l'install
+    reg.addEventListener('updatefound', () => {
+      const installing = reg.installing
+      if (!installing) return
+      installing.addEventListener('statechange', () => {
+        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+          installing.postMessage({ type: 'SKIP_WAITING' })
+        }
+      })
+    })
   } catch (err) {
-    console.warn('SW registration failed (non bloquant):', err)
+    console.warn('[PWA] SW registration failed (non bloquant):', err)
   }
 })()
