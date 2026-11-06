@@ -5,10 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/mobile/favicon.svg?v=3" />
     <link rel="apple-touch-icon" href="/mobile/icons/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Tipsmana</title>
+    <title>Tipsmana — L'App du Boss</title>
     <meta name="theme-color" content="#059669"/>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-startup-image" href="/mobile/icons/icon-512.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -21,28 +22,55 @@
         background: #06241b;
         color: #fff;
         font-family: 'Montserrat', -apple-system, sans-serif;
-        transition: opacity 0.4s ease;
+        transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       }
       #app-splash.hide { opacity: 0; pointer-events: none; }
+      .splash-logo-wrapper {
+        position: relative;
+        margin-bottom: 16px;
+      }
+      .splash-logo-ring {
+        position: absolute;
+        inset: -12px;
+        border: 2px solid rgba(16, 185, 129, 0.15);
+        border-radius: 50%;
+        animation: splash-ring-pulse 2s ease-in-out infinite;
+      }
+      .splash-logo-ring:nth-child(2) {
+        inset: -22px;
+        border-color: rgba(16, 185, 129, 0.08);
+        animation-delay: 0.5s;
+      }
       .splash-logo {
-        font-size: 48px; line-height: 1; margin-bottom: 12px;
+        font-size: 52px; line-height: 1;
+        animation: splash-float 2s ease-in-out infinite;
+      }
+      @keyframes splash-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+      }
+      @keyframes splash-ring-pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.06); opacity: 1; }
       }
       .splash-title {
-        font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+        font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
         background: linear-gradient(135deg, #34d399, #059669);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         background-clip: text;
+        margin-bottom: 4px;
       }
       .splash-sub {
-        font-size: 13px; color: #6b7280; margin-top: 6px; font-weight: 500;
+        font-size: 13px; color: #6b7280; margin-top: 2px; font-weight: 500;
+        letter-spacing: 0.5px;
       }
       .splash-loader {
-        margin-top: 24px;
-        width: 32px; height: 32px;
-        border: 3px solid rgba(16,185,129,0.15);
+        margin-top: 32px;
+        width: 24px; height: 24px;
+        border: 2.5px solid rgba(16,185,129,0.12);
         border-top-color: #10b981;
         border-radius: 50%;
-        animation: splash-spin 0.8s linear infinite;
+        animation: splash-spin 1s cubic-bezier(0.6, 0, 0.4, 1) infinite;
       }
       @keyframes splash-spin { to { transform: rotate(360deg); } }
     </style>
@@ -50,7 +78,11 @@
   <body>
     <div id="app">
       <div id="app-splash">
-        <div class="splash-logo">🧾</div>
+        <div class="splash-logo-wrapper">
+          <div class="splash-logo-ring"></div>
+          <div class="splash-logo-ring"></div>
+          <div class="splash-logo">🧾</div>
+        </div>
         <div class="splash-title">Tipsmana</div>
         <div class="splash-sub">L'App du Boss</div>
         <div class="splash-loader"></div>

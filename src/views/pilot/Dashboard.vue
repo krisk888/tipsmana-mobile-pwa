@@ -42,6 +42,38 @@
         </div>
       </div>
 
+      <!-- ═══ Plan de salle : occupation en direct ═══ -->
+      <div class="floorplan-widget" v-if="floorplanSpaces.length">
+        <h3>Plan de salle
+          <span class="floorplan-legend">
+            <span class="fp-legend-dot libre"></span> Libre
+            <span class="fp-legend-dot occupee"></span> Occupée
+            <span class="fp-legend-dot addition"></span> Addition
+          </span>
+        </h3>
+        <div class="fp-spaces">
+          <div v-for="sp in floorplanSpaces" :key="sp.id" class="fp-space">
+            <div class="fp-space-header">
+              <span class="fp-space-name">{{ sp.icon }} {{ sp.name }}</span>
+              <span class="fp-space-counts">
+                <span class="fp-count libre">{{ sp.tables.filter(t => t.state === 'libre').length }}</span>
+                <span class="fp-count occupee">{{ sp.tables.filter(t => t.state === 'occupée').length }}</span>
+                <span class="fp-count addition">{{ sp.tables.filter(t => t.state === 'addition').length }}</span>
+              </span>
+            </div>
+            <div class="fp-mini-grid">
+              <div
+                v-for="t in sp.tables"
+                :key="t.number"
+                class="fp-mini-dot"
+                :class="t.state"
+                :title="'Table ' + t.number + ' — ' + t.state + (t.serveur !== '—' ? ' (' + t.serveur + ')' : '')"
+              >{{ t.number }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ Graphique : CA horaire et commandes/h ═══ -->
       <div class="chart-section">
         <h3>Activité horaire</h3>
@@ -163,6 +195,21 @@ const error = ref(null)
 const usingCache = ref(false)
 const cacheAvailable = ref(false)
 const lastSync = ref(null)
+const floorplanSpaces = ref([])
+const floorplanLoading = ref(false)
+
+async function loadFloorplan() {
+  floorplanLoading.value = true
+  try {
+    const res = await api.get('/floorplan/spaces')
+    const body = res?.data || res || {}
+    floorplanSpaces.value = body?.data || (Array.isArray(body) ? body : [])
+  } catch {
+    floorplanSpaces.value = []
+  } finally {
+    floorplanLoading.value = false
+  }
+}
 
 // ── Graphique horaire ────────────────────────────────────
 const hourlyStats = ref([])
@@ -374,9 +421,11 @@ onMounted(() => {
   }
   loadDashboard()
   loadOrdersCount()
+  loadFloorplan()
   loadHourlyStats()
   refreshTimer = setInterval(() => {
     loadDashboard()
+    loadFloorplan()
     loadHourlyStats()
   }, 30000)
 })
@@ -505,4 +554,45 @@ onUnmounted(() => {
 .legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .legend-dot.ca { background: #6366f1; }
 .legend-dot.orders { background: #10b981; }
+
+/* ═══ Plan de salle widget ═══ */
+.floorplan-widget {
+  background: #1a1a2e; border: 1px solid #2a2a40; border-radius: 14px;
+  padding: 14px; margin-bottom: 14px;
+}
+.floorplan-widget h3 {
+  font-size: 13px; color: #aaa; margin-bottom: 10px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.floorplan-legend { font-size: 10px; text-transform: none; display: flex; align-items: center; gap: 6px; color: #666; letter-spacing: 0; }
+.fp-legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.fp-legend-dot.libre { background: #10b981; }
+.fp-legend-dot.occupee { background: #f59e0b; }
+.fp-legend-dot.addition { background: #ef4444; }
+.fp-space {
+  background: #15152a; border-radius: 10px; padding: 10px; margin-bottom: 8px;
+}
+.fp-space-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+}
+.fp-space-name { font-size: 13px; font-weight: 600; color: #ddd; }
+.fp-space-counts { display: flex; gap: 8px; }
+.fp-count { font-size: 12px; font-weight: 700; padding: 1px 6px; border-radius: 6px; }
+.fp-count.libre { background: rgba(16,185,129,0.15); color: #10b981; }
+.fp-count.occupee { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.fp-count.addition { background: rgba(239,68,68,0.15); color: #ef4444; }
+.fp-mini-grid {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.fp-mini-dot {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  transition: transform 0.15s;
+}
+.fp-mini-dot.libre { background: rgba(16,185,129,0.15); color: #10b981; }
+.fp-mini-dot.occupee { background: rgba(245,158,11,0.2); color: #fbbf24; }
+.fp-mini-dot.addition { background: rgba(239,68,68,0.2); color: #fca5a5; }
+.fp-mini-dot:active { transform: scale(0.9); }
 </style>

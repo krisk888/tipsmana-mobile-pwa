@@ -109,6 +109,65 @@
         </button>
       </section>
 
+      <!-- ═══ Paiement ═══ -->
+      <section class="form-section">
+        <h4>💳 Paiement</h4>
+        <div v-if="paymentLoading" class="loading-state">Chargement…</div>
+        <template v-else>
+          <p v-if="paymentErrorMsg" class="field-error">{{ paymentErrorMsg }}</p>
+          <div
+            v-for="m in paymentMethods"
+            :key="m.method_code"
+            class="payment-method-row"
+          >
+            <label class="payment-toggle-label">
+              <span class="payment-method-name">
+                <span class="method-icon">{{ methodIcon(m.method_code) }}</span>
+                {{ m.method_name }}
+              </span>
+              <label class="toggle-switch">
+                <input type="checkbox" v-model="m.is_active" />
+                <span class="toggle-slider-sm"></span>
+              </label>
+            </label>
+            <!-- Bank details for bank_transfer -->
+            <div v-if="m.method_code === 'bank_transfer' && m.is_active" class="bank-fields">
+              <div class="bank-field-row">
+                <label class="bank-field-label">IBAN</label>
+                <input v-model="m._config.iban" class="bank-input" placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX" />
+              </div>
+              <div class="bank-field-row">
+                <label class="bank-field-label">BIC</label>
+                <input v-model="m._config.bic" class="bank-input" placeholder="ABCDEFGH" />
+              </div>
+              <div class="bank-field-row">
+                <label class="bank-field-label">Titulaire</label>
+                <input v-model="m._config.bank_holder" class="bank-input" placeholder="Nom du titulaire" />
+              </div>
+              <div class="bank-field-row">
+                <label class="bank-field-label">Banque</label>
+                <input v-model="m._config.bank_name" class="bank-input" placeholder="Nom de la banque" />
+              </div>
+            </div>
+            <!-- SumUp config -->
+            <div v-if="m.method_code === 'sumup' && m.is_active" class="bank-fields">
+              <div class="bank-field-row">
+                <label class="bank-field-label">API Key</label>
+                <input v-model="m._config.api_key" class="bank-input" placeholder="Clé API SumUp" type="password" />
+              </div>
+              <div class="bank-field-row">
+                <label class="bank-field-label">Merchant ID</label>
+                <input v-model="m._config.merchant_id" class="bank-input" placeholder="ID commerçant SumUp" />
+              </div>
+            </div>
+          </div>
+          <p v-if="paymentSaveMsg" class="payment-msg" :class="paymentSaveMsgClass">{{ paymentSaveMsg }}</p>
+          <button class="btn-save" :disabled="paymentSaving" @click="savePaymentMethods">
+            {{ paymentSaving ? 'Sauvegarde…' : '💾 Sauvegarder' }}
+          </button>
+        </template>
+      </section>
+
       <!-- Déconnexion -->
       <section class="danger-section">
         <button class="btn-logout" @click="handleLogout">
@@ -158,6 +217,19 @@ const passwordForm = reactive({
 const changingPassword = ref(false)
 const passwordError = ref('')
 const passwordSuccess = ref('')
+
+// Payment methods
+const paymentMethods = ref([])
+const paymentLoading = ref(false)
+const paymentSaving = ref(false)
+const paymentSaveMsg = ref('')
+const paymentSaveMsgClass = ref('')
+const paymentErrorMsg = ref('')
+
+function methodIcon(code) {
+  const icons = { cash: '💵', card: '💳', sumup: '📱', bank_transfer: '🏦', ticket_resto: '🍽️', amex: '🔷', nfc: '📲', voucher: '🎁', online: '🌐' }
+  return icons[code] || '💳'
+}
 
 async function loadProfile() {
   loading.value = true
@@ -261,6 +333,51 @@ async function changePassword() {
   } finally {
     changingPassword.value = false
     setTimeout(() => { passwordSuccess.value = ''; passwordError.value = '' }, 3000)
+  }
+}
+
+async function loadPaymentMethods() {
+  paymentLoading.value = true
+  paymentErrorMsg.value = ''
+  try {
+    const res = await api.get('/settings/payment-methods')
+    const data = res.data || res
+    const list = data.data || data
+    paymentMethods.value = (Array.isArray(list) ? list : []).map(m => ({
+      ...m,
+      _config: m.config ? { ...m.config } : {}
+    }))
+  } catch {
+    paymentErrorMsg.value = '❌ Impossible de charger les méthodes de paiement'
+    paymentMethods.value = []
+  } finally {
+    paymentLoading.value = false
+  }
+}
+
+async function savePaymentMethods() {
+  paymentSaving.value = true
+  paymentSaveMsg.value = ''
+  paymentSaveMsgClass.value = ''
+  try {
+    const methods = paymentMethods.value.map(m => ({
+      method_code: m.method_code,
+      method_name: m.method_name,
+      icon: m.icon,
+      is_active: m.is_active,
+      sort_order: m.sort_order,
+      config: m._config
+    }))
+    await api.put('/settings/payment-methods/bulk', { methods })
+    paymentSaveMsg.value = '✅ Configuration sauvegardée'
+    paymentSaveMsgClass.value = 'payment-success'
+    await loadPaymentMethods()
+  } catch (e) {
+    paymentSaveMsg.value = e.message || '❌ Erreur de sauvegarde'
+    paymentSaveMsgClass.value = 'payment-error'
+  } finally {
+    paymentSaving.value = false
+    setTimeout(() => { paymentSaveMsg.value = ''; paymentSaveMsgClass.value = '' }, 3000)
   }
 }
 

@@ -1,17 +1,29 @@
 <template>
   <div id="app">
+    <!-- Offline banner -->
+    <OfflineBanner
+      :is-online="isOnline"
+      :pending-count="pendingCount"
+      :is-syncing="isSyncing"
+      :synced="syncedCount"
+      @flush="flushQueue"
+    />
+
     <!-- Login screen: no nav -->
-    <router-view v-if="isLoginPage" />
+    <router-view v-if="isLoginPage" v-slot="{ Component }">
+      <transition name="page-fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
 
     <!-- Main app with bottom nav -->
     <div v-else class="app-layout">
-      <!-- Top logout button -->
-      <button class="top-logout-btn" @click="handleLogout" title="Déconnexion">
-        <TipsIcon name="quitter" :size="16" />
-      </button>
-
       <main class="app-content">
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <transition name="page-slide" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
       </main>
 
       <nav class="bottom-nav">
@@ -28,17 +40,24 @@
           </span>
           <span class="nav-label">{{ tab.label }}</span>
         </router-link>
+
+        <!-- Pending offline indicator on notification tab -->
         <router-link to="/notifications" class="nav-item" :class="{ active: $route.path === '/notifications' }">
-          <span class="nav-icon notif-icon">
-            🔔
+          <span class="nav-icon-wrap">
+            <TipsIcon name="notifications_overview" :size="20" class="nav-icon" />
             <span v-if="notifCount > 0" class="notif-badge">{{ notifCount > 99 ? '99+' : notifCount }}</span>
+            <span v-if="pendingCount > 0 && !isOnline" class="offline-dot"></span>
           </span>
           <span class="nav-label">Alertes</span>
         </router-link>
+
         <router-link to="/profile" class="nav-item" :class="{ active: $route.path === '/profile' }">
-          <span class="nav-icon">👤</span>
+          <span class="nav-icon-wrap">
+            <TipsIcon name="users_edit_users" :size="20" class="nav-icon" />
+          </span>
           <span class="nav-label">Profil</span>
         </router-link>
+
         <button class="nav-item nav-logout" @click="handleLogout">
           <TipsIcon name="quitter" :size="22" class="nav-icon" />
           <span class="nav-label">Quitter</span>
@@ -49,66 +68,86 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
+import { useOffline } from './shared/useOffline'
 import TipsIcon from './components/TipsIcon.vue'
+import OfflineBanner from './components/OfflineBanner.vue'
+import api from './shared/api'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const isLoginPage = computed(() => route.path === '/login')
 
-// Detection du safe-area-bottom pour les mobiles à encoche (iOS/Android)
-let safeAreaBottom = 0
-try {
-  // iOS Safari expose safeAreaInsets via CSS env, on le tente avec un calcul JS
-  if (typeof CSS !== 'undefined' && CSS.supports) {
-    // Vérifie si le navigateur supporte env()
-  }
-  // Fallback : la valeur par défaut iOS est 34px (barre de navigation)
-  // On utilise une valeur conservative
-  safeAreaBottom = 34
-} catch { safeAreaBottom = 34 }
+// Offline state
+const { isOnline, pendingCount, onlineEvent } = useOffline()
+const isSyncing = ref(false)
+const syncedCount = ref(0)
 
 // Navigation dynamique basée sur le rôle
 const tabs = computed(() => authStore.navTabs)
 const notifCount = computed(() => authStore.notificationCount)
 
 let notifInterval = null
-let onlineWatcher = null
 
 function handleLogout() {
   authStore.logout()
   router.push('/login')
 }
 
-onMounted(() => {
-  // Set safe area bottom from JS
-  document.documentElement.style.setProperty('--safe-area-bottom', '0px')
-  // iOS Safari: env(safe-area-inset-bottom) works natively, valeurs par défaut ~34px
-  // Pour les autres, on laisse la nav s'adapter via padding-bottom existant
-
-  // Online/offline connectivity watcher — auto-sync when back online
-  function onOnline() {
-    // Déclenche le sync offline depuis n'importe quelle vue active
-    if (window.__flushOfflineQueue) {
-      window.__flushOfflineQueue()
-    }
+async function flushQueue() {
+  isSyncing.value = true
+  syncedCount.value = 0
+  try {
+    const result = await api.flushQueue()
+    syncedCount.value = result.synced
+  } finally {
+    setTimeout(() => {
+      isSyncing.value = false
+      syncedCount.value = 0
+    }, 2000)
   }
-  window.addEventListener('online', onOnline)
-  onlineWatcher = setInterval(() => {
-    if (navigator.onLine && window.__flushOfflineQueue) {
-      window.__flushOfflineQueue()
-    }
-  }, 60000) // Vérification minute
+}
+
+// Auto-flush when coming back online
+function onReconnect() {
+  setTimeout(() => { flushQueue() }, 1500)
+}
+
+// Toast helper
+function showToast(message, type = 'success') {
+  let container = document.querySelector('.toast-container')
+  if (!container) {
+    container = document.createElement('div')
+    container.className = 'toast-container'
+    document.body.appendChild(container)
+  }
+  const toast = document.createElement('div')
+  toast.className = `toast toast-${type}`
+  toast.textContent = message
+  container.appendChild(toast)
+  setTimeout(() => {
+    toast.style.opacity = '0'
+    toast.style.transform = 'translateY(-8px)'
+    setTimeout(() => toast.remove(), 300)
+  }, 3000)
+}
+
+window.__showToast = showToast
+
+onMounted(() => {
+  document.documentElement.style.setProperty('--safe-area-bottom', '0px')
+
+  // Auto-flush on reconnect
+  onlineEvent.addEventListener('online', onReconnect)
 
   // Poll notification count every 30s when authenticated + auto-logout if token expired
   notifInterval = setInterval(() => {
     if (authStore.isAuthenticated) {
       authStore.fetchNotificationCount()
     } else if (authStore.user) {
-      // Token expired while sitting on a page → force logout
       authStore.logout()
       router.push('/login')
     }
@@ -117,7 +156,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (notifInterval) clearInterval(notifInterval)
-  if (onlineWatcher) clearInterval(onlineWatcher)
+  onlineEvent.removeEventListener('online', onReconnect)
 })
 </script>
 
@@ -154,7 +193,38 @@ body {
   transition: background 0.3s ease, color 0.3s ease;
 }
 .app-layout { display: flex; flex-direction: column; min-height: 100dvh; }
-.app-content { flex: 1; overflow-y: auto; }
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ═══ Page transitions ═══ */
+
+/* Fade transition (login) */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+.page-fade-enter-from,
+.page-fade-leave-to {
+  opacity: 0;
+}
+
+/* Slide transition (app pages) */
+.page-slide-enter-active {
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.page-slide-leave-active {
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.page-slide-enter-from {
+  opacity: 0;
+  transform: translateX(18px);
+}
+.page-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-12px);
+}
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   display: flex; justify-content: space-around;
@@ -163,12 +233,16 @@ body {
   border-top: 1px solid var(--nav-border);
   z-index: 100;
   transition: background 0.3s ease, border-color 0.3s ease;
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.2);
 }
 .nav-item {
   display: flex; flex-direction: column; align-items: center;
   gap: 2px; text-decoration: none; color: var(--nav-inactive);
   padding: 4px 8px; border-radius: 8px;
-  transition: color 0.2s;
+  transition: color 0.2s, transform 0.15s;
+}
+.nav-item:active {
+  transform: scale(0.92);
 }
 .nav-item.active { color: var(--nav-active); }
 .nav-icon { font-size: 22px; line-height: 1; }
@@ -197,6 +271,18 @@ body {
   line-height: 1;
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
+.offline-dot {
+  position: absolute; bottom: -4px; right: -4px;
+  width: 10px; height: 10px;
+  background: #f59e0b;
+  border: 2px solid var(--nav-bg);
+  border-radius: 50%;
+  animation: offline-pulse 2s ease-in-out infinite;
+}
+@keyframes offline-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 
 /* Override nav-item for profile/notif — always visible regardless of role */
 .bottom-nav .nav-item:not(.nav-logout) { flex-shrink: 0; }
@@ -206,26 +292,4 @@ body {
   color: var(--nav-inactive); transition: color 0.2s;
 }
 .theme-toggle:active { color: var(--nav-active); }
-
-/* Top logout button */
-.top-logout-btn {
-  position: fixed;
-  top: 8px;
-  right: 8px;
-  z-index: 200;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--nav-bg);
-  border: 1px solid rgba(239,68,68,0.2);
-  color: var(--danger, #ef4444);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s, background 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-.top-logout-btn:active { opacity: 1; background: rgba(239,68,68,0.12); }
 </style>

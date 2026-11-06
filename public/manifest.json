@@ -1,14 +1,29 @@
 {
-  "name": "Tipsmana \u2014 L'App du Boss",
+  "name": "Tipsmana — L'App du Boss",
   "short_name": "Tipsmana",
-  "description": "Gestion restaurant mobile \u2014 inventaire, caisse, pilotage",
+  "description": "Gestion restaurant mobile — inventaire, caisse, pilotage, cuisine, stock",
   "start_url": "/mobile/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "theme_color": "#059669",
   "background_color": "#06241b",
   "scope": "/mobile/",
+  "lang": "fr",
+  "categories": ["business", "food", "productivity"],
+  "prefer_related_applications": false,
+  "splash_pages": null,
   "icons": [
+    {
+      "src": "icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
     {
       "src": "icons/icon-192.png",
       "sizes": "192x192",

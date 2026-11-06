@@ -1,14 +1,24 @@
 /**
- * Tipsmana API Client — HTTP layer with JWT interceptors
- * Used by both web frontend and mobile PWA
+ * Tipsmana API Client — HTTP layer with JWT interceptors + offline caching
+ *
+ * Features:
+ *  - Cache les réponses GET dans IndexedDB (via offlineStore)
+ *  - En mode hors-ligne : sert le cache + queue les mutations
+ *  - En ligne : flush automatique des requêtes en attente
+ *  - Auto-refresh du token JWT sur 401
+ *  - Détection online/offline avec navigator.onLine
  */
 
+import { offlineStore } from './offlineStore'
+
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1'
+
+// Types de requêtes mutables (POST/PUT/PATCH/DELETE)
+const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 class ApiClient {
   constructor() {
     this.baseUrl = API_BASE
-    this.offlineQueue = []
   }
 
   getToken() {
@@ -42,6 +52,61 @@ class ApiClient {
     }
   }
 
+  /**
+   * Construction de l'URL complète (sans le /api/v1 du path)
+   */
+  _buildUrl(path) {
+    return `${this.baseUrl}${path}`
+  }
+
+  /**
+   * Cache une réponse GET
+   */
+  async _cacheResponse(path, data) {
+    const cacheKey = this._cacheKey(path)
+    await offlineStore.setCached(cacheKey, data)
+  }
+
+  /**
+   * Récupère le cache d'une route GET
+   */
+  async _getCachedResponse(path) {
+    const cacheKey = this._cacheKey(path)
+    return offlineStore.getCached(cacheKey)
+  }
+
+  /**
+   * Invalide le cache lié à un préfixe de chemin
+   */
+  async _invalidateRelated(path) {
+    // Invalide le cache exact
+    await offlineStore.invalidateCached(this._cacheKey(path))
+    // Invalide aussi les routes de bundle/dashboard qui pourraient être affectées
+    if (path.includes('/stock/') || path.includes('/inventory/')) {
+      await offlineStore.invalidateCached(this._cacheKey('/dashboard/bundle'))
+    }
+  }
+
+  _cacheKey(path) {
+    const estId = this.getEstablishmentId()
+    return `${estId || 'default'}:${path}`
+  }
+
+  /**
+   * Queue une requête pour rejeu quand online
+   */
+  async _queueRequest(method, path, body) {
+    await offlineStore.enqueueRequest(method, path, body)
+  }
+
+  /**
+   * Tente de flush la queue des requêtes en attente
+   */
+  async flushQueue() {
+    if (!navigator.onLine) return { synced: 0, failed: 0 }
+    return offlineStore.flushToServer(this)
+  }
+
   async request(method, path, body = null, options = {}) {
     const token = this.getToken()
     const headers = { 'Content-Type': 'application/json', ...options.headers }
@@ -50,20 +115,37 @@ class ApiClient {
     const establishmentId = this.getEstablishmentId()
     if (establishmentId) headers['X-Establishment-ID'] = establishmentId
 
-    const url = `${this.baseUrl}${path}`
+    const url = this._buildUrl(path)
     const config = { method, headers }
     if (body) config.body = JSON.stringify(body)
 
+    // ── Mode HORS-LIGNE ──
+    if (!navigator.onLine) {
+      if (MUTATION_METHODS.has(method)) {
+        // Mutation : on queue et on notifie
+        await this._queueRequest(method, path, body)
+        return { success: true, offline: true, queued: true, method, path }
+      } else {
+        // GET : on sert le cache
+        const cached = await this._getCachedResponse(path)
+        if (cached) {
+          return { ...cached, offline: true, fromCache: true }
+        }
+        throw new Error('Réseau indisponible. Aucune donnée en cache.')
+      }
+    }
+
+    // ── Mode EN-LIGNE ──
     try {
       const res = await fetch(url, config)
-      
+
       // Auto-refresh on 401
       if (res.status === 401 && this.getRefreshToken()) {
         const refreshed = await this._refreshToken()
         if (refreshed) {
           headers['Authorization'] = `Bearer ${this.getToken()}`
           const retryRes = await fetch(url, { ...config, headers })
-          return this._handleResponse(retryRes)
+          return this._handleResponse(path, method, retryRes)
         }
       }
 
@@ -73,15 +155,45 @@ class ApiClient {
         throw new Error('Session expirée. Veuillez vous reconnecter.')
       }
 
-      return this._handleResponse(res)
+      return this._handleResponse(path, method, res)
     } catch (err) {
-      // Offline queue
-      if (!navigator.onLine) {
-        this.offlineQueue.push({ method, path, body, options })
-        return { success: true, offline: true, queued: true }
+      // Fallback réseau : on tente le cache
+      if (err.name === 'TypeError' || err.message?.includes('fetch')) {
+        const cached = await this._getCachedResponse(path)
+        if (cached) {
+          return { ...cached, offline: true, fromCache: true }
+        }
+        // Queue les mutations même en cas d'échec réseau non détecté
+        if (MUTATION_METHODS.has(method)) {
+          await this._queueRequest(method, path, body)
+          return { success: true, offline: true, queued: true, method, path }
+        }
       }
       throw err
     }
+  }
+
+  async _handleResponse(path, method, res) {
+    const data = await res.json()
+    if (!res.ok) {
+      const err = new Error(data.message || data.detail || 'API Error')
+      err.status = res.status
+      err.data = data
+      throw err
+    }
+
+    // Cache les réponses GET réussies
+    if (method === 'GET' || method === 'get') {
+      // On évite de cachemiser la pagination longue
+      if (!path.includes('?page=')) {
+        this._cacheResponse(path, data).catch(() => {})
+      }
+    } else {
+      // Invalide le cache lié aux mutations
+      this._invalidateRelated(path).catch(() => {})
+    }
+
+    return data
   }
 
   async _refreshToken() {
@@ -116,21 +228,10 @@ class ApiClient {
 
   _forceLogout() {
     localStorage.removeItem('tipsmana_token')
-    // Redirect to login if we're in a browser context
+    offlineStore.clearCache().catch(() => {})
     if (typeof window !== 'undefined' && window.location) {
       window.location.href = '/mobile/login'
     }
-  }
-
-  async _handleResponse(res) {
-    const data = await res.json()
-    if (!res.ok) {
-      const err = new Error(data.message || data.detail || 'API Error')
-      err.status = res.status
-      err.data = data
-      throw err
-    }
-    return data
   }
 
   // Convenience methods
@@ -140,7 +241,7 @@ class ApiClient {
   patch(path, body, opts) { return this.request('PATCH', path, body, opts) }
   del(path, opts) { return this.request('DELETE', path, null, opts) }
 
-  // Image upload (multipart)
+  // Image upload (multipart) — pas de cache pour l'upload
   async upload(path, file, fieldName = 'file') {
     const token = this.getToken()
     const formData = new FormData()
@@ -151,14 +252,22 @@ class ApiClient {
     const establishmentId = this.getEstablishmentId()
     if (establishmentId) headers['X-Establishment-ID'] = establishmentId
 
+    if (!navigator.onLine) {
+      throw new Error('Réseau indisponible. Impossible de télécharger le fichier.')
+    }
+
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers,
       body: formData
     })
-    return this._handleResponse(res)
+    return this._handleResponse(path, 'POST', res)
   }
 }
 
 export const api = new ApiClient()
+
+// Expose la fonction de flush globale (utilisée par App.vue)
+window.__flushOfflineQueue = () => api.flushQueue()
+
 export default api
