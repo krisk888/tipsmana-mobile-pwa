@@ -71,6 +71,7 @@ function _saveRequestQueue(queue) {
 
 // ═══ Badge (PWA app badge + cache) ═══
 const BADGE_KEY = 'tipsmana_pwa_badge'
+const PUSH_SUB_KEY = 'tipsmana_push_subscription'
 
 export const offlineStore = {
   // ── Cache IndexedDB ──
@@ -255,6 +256,45 @@ export const offlineStore = {
       const db = await _getDB()
       const tx = db.transaction(CACHE_STORE, 'readwrite')
       tx.objectStore(CACHE_STORE).delete(BADGE_KEY)
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve
+        tx.onerror = () => reject(tx.error)
+      })
+    } catch { /* silencieux */ }
+  },
+
+  // ── Push subscription (IndexedDB — même pattern que le badge) ──
+  async setPushSubscription(subscription) {
+    try {
+      const db = await _getDB()
+      const tx = db.transaction(CACHE_STORE, 'readwrite')
+      tx.objectStore(CACHE_STORE).put(subscription, PUSH_SUB_KEY)
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve
+        tx.onerror = () => reject(tx.error)
+      })
+    } catch { /* silencieux — le push est un bonus, jamais bloquant */ }
+  },
+
+  async getPushSubscription() {
+    try {
+      const db = await _getDB()
+      const tx = db.transaction(CACHE_STORE, 'readonly')
+      const store = tx.objectStore(CACHE_STORE)
+      const req = store.get(PUSH_SUB_KEY)
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = resolve
+        tx.onerror = () => reject(tx.error)
+      })
+      return req.result || null
+    } catch { return null }
+  },
+
+  async clearPushSubscription() {
+    try {
+      const db = await _getDB()
+      const tx = db.transaction(CACHE_STORE, 'readwrite')
+      tx.objectStore(CACHE_STORE).delete(PUSH_SUB_KEY)
       await new Promise((resolve, reject) => {
         tx.oncomplete = resolve
         tx.onerror = () => reject(tx.error)
