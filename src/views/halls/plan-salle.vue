@@ -35,6 +35,7 @@
         <span><span class="lgd lgd-libre"></span> Libre</span>
         <span><span class="lgd lgd-commande"></span> Commande</span>
         <span><span class="lgd lgd-occupee"></span> Occupé</span>
+        <span><span class="lgd lgd-reservee"></span> Réservé</span>
       </div>
 
       <div
@@ -66,6 +67,23 @@
             <span class="ps-table-covers">👤{{ t.covers || 1 }}</span>
             <span class="ps-table-serveur">{{ t.serveur }}</span>
           </span>
+          <!-- Floating action: navigate to caisse -->
+          <div
+            v-if="tableActionsShown === t.number"
+            class="ps-table-actions"
+            @click.stop
+          >
+            <button
+              class="ps-ta-btn"
+              @click.stop="navigateToCaisse(t)"
+              title="Voir en caisse"
+            >🛒</button>
+            <button
+              class="ps-ta-btn ps-ta-close"
+              @click.stop="hideTableActions"
+              title="Fermer"
+            >✕</button>
+          </div>
         </div>
 
         <div v-if="!activeSpace.tables.length" class="ps-empty">
@@ -246,10 +264,48 @@ async function onDragEnd() {
   }
 }
 
-/* ═══ Clic table → navigation vers la caisse ═══ */
+/* ═══ Clic table → changer statut + navigation caisse ═══ */
 function onTableClick(table) {
-  // Navigation vers la caisse avec cette table sélectionnée
+  // Cycle through states: libre → occupée → réservée → libre
+  const cycle = { 'libre': 'occupee', 'occupee': 'reservee', 'reservee': 'libre' }
+  const nextState = cycle[table.state] || 'libre'
+  const oldState = table.state
+
+  // Optimistic update
+  table.state = nextState
+
+  // API call to persist
+  api.put(`/floorplan/tables/${table.number}/status`, { status: nextState })
+    .catch(() => {
+      // Rollback on failure
+      table.state = oldState
+    })
+
+  // Also offer navigation via a small floating action
+  showTableActions(table)
+}
+
+const tableActionsShown = ref(null)
+const tableActionsTable = ref(null)
+
+function showTableActions(table) {
+  tableActionsShown.value = table.number
+  tableActionsTable.value = table
+  setTimeout(() => {
+    if (tableActionsShown.value === table.number) {
+      tableActionsShown.value = null
+    }
+  }, 5000)
+}
+
+function hideTableActions() {
+  tableActionsShown.value = null
+  tableActionsTable.value = null
+}
+
+function navigateToCaisse(table) {
   router.push({ path: '/caisse', query: { table: table.number } })
+  hideTableActions()
 }
 
 onMounted(() => {
@@ -318,6 +374,7 @@ onMounted(() => {
 .lgd-libre { background: #22c55e; }
 .lgd-commande { background: #f59e0b; }
 .lgd-occupee { background: #ef4444; }
+.lgd-reservee { background: #8b5cf6; }
 
 .ps-canvas {
   position: relative; flex: 1; min-height: 340px;
@@ -355,7 +412,42 @@ onMounted(() => {
 /* États par couleur */
 .state-libre { background: #22c55e; color: #fff; }
 .state-occupee { background: #ef4444; color: #fff; }
+.state-reservee { background: #8b5cf6; color: #fff; }
 .state-addition { background: #f59e0b; color: #fff; }
+
+/* ═══ Floating action popup ═══ */
+.ps-table-actions {
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 20;
+  animation: ps-ta-in 0.2s ease-out;
+  white-space: nowrap;
+}
+.ps-ta-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+.ps-ta-btn:active { transform: scale(0.9); }
+.ps-ta-close { background: rgba(239,68,68,0.7); }
+@keyframes ps-ta-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
 
 /* Numéro de table */
 .ps-table-num { font-weight: 700; line-height: 1.1; }
