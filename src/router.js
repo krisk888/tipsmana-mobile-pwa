@@ -37,6 +37,12 @@ const routes = [
     component: () => import('./views/cuisine/Orders.vue'),
     meta: { title: 'Cuisine', icon: 'cuisine', auth: true, roles: ['OWNER', 'MANAGER', 'CUISINE'] }
   },
+  {
+    path: '/halls',
+    name: 'plan-salle',
+    component: () => import('./views/halls/plan-salle.vue'),
+    meta: { title: 'Plan de salle', icon: 'halls', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
+  },
 ]
 
 const router = createRouter({
