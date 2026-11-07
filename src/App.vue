@@ -83,6 +83,8 @@ import EstablishmentSwitcher from './components/EstablishmentSwitcher.vue'
 import api from './shared/api'
 import { offlineStore } from './shared/offlineStore'
 import { initPushSubscription } from './shared/push'
+import { startOrderStatusWatcher } from './shared/orderNotifications'
+import { currentEstablishmentId } from './shared/serviceOrders'
 
 const route = useRoute()
 const router = useRouter()
@@ -103,12 +105,27 @@ const notifCount = computed(() => authStore.notificationCount)
 
 let notifInterval = null
 
+const FLOOR_ROLES = ['SERVEUR', 'VENTES']
+
 // Push : une seule tentative par session — ne re-demande pas la permission à chaque login
 const pushRequested = ref(false)
 watch(() => authStore.isAuthenticated, (isAuth) => {
   if (isAuth && !pushRequested.value) {
     pushRequested.value = true
-    initPushSubscription()
+    // Rôles de salle : permission demandée au premier envoi en cuisine (OrderTaking)
+    initPushSubscription({ prompt: !FLOOR_ROLES.includes(authStore.roleCode) })
+  }
+}, { immediate: true })
+
+// Suivi des commandes de table (en cuisine → servi) pour les rôles du service en salle
+const SERVICE_ROLES = ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR']
+let stopOrderWatcher = null
+watch(() => authStore.isAuthenticated && SERVICE_ROLES.includes(authStore.roleCode), (active) => {
+  if (active && !stopOrderWatcher) {
+    stopOrderWatcher = startOrderStatusWatcher({ getEstId: currentEstablishmentId })
+  } else if (!active && stopOrderWatcher) {
+    stopOrderWatcher()
+    stopOrderWatcher = null
   }
 }, { immediate: true })
 
@@ -189,6 +206,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (notifInterval) clearInterval(notifInterval)
+  if (stopOrderWatcher) stopOrderWatcher()
   onlineEvent.removeEventListener('online', onReconnect)
 })
 </script>

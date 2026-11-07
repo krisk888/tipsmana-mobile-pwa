@@ -7,7 +7,9 @@
         <span class="svc-subtitle">{{ establishmentName }}</span>
       </div>
       <div class="svc-header-right">
+        <button class="svc-icon-btn svc-scan-btn" title="Scanner le QR d'une table" @click="scannerOpen = true">📷</button>
         <router-link to="/service/history" class="svc-icon-btn" title="Commandes en cours">🧾</router-link>
+        <router-link to="/service/profile" class="svc-icon-btn" title="Mon profil">👤</router-link>
         <button class="svc-icon-btn" :disabled="loading" title="Rafraîchir" @click="load()">
           <span :class="{ spinning: loading }">⟳</span>
         </button>
@@ -95,6 +97,9 @@
       </div>
     </template>
 
+    <!-- ═══ SCAN QR TABLE ═══ -->
+    <QrTableScanner v-if="scannerOpen" @detected="onScanned" @close="scannerOpen = false" />
+
     <!-- ═══ MODAL COUVERTS ═══ -->
     <div v-if="coversFor" class="modal-overlay" @click.self="coversFor = null">
       <div class="modal-card">
@@ -123,6 +128,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore'
 import EstablishmentSwitcher from '../../components/EstablishmentSwitcher.vue'
+import QrTableScanner from '../../components/QrTableScanner.vue'
 import { fetchTables, formatEur, TABLE_STATES } from '../../shared/serviceOrders'
 
 const router = useRouter()
@@ -138,6 +144,7 @@ const partial = ref(false)
 const manualNumber = ref('')
 const coversFor = ref(null)
 const covers = ref(2)
+const scannerOpen = ref(false)
 
 const POLL_INTERVAL = 15000
 let pollTimer = null
@@ -219,7 +226,16 @@ function openManual() {
   if (!manualValid.value) return
   const number = Number(manualNumber.value)
   manualNumber.value = ''
+  openNumber(number)
+}
+
+function openNumber(number) {
   pickTable(findTable(number) || { number, state: 'libre' })
+}
+
+function onScanned(number) {
+  scannerOpen.value = false
+  openNumber(number)
 }
 
 onMounted(() => {

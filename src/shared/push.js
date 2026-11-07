@@ -24,9 +24,11 @@ function urlBase64ToUint8Array(base64String) {
 
 /**
  * Active l'abonnement push (une seule fois par session côté appelant).
+ * prompt=false : n'affiche pas la demande de permission (abonne seulement si
+ * déjà accordée) — les rôles de salle la voient au premier envoi en cuisine.
  * Retourne true si abonné (existant ou nouveau), false sinon.
  */
-export async function initPushSubscription() {
+export async function initPushSubscription({ prompt = true } = {}) {
   try {
     if (typeof navigator === 'undefined') return false
     if (!('serviceWorker' in navigator)) return false
@@ -43,6 +45,7 @@ export async function initPushSubscription() {
       // Permission refusée : on ne re-demande pas
       if (Notification.permission === 'denied') return false
       if (Notification.permission === 'default') {
+        if (!prompt) return false
         const permission = await Notification.requestPermission()
         if (permission !== 'granted') return false
       }

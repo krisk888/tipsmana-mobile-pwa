@@ -48,8 +48,10 @@ const DRINK_RE = /(^|[^a-zà-ÿ])(boissons?|bi[eè]res?|vins?|softs?|eaux?|cockt
 
 const KITCHEN_KEY = 'tipsmana_service_kitchen'
 const HISTORY_KEY = 'tipsmana_service_history'
+const STATS_KEY = 'tipsmana_service_stats'
 const DRAFT_PREFIX = 'tipsmana_service_draft'
 const HISTORY_TTL = 18 * 3600 * 1000 // un service : les notes soldées disparaissent le lendemain
+const WATCH_TTL = 6 * 3600 * 1000 // suivi des statuts cuisine : 6 h après le dernier envoi
 
 /* ═══ Utils ═══ */
 
@@ -130,6 +132,8 @@ export function getKitchenRecord(estId, ticketId) {
     refs: rec?.refs || [],
     sentItemIds: rec?.sentItemIds || [],
     failedItemIds: rec?.failedItemIds || [],
+    tableNumber: rec?.tableNumber ?? null,
+    status: rec?.status || null,
   }
 }
 
@@ -416,9 +420,13 @@ export async function dispatchTicketItems({ establishmentId, ticket, items }) {
       ? []
       : [...new Set((unwrap(res)?.orders || []).map(o => o.ticket_ref).filter(Boolean))]
     updateKitchenRecord(establishmentId, ticket.id, rec => ({
+      ...rec,
       refs: [...new Set([...rec.refs, ...refs])],
       sentItemIds: [...new Set([...rec.sentItemIds, ...ids])],
       failedItemIds: rec.failedItemIds.filter(id => !ids.includes(id)),
+      tableNumber: ticket.tableNumber,
+      // Nouveaux plats en cuisine : la note repart « en cuisine » (base du suivi de statut)
+      status: refs.length ? 'en_cuisine' : rec.status,
     }))
     return { dispatched: true, queued: !!res?.queued, refs }
   } catch (e) {
@@ -537,4 +545,103 @@ export function syncHistory(estId, openTickets) {
   all[est] = reconcileHistory(all[est], openTickets)
   writeJson(HISTORY_KEY, all)
   return Object.values(all[est])
+}
+
+/* ═══ Suivi de statut (notifications en_cuisine → servi) ═══ */
+
+/** Notes de cet établissement envoyées en cuisine depuis ce téléphone. */
+export function listKitchenRecords(estId) {
+  const byEst = readJson(KITCHEN_KEY, {})?.[estId || 'default'] || {}
+  return Object.entries(byEst)
+    .map(([ticketId, raw]) => ({ ticketId, ...getKitchenRecord(estId, ticketId), at: raw?.at || 0 }))
+    .filter(r => r.refs.length)
+}
+
+export function setKitchenStatus(estId, ticketId, status) {
+  updateKitchenRecord(estId, ticketId, rec => ({ ...rec, status }))
+}
+
+/**
+ * Relève le statut cuisine des notes suivies et renvoie celles qui viennent
+ * de passer « en cuisine » → « servi ». Un statut inconnu (note antérieure au
+ * suivi) est mémorisé sans notifier.
+ */
+export async function checkKitchenTransitions(estId, now = Date.now()) {
+  const transitions = []
+  for (const rec of listKitchenRecords(estId)) {
+    if (rec.status === 'servi') continue
+    if (now - rec.at > WATCH_TTL) continue // bon jamais clôturé au KDS : on arrête de le suivre
+    const { items, failed } = await fetchKitchenItems(rec.refs)
+    if (failed) continue // statut partiel : on retentera au prochain passage
+    const status = orderStatus({ refs: rec.refs, kitchenItems: items })
+    if (status === rec.status) continue
+    setKitchenStatus(estId, rec.ticketId, status)
+    if (rec.status === 'en_cuisine' && status === 'servi') {
+      transitions.push({ ticketId: rec.ticketId, tableNumber: rec.tableNumber, from: rec.status, to: status })
+    }
+  }
+  return transitions
+}
+
+/* ═══ QR code table ═══ */
+
+/**
+ * Numéro de table lu dans un QR code. Formats acceptés :
+ *  - « 12 », « T12 », « Table 12 », « TABLE:12 »
+ *  - URL avec ?table=12 ou un chemin …/table/12 (ou …/tables/12)
+ * Renvoie null si aucun numéro valide (1–999).
+ */
+export function parseTableQr(text) {
+  const raw = String(text ?? '').trim()
+  if (!raw) return null
+  let candidate = null
+  if (/^https?:\/\//i.test(raw)) {
+    // « TABLE:15 » serait une URL valide (schéma table:) : seules les URL http(s) sont lues comme telles
+    try {
+      const url = new URL(raw)
+      candidate = url.searchParams.get('table') ?? url.searchParams.get('t')
+      if (candidate == null) candidate = url.pathname.match(/\/tables?\/(\d+)\/?$/i)?.[1] ?? null
+    } catch { /* URL invalide */ }
+  } else {
+    candidate = raw.match(/^(?:t|table)?\s*[:#=-]?\s*(\d+)$/i)?.[1] ?? null
+  }
+  if (candidate == null || !/^\d+$/.test(String(candidate).trim())) return null
+  const n = Number(candidate)
+  return Number.isInteger(n) && n > 0 && n < 1000 ? n : null
+}
+
+/* ═══ Statistiques serveur (ce téléphone) ═══ */
+
+function dayKey(ts) {
+  const d = new Date(ts)
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+}
+
+/** Mémorise une commande envoyée (une entrée par envoi, purge à J+1). */
+export function recordServiceOrder({ estId, userId, tableNumber, itemCount = 0, at = Date.now() }) {
+  const today = dayKey(at)
+  const log = readJson(STATS_KEY, [])
+  const kept = (Array.isArray(log) ? log : []).filter(e => dayKey(e.at) === today)
+  kept.push({
+    at,
+    est: estId || 'default',
+    user: userId == null ? null : String(userId),
+    table: toNumber(tableNumber),
+    items: toNumber(itemCount),
+  })
+  writeJson(STATS_KEY, kept)
+}
+
+export function getServiceStats({ estId, userId, now = Date.now() }) {
+  const today = dayKey(now)
+  const uid = userId == null ? null : String(userId)
+  const log = readJson(STATS_KEY, [])
+  const mine = (Array.isArray(log) ? log : []).filter(e =>
+    dayKey(e.at) === today && e.est === (estId || 'default') && e.user === uid
+  )
+  return {
+    ordersToday: mine.length,
+    itemsToday: mine.reduce((s, e) => s + toNumber(e.items), 0),
+    tablesToday: [...new Set(mine.map(e => e.table))].sort((a, b) => a - b),
+  }
 }
