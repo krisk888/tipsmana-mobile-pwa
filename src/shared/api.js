@@ -36,7 +36,12 @@ class ApiClient {
   getEstablishmentId() {
     try {
       const stored = localStorage.getItem('tipsmana_token')
-      return stored ? JSON.parse(stored).establishment_id || null : null
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.establishment_id) return parsed.establishment_id
+      }
+      // Fallback: when setEstablishment() stores only the ID (no per-est token)
+      return localStorage.getItem('auth_current_establishment_id') || null
     } catch {
       return null
     }
