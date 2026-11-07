@@ -208,6 +208,12 @@ const activeEstablishmentId = computed(() => authStore.activeEstablishmentId)
 
 async function onEstablishmentChange(event) {
   await authStore.setEstablishment(event.target.value)
+  // Re-sync editForm after establishment switch (user data may differ per est)
+  const u = authStore.user || {}
+  editForm.first_name = u.first_name || ''
+  editForm.last_name = u.last_name || ''
+  editForm.phone = u.phone || ''
+  editForm.email = u.email || ''
 }
 
 const loading = ref(false)
