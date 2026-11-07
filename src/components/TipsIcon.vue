@@ -31,6 +31,7 @@ const NAME_MAP = {
   caisse: 'sales_overview',
   cuisine: 'products_recipes',
   quitter: 'logout',
+  service: 'sales_manual_entry',
 }
 
 // Icônes absentes du dépôt → repli

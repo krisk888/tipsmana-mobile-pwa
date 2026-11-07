@@ -38,6 +38,24 @@ const routes = [
     meta: { title: 'Cuisine', icon: 'cuisine', auth: true, roles: ['OWNER', 'MANAGER', 'CUISINE'] }
   },
   {
+    path: '/service',
+    name: 'Service',
+    component: () => import('./views/service/TableSelect.vue'),
+    meta: { title: 'Service', icon: 'service', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
+  },
+  {
+    path: '/service/history',
+    name: 'ServiceHistory',
+    component: () => import('./views/service/OrderHistory.vue'),
+    meta: { title: 'Commandes en cours', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
+  },
+  {
+    path: '/service/table/:number(\\d+)',
+    name: 'ServiceOrder',
+    component: () => import('./views/service/OrderTaking.vue'),
+    meta: { title: 'Prise de commande', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
+  },
+  {
     path: '/halls',
     name: 'plan-salle',
     component: () => import('./views/halls/plan-salle.vue'),

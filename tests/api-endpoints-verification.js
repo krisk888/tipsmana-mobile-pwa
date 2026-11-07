@@ -24,6 +24,15 @@ const EXPECTED = [
   // Cash / dispatch
   { method: 'POST',   pattern: '/cash/dispatch', exist: true, note: 'mobile PWA dispatch without ticket' },
   { method: 'POST',   pattern: '/cash/tickets/{id}/dispatch-kitchen', exist: true, note: 'backend dispatch with ticket_id' },
+  { method: 'GET',    pattern: '/cash/tickets/{id}/kitchen-status', exist: true, note: 'KDS status by ticket_ref (MOB-XXXX)' },
+  { method: 'POST',   pattern: '/cash/tickets/{id}/items', exist: false, note: 'NOT in backend — use /table-tickets/{table}/items' },
+  // Service en salle — notes de table + plan de salle (verified 2026-11-07)
+  { method: 'GET',    pattern: '/products/pos-menu', exist: true, note: 'POS menu grouped by category' },
+  { method: 'GET',    pattern: '/table-tickets/list', exist: true, note: 'open table tickets' },
+  { method: 'GET',    pattern: '/table-tickets/{id}', exist: true, note: 'open ticket of a table (404 if none)' },
+  { method: 'POST',   pattern: '/table-tickets/{id}/items', exist: true, note: 'add items (creates ticket)' },
+  { method: 'GET',    pattern: '/floorplan/spaces', exist: true, note: 'spaces + live table states' },
+  { method: 'POST',   pattern: '/floorplan/tables/{id}/open', exist: true, note: 'open table (covers)' },
   // Sales
   { method: 'POST',   pattern: '/sales/entries', exist: true, note: 'create sales entry' },
   // Auth
@@ -63,6 +72,7 @@ const VIEWS = [
   { name: 'Tickets.vue',      file: 'src/views/caisse/Tickets.vue' },
   { name: 'InventoryScan.vue', file: 'src/views/stock/InventoryScan.vue' },
   { name: 'ScanQR.vue',       file: 'src/views/stock/ScanQR.vue' },
+  { name: 'serviceOrders.js', file: 'src/shared/serviceOrders.js' },
 ]
 
 const REPO = new URL('..', import.meta.url).pathname
