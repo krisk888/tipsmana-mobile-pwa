@@ -123,6 +123,7 @@ export const useAuthStore = defineStore('auth', () => {
       { path: '/pilot', iconName: 'pilote', label: 'Pilote', roles: ['OWNER', 'MANAGER'] },
       { path: '/orders', iconName: 'orders', label: 'Commandes', roles: ['OWNER', 'MANAGER', 'CUISINE', 'VENTES', 'SERVEUR', 'ACHATS'], showNotifDot: true },
       { path: '/caisse', iconName: 'caisse', label: 'Caisse', roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] },
+      { path: '/service', iconName: 'service', label: 'Service', roles: ['VENTES', 'SERVEUR'] },
       { path: '/stock', iconName: 'stock', label: 'Stock', roles: ['OWNER', 'MANAGER', 'INVENTAIRE', 'ACHATS'] },
       { path: '/cuisine', iconName: 'cuisine', label: 'Cuisine', roles: ['OWNER', 'MANAGER', 'CUISINE'], showNotifDot: true },
     ]
