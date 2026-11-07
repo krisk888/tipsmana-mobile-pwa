@@ -792,6 +792,7 @@ async function dispatchCurrentCourse() {
   const items = cart.value.filter(i => i.course === courseKey && !i.sent)
   if (!items.length) return
   try {
+    const courseOrder = courses.value.find(c => c.key === courseKey)?.order ?? 0
     await api.post('/cash/dispatch', {
       establishment_id: getEstablishmentId(),
       table: selectedTable.value,
@@ -799,11 +800,11 @@ async function dispatchCurrentCourse() {
         product_id: item.id,
         product_name: item.name,
         qty: item.qty,
-        course_number: courseKey,
+        course_number: courseOrder,
       })),
-      routing: { [courseKey]: 'cuisine' },
+      routing: { [String(courseOrder)]: 'cuisine' },
       default_station: 'cuisine',
-      notes: { [courseKey]: `Service ${courses.value.find(c => c.key === courseKey)?.label || courseKey}` },
+      notes: { [String(courseOrder)]: `Service ${courses.value.find(c => c.key === courseKey)?.label || courseKey}` },
     })
     items.forEach(item => { item.sent = true })
     ticketSent.value = true
@@ -831,11 +832,11 @@ async function sendToKitchen() {
             product_id: item.id,
             product_name: item.name,
             qty: item.qty,
-            course_number: cur.key,
+            course_number: cur.order,
           })),
-          routing: { [cur.key]: 'cuisine' },
+          routing: { [String(cur.order)]: 'cuisine' },
           default_station: 'cuisine',
-          notes: { [cur.key]: `Service ${cur.label}` },
+          notes: { [String(cur.order)]: `Service ${cur.label}` },
         })
       }
     }
