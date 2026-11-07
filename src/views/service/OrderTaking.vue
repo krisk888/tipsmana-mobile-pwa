@@ -209,11 +209,14 @@ import {
   OPTION_GROUPS, COURSE_OPTIONS,
   addLine, setLineQty, lineKey, computeTotals, groupByCourse, formatEur,
   fetchMenu, fetchTableTicket, sendOrder, retryFailedDispatch,
-  getKitchenRecord, loadDraft, saveDraft, currentEstablishmentId, toNumber,
+  getKitchenRecord, loadDraft, saveDraft, currentEstablishmentId, toNumber, recordServiceOrder,
 } from '../../shared/serviceOrders'
+import { ensureNotificationPermission } from '../../shared/orderNotifications'
+import { useAuthStore } from '../../stores/authStore'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 
 const tableNumber = computed(() => toNumber(route.params.number))
 const covers = computed(() => Math.max(1, toNumber(route.query.covers, 1)))
@@ -352,14 +355,18 @@ function toast(message, type = 'success') {
 
 async function send() {
   if (!cart.value.length || sending.value) return
+  // Premier envoi : demande la permission (doit partir du geste utilisateur), sans bloquer l'envoi
+  ensureNotificationPermission()
   sending.value = true
   try {
+    const sentCount = cartCount.value
     const res = await sendOrder({
       tableNumber: tableNumber.value,
       cart: cart.value,
       covers: covers.value,
       openTable: !ticket.value,
     })
+    recordServiceOrder({ estId, userId: authStore.user?.id, tableNumber: tableNumber.value, itemCount: sentCount })
     cart.value = []
     cartOpen.value = false
     if (res.queued) {

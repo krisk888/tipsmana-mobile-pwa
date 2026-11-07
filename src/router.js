@@ -50,6 +50,12 @@ const routes = [
     meta: { title: 'Commandes en cours', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
   },
   {
+    path: '/service/profile',
+    name: 'ServiceProfile',
+    component: () => import('./views/service/ServiceProfile.vue'),
+    meta: { title: 'Mon profil', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
+  },
+  {
     path: '/service/table/:number(\\d+)',
     name: 'ServiceOrder',
     component: () => import('./views/service/OrderTaking.vue'),

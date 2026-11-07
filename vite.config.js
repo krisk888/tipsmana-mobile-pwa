@@ -30,6 +30,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Handlers push / notificationclick (public/push-sw.js, copié tel quel dans dist/)
+        importScripts: ['push-sw.js'],
         // Données statiques (build hashé) : précache = cache-first
         globPatterns: ['**/*.{js,css,html,png,jpg,svg,ico,json,woff2}'],
         cleanupOutdatedCaches: true,
