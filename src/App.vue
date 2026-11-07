@@ -19,9 +19,14 @@
     <!-- Main app with bottom nav -->
     <div v-else class="app-layout">
       <main class="app-content">
+        <!-- Bascule d'établissement : page d'accueil du rôle, boss multi-établissement -->
+        <div v-if="showEstSwitcher" class="est-switcher-bar">
+          <EstablishmentSwitcher />
+        </div>
+        <!-- key = établissement actif : la vue est remontée et recharge ses données -->
         <router-view v-slot="{ Component }">
           <transition name="page-slide" mode="out-in">
-            <component :is="Component" />
+            <component :is="Component" :key="authStore.activeEstablishmentId || 'none'" />
           </transition>
         </router-view>
       </main>
@@ -74,6 +79,7 @@ import { useAuthStore } from './stores/authStore'
 import { useOffline } from './shared/useOffline'
 import TipsIcon from './components/TipsIcon.vue'
 import OfflineBanner from './components/OfflineBanner.vue'
+import EstablishmentSwitcher from './components/EstablishmentSwitcher.vue'
 import api from './shared/api'
 import { offlineStore } from './shared/offlineStore'
 import { initPushSubscription } from './shared/push'
@@ -82,6 +88,9 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const isLoginPage = computed(() => route.path === '/login')
+const showEstSwitcher = computed(() =>
+  authStore.establishments.length > 1 && route.path === authStore.homeRoute
+)
 
 // Offline state
 const { isOnline, pendingCount, onlineEvent } = useOffline()
@@ -220,6 +229,11 @@ body {
 .app-content {
   flex: 1;
   overflow-y: auto;
+}
+.est-switcher-bar {
+  position: sticky; top: 0; z-index: 60;
+  padding: 12px 16px 0;
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
 }
 
 /* ═══ Page transitions ═══ */

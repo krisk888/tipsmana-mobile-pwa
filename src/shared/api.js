@@ -96,7 +96,9 @@ class ApiClient {
    * Queue une requête pour rejeu quand online
    */
   async _queueRequest(method, path, body) {
-    await offlineStore.enqueueRequest(method, path, body)
+    // L'établissement est figé à la mise en file : un rejeu après bascule
+    // d'établissement ne doit pas écrire chez le mauvais établissement
+    await offlineStore.enqueueRequest(method, path, body, this.getEstablishmentId())
   }
 
   /**
@@ -109,11 +111,15 @@ class ApiClient {
 
   async request(method, path, body = null, options = {}) {
     const token = this.getToken()
-    const headers = { 'Content-Type': 'application/json', ...options.headers }
+    const headers = { 'Content-Type': 'application/json' }
 
     if (token) headers['Authorization'] = `Bearer ${token}`
     const establishmentId = this.getEstablishmentId()
     if (establishmentId) headers['X-Establishment-ID'] = establishmentId
+    // Les headers explicites (ex. rejeu de la file) priment
+    Object.assign(headers, options.headers)
+    // Rejeu de la file : jamais re-queue ni cache, l'échec doit remonter
+    const replay = !!options.replay
 
     const url = this._buildUrl(path)
     const config = { method, headers }
@@ -121,6 +127,7 @@ class ApiClient {
 
     // ── Mode HORS-LIGNE ──
     if (!navigator.onLine) {
+      if (replay) throw new Error('Réseau indisponible.')
       if (MUTATION_METHODS.has(method)) {
         // Mutation : on queue et on notifie
         await this._queueRequest(method, path, body)
@@ -157,11 +164,13 @@ class ApiClient {
 
       return this._handleResponse(path, method, res)
     } catch (err) {
-      // Fallback réseau : on tente le cache
-      if (err.name === 'TypeError' || err.message?.includes('fetch')) {
-        const cached = await this._getCachedResponse(path)
-        if (cached) {
-          return { ...cached, offline: true, fromCache: true }
+      // Fallback réseau : cache pour les GET, file d'attente pour les mutations
+      if (!replay && (err.name === 'TypeError' || err.message?.includes('fetch'))) {
+        if (!MUTATION_METHODS.has(method)) {
+          const cached = await this._getCachedResponse(path)
+          if (cached) {
+            return { ...cached, offline: true, fromCache: true }
+          }
         }
         // Queue les mutations même en cas d'échec réseau non détecté
         if (MUTATION_METHODS.has(method)) {
@@ -174,7 +183,12 @@ class ApiClient {
   }
 
   async _handleResponse(path, method, res) {
-    const data = await res.json()
+    // Corps vide (204) ou non-JSON (page d'erreur proxy) : ne pas planter sur res.json()
+    const text = await res.text()
+    let data = {}
+    if (text) {
+      try { data = JSON.parse(text) } catch { data = { message: text.slice(0, 200) } }
+    }
     if (!res.ok) {
       const err = new Error(data.message || data.detail || 'API Error')
       err.status = res.status

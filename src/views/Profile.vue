@@ -66,16 +66,8 @@
           <span class="info-value">{{ establishment?.business_type || '—' }}</span>
         </div>
         <!-- Établissement actif (boss multi-établissement) -->
-        <div v-if="establishments.length" class="info-row">
-          <span class="info-label">Établissement actif</span>
-          <select
-            class="est-switch"
-            :value="activeEstablishmentId"
-            @change="onEstablishmentChange"
-            title="Basculer l'établissement actif"
-          >
-            <option v-for="est in establishments" :key="est.id" :value="est.id">{{ est.name }}</option>
-          </select>
+        <div v-if="establishments.length > 1" class="est-switch-row">
+          <EstablishmentSwitcher />
         </div>
       </section>
 
@@ -195,6 +187,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import api from '../shared/api'
+import EstablishmentSwitcher from '../components/EstablishmentSwitcher.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -204,11 +197,6 @@ const roleCode = computed(() => authStore.roleCode)
 const roleLabel = computed(() => authStore.roleLabel)
 const establishment = computed(() => authStore.establishment)
 const establishments = computed(() => authStore.establishments)
-const activeEstablishmentId = computed(() => authStore.activeEstablishmentId)
-
-async function onEstablishmentChange(event) {
-  await authStore.setEstablishment(event.target.value)
-}
 
 const loading = ref(false)
 const saving = ref(false)
@@ -494,12 +482,7 @@ label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
 .info-row:last-child { border-bottom: none; }
 .info-label { font-size: 13px; color: #888; }
 .info-value { font-size: 13px; color: #ddd; font-weight: 500; }
-.est-switch {
-  background: #0f0f1a; border: 1px solid #2a2a40; border-radius: 8px;
-  color: #fff; font-size: 13px; padding: 6px 10px; max-width: 65%;
-  font-family: inherit; text-align: right;
-}
-.est-switch:focus { outline: none; border-color: #6c5ce7; }
+.est-switch-row { padding-top: 12px; }
 
 /* Toggle switches */
 .toggle-row {

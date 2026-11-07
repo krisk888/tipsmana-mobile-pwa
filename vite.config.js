@@ -30,21 +30,44 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,jpg,svg,ico,json}'],
+        // Données statiques (build hashé) : précache = cache-first
+        globPatterns: ['**/*.{js,css,html,png,jpg,svg,ico,json,woff2}'],
+        cleanupOutdatedCaches: true,
+        // SPA hors-ligne : les navigations retombent sur index.html, sauf l'API
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/\/api\//, /\/ws\//],
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/.*\/api\/v1\//,
+            // Auth : jamais de cache (jetons, profil de session)
+            urlPattern: /\/api\/v1\/auth\//,
+            handler: 'NetworkOnly',
+          },
+          {
+            // Données dynamiques : network-first avec repli cache
+            urlPattern: /\/api\/v1\//,
             handler: 'NetworkFirst',
+            method: 'GET',
             options: {
               cacheName: 'api-cache',
+              networkTimeoutSeconds: 5,
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 600, // 10 min cache for API
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24, // repli hors-ligne 24h
               },
-              networkTimeoutSeconds: 8,
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
+              cacheableResponse: { statuses: [200] },
+              plugins: [
+                {
+                  // Même URL, établissements différents (header X-Establishment-ID) :
+                  // la clé de cache inclut l'établissement pour ne jamais servir
+                  // les données d'un établissement à un autre
+                  cacheKeyWillBeUsed: async ({ request }) => {
+                    const est = request.headers.get('X-Establishment-ID') || 'default'
+                    const url = new URL(request.url)
+                    url.searchParams.set('__est', est)
+                    return url.href
+                  },
+                },
+              ],
             },
           },
           {
@@ -67,6 +90,19 @@ export default defineConfig({
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
+            },
+          },
+          {
+            // Fichiers de police : immuables → cache-first
+            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-files',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
         ],

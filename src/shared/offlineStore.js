@@ -68,6 +68,7 @@ function _loadRequestQueue() {
 function _saveRequestQueue(queue) {
   localStorage.setItem(REQ_KEY, JSON.stringify(queue))
 }
+let _flushing = null
 
 // ═══ Badge (PWA app badge + cache) ═══
 const BADGE_KEY = 'tipsmana_pwa_badge'
@@ -126,13 +127,14 @@ export const offlineStore = {
   },
 
   // ── Queue requêtes générales ──
-  async enqueueRequest(method, path, body) {
+  async enqueueRequest(method, path, body, establishmentId = null) {
     const queue = _loadRequestQueue()
     queue.push({
       id: _nextId(),
       method,
       path,
       body,
+      establishment_id: establishmentId,
       created_at: new Date().toISOString(),
     })
     _saveRequestQueue(queue)
@@ -151,29 +153,32 @@ export const offlineStore = {
   },
 
   async flushToServer(apiClient) {
-    const queue = _loadRequestQueue()
-    if (!queue.length) return { synced: 0, failed: 0 }
-    let synced = 0
-    let failed = 0
-    for (const req of queue) {
-      try {
-        await apiClient.request(req.method, req.path, req.body)
-        synced++
-      } catch {
-        failed++
+    // Verrou : online + bouton « Synchroniser » peuvent déclencher deux flush
+    // concurrents → double envoi des mêmes mutations
+    if (_flushing) return _flushing
+    _flushing = (async () => {
+      const queue = _loadRequestQueue()
+      if (!queue.length) return { synced: 0, failed: 0 }
+      const syncedIds = new Set()
+      let failed = 0
+      for (const req of queue) {
+        try {
+          const headers = req.establishment_id ? { 'X-Establishment-ID': req.establishment_id } : undefined
+          await apiClient.request(req.method, req.path, req.body, { headers, replay: true })
+          syncedIds.add(req.id)
+        } catch {
+          failed++
+        }
       }
+      // Relit la file : des requêtes ont pu être ajoutées pendant le flush
+      _saveRequestQueue(_loadRequestQueue().filter(r => !syncedIds.has(r.id)))
+      return { synced: syncedIds.size, failed }
+    })()
+    try {
+      return await _flushing
+    } finally {
+      _flushing = null
     }
-    if (failed === 0) {
-      _saveRequestQueue([])
-    } else {
-      const remaining = queue.filter(r => {
-        const idx = queue.indexOf(r)
-        const wasSynced = idx < synced
-        return !wasSynced
-      })
-      _saveRequestQueue(remaining)
-    }
-    return { synced, failed }
   },
 
   async pendingRequestCount() {
