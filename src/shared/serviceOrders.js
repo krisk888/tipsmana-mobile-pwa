@@ -16,20 +16,55 @@
  */
 
 import api from './api'
+import { t, intlLocale } from '../i18n'
 
 export const DEFAULT_VAT_RATE = 10
 
-export const COURSES = [
-  { key: 'entree',  label: 'Entrée',  order: 0, icon: '🥗', color: '#34d399' },
-  { key: 'plat',    label: 'Plat',    order: 1, icon: '🍽', color: '#fbbf24' },
-  { key: 'dessert', label: 'Dessert', order: 2, icon: '🍰', color: '#f472b6' },
-  { key: 'boisson', label: 'Boisson', order: 3, icon: '🥤', color: '#38bdf8' },
-  { key: 'autre',   label: 'Autre',   order: 4, icon: '✨', color: '#a78bfa' },
-]
+// `label` est traduit à la lecture (langue active) ; `kitchenLabel` reste en
+// français : c'est la donnée envoyée à la cuisine (notes du bon KDS).
+function translatable(entry) {
+  return Object.defineProperty(entry, 'label', {
+    get() { return t(this.labelKey) },
+    enumerable: true,
+  })
+}
 
+export const COURSES = [
+  { key: 'entree',  kitchenLabel: 'Entrée',  labelKey: 'service.courses.entree',  order: 0, icon: '🥗', color: '#34d399' },
+  { key: 'plat',    kitchenLabel: 'Plat',    labelKey: 'service.courses.plat',    order: 1, icon: '🍽', color: '#fbbf24' },
+  { key: 'dessert', kitchenLabel: 'Dessert', labelKey: 'service.courses.dessert', order: 2, icon: '🍰', color: '#f472b6' },
+  { key: 'boisson', kitchenLabel: 'Boisson', labelKey: 'service.courses.boisson', order: 3, icon: '🥤', color: '#38bdf8' },
+  { key: 'autre',   kitchenLabel: 'Autre',   labelKey: 'service.courses.autre',   order: 4, icon: '✨', color: '#a78bfa' },
+].map(translatable)
+
+// Les valeurs d'options restent en français (donnée enregistrée sur la note et
+// lue par la cuisine) ; seul leur libellé affiché est traduit (optionLabel).
 export const OPTION_GROUPS = {
-  cuisson:   { key: 'cuisson',   label: 'Cuisson',   options: ['Bleu', 'Saignant', 'À point', 'Bien cuit'] },
-  garniture: { key: 'garniture', label: 'Garniture', options: ['Frites', 'Riz', 'Légumes', 'Salade'] },
+  cuisson:   translatable({ key: 'cuisson',   labelKey: 'service.optionGroups.cuisson',   options: ['Bleu', 'Saignant', 'À point', 'Bien cuit'] }),
+  garniture: translatable({ key: 'garniture', labelKey: 'service.optionGroups.garniture', options: ['Frites', 'Riz', 'Légumes', 'Salade'] }),
+}
+
+const OPTION_LABEL_KEYS = {
+  'Bleu': 'service.options.bleu',
+  'Saignant': 'service.options.saignant',
+  'À point': 'service.options.aPoint',
+  'Bien cuit': 'service.options.bienCuit',
+  'Frites': 'service.options.frites',
+  'Riz': 'service.options.riz',
+  'Légumes': 'service.options.legumes',
+  'Salade': 'service.options.salade',
+}
+
+/** Libellé affiché d'une valeur d'option (valeur inconnue : telle quelle). */
+export function optionLabel(value) {
+  const key = OPTION_LABEL_KEYS[value]
+  return key ? t(key) : value
+}
+
+/** Options d'une ligne (« Saignant + Frites ») traduites pour l'affichage. */
+export function formatOptions(options) {
+  if (!options) return ''
+  return String(options).split(' + ').map(optionLabel).join(' + ')
 }
 
 // Options proposées par service (les articles du pos-menu ne portent pas d'options)
@@ -38,10 +73,10 @@ export const COURSE_OPTIONS = {
 }
 
 export const ORDER_STATUSES = {
-  en_cours:   { label: 'En cours',   icon: '📝' },
-  en_cuisine: { label: 'En cuisine', icon: '🔥' },
-  servi:      { label: 'Servi',      icon: '✅' },
-  solde:      { label: 'Soldé',      icon: '💶' },
+  en_cours:   translatable({ labelKey: 'service.orderStatuses.enCours',   icon: '📝' }),
+  en_cuisine: translatable({ labelKey: 'service.orderStatuses.enCuisine', icon: '🔥' }),
+  servi:      translatable({ labelKey: 'service.orderStatuses.servi',     icon: '✅' }),
+  solde:      translatable({ labelKey: 'service.orderStatuses.solde',     icon: '💶' }),
 }
 
 const DRINK_RE = /(^|[^a-zà-ÿ])(boissons?|bi[eè]res?|vins?|softs?|eaux?|cocktails?|caf[eé]s?|th[eé]s?|champagnes?|ap[eé]ritifs?|digestifs?|jus)(?![a-zà-ÿ])/i
@@ -65,7 +100,7 @@ export function round2(v) {
 }
 
 export function formatEur(v) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v || 0)
+  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0)
 }
 
 // Réponses api.js : { success, data, message } (ou cache hors-ligne avec la même forme)
@@ -75,6 +110,11 @@ export function unwrap(res) {
 
 export function courseMeta(key) {
   return COURSES.find(c => c.key === key) || COURSES.find(c => c.key === 'autre')
+}
+
+/** Libellé traduit d'un service (entrée, plat…). */
+export function courseLabel(key) {
+  return t(courseMeta(key).labelKey)
 }
 
 export function resolveCourse(category) {
@@ -157,13 +197,13 @@ export function normalizeCategory(cat) {
   const meta = courseMeta(course)
   return {
     id: String(cat.id),
-    name: cat.name || 'Catégorie',
+    name: cat.name || t('service.fallback.category'),
     course,
     icon: meta.icon,
     color: meta.color,
     items: (Array.isArray(cat.items) ? cat.items : []).map(p => ({
       id: String(p.id),
-      name: p.name || p.label || 'Article',
+      name: p.name || p.label || t('service.fallback.article'),
       price: round2(p.price_ttc ?? p.price),
       vatRate: toNumber(p.vat_rate, DEFAULT_VAT_RATE),
       isKitchen: p.is_kitchen !== false,
@@ -176,7 +216,7 @@ export function normalizeTicket(t) {
   if (!t || !t.id) return null
   const items = (Array.isArray(t.items) ? t.items : []).map(i => ({
     id: String(i.id),
-    name: i.item_name || i.name || 'Article',
+    name: i.item_name || i.name || t('service.fallback.article'),
     qty: toNumber(i.quantity, 1),
     price: round2(i.unit_price_ttc),
     priceHt: round2(i.unit_price_ht),
@@ -231,7 +271,7 @@ export function mergeTables(spaces, tickets) {
   const seen = new Set()
   const out = spaces.map(s => ({
     id: String(s.id ?? s.number ?? s.name),
-    name: s.name || 'Salle',
+    name: s.name || t('service.fallback.space'),
     icon: s.icon || '🪑',
     tables: (Array.isArray(s.tables) ? s.tables : []).map(t => {
       const number = toNumber(t.number)
@@ -258,7 +298,7 @@ export function mergeTables(spaces, tickets) {
   if (orphans.length) {
     out.push({
       id: '__autres',
-      name: 'Autres',
+      name: t('service.fallback.otherSpace'),
       icon: '🔢',
       tables: orphans.map(t => ({
         number: t.tableNumber,
@@ -338,7 +378,7 @@ export async function fetchMenu() {
   return cats
     .map(normalizeCategory)
     .filter(c => c.items.length)
-    .sort((a, b) => courseMeta(a.course).order - courseMeta(b.course).order || a.name.localeCompare(b.name, 'fr'))
+    .sort((a, b) => courseMeta(a.course).order - courseMeta(b.course).order || a.name.localeCompare(b.name, intlLocale()))
 }
 
 export async function fetchOpenTickets() {
@@ -401,7 +441,8 @@ export function buildDispatchPayload({ establishmentId, tableNumber, items }) {
     notes,
     items: kitchenItems.map(i => {
       const meta = courseMeta(i.course)
-      notes[String(meta.order)] = `Table ${tableNumber} · ${meta.label}`
+      // Donnée cuisine : toujours en français, quelle que soit la langue de l'écran
+      notes[String(meta.order)] = `Table ${tableNumber} · ${meta.kitchenLabel}`
       routing[String(meta.order)] = 'cuisine'
       return {
         product_id: String(i.productId || i.id),
@@ -448,7 +489,7 @@ export async function dispatchTicketItems({ establishmentId, ticket, items }) {
       ...rec,
       failedItemIds: [...new Set([...rec.failedItemIds, ...ids])],
     }))
-    return { dispatched: false, error: e.data?.detail || e.message || 'Envoi cuisine impossible' }
+    return { dispatched: false, error: e.data?.detail || e.message || t('service.errors.dispatchFailed') }
   }
 }
 
@@ -458,8 +499,8 @@ export async function dispatchTicketItems({ establishmentId, ticket, items }) {
  */
 export async function sendOrder({ tableNumber, cart, covers = 1, openTable = false }) {
   const establishmentId = currentEstablishmentId()
-  if (!establishmentId) throw new Error('Aucun établissement actif')
-  if (!cart.length) throw new Error('Panier vide')
+  if (!establishmentId) throw new Error(t('service.errors.noEstablishment'))
+  if (!cart.length) throw new Error(t('service.errors.emptyCart'))
   // Envoi dans l'ordre des services : entrées, puis plats, desserts…
   cart = sortByCourse(cart)
 
@@ -489,7 +530,7 @@ export async function sendOrder({ tableNumber, cart, covers = 1, openTable = fal
   }
 
   const ticket = normalizeTicket(unwrap(res))
-  if (!ticket) throw new Error('Réponse inattendue du serveur')
+  if (!ticket) throw new Error(t('common.errors.unexpected'))
 
   // Les articles créés sont les derniers par sort_order
   const created = ticket.items.slice(-body.length)
@@ -754,15 +795,15 @@ export function applyMergeRecords(tickets, estId = currentEstablishmentId()) {
 
 function assertOnline() {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    throw new Error('Connexion requise pour fusionner ou séparer des tables')
+    throw new Error(t('service.errors.mergeOffline'))
   }
 }
 
 export function buildMergePayload(tableNumbers, targetTable) {
   const tables = uniqueTables(tableNumbers)
   const target = toNumber(targetTable)
-  if (tables.length < 2) throw new Error('Sélectionnez au moins 2 tables')
-  if (!tables.includes(target)) throw new Error('La table cible doit faire partie de la sélection')
+  if (tables.length < 2) throw new Error(t('service.errors.mergeMinTables'))
+  if (!tables.includes(target)) throw new Error(t('service.errors.mergeTarget'))
   return { table_numbers: tables, target_table: target }
 }
 
@@ -772,7 +813,7 @@ export async function mergeTableTickets({ tableNumbers, targetTable }) {
   const res = await api.post('/table-tickets/merge', payload)
   if (res?.queued) return { queued: true, ticket: null }
   const ticket = normalizeTicket(unwrap(res))
-  if (!ticket) throw new Error('Réponse inattendue du serveur')
+  if (!ticket) throw new Error(t('common.errors.unexpected'))
   const estId = currentEstablishmentId()
   const merges = readMerges(estId)
   merges[ticket.id] = uniqueTables([...payload.table_numbers, ...(ticket.tables || [])])
@@ -793,7 +834,7 @@ export function buildSplitPayload(ticket, assignments) {
     if (!byTable.has(table)) byTable.set(table, [])
     byTable.get(table).push(item.id)
   }
-  if (!byTable.size) throw new Error('Aucun article déplacé vers une autre table')
+  if (!byTable.size) throw new Error(t('service.errors.splitNothing'))
   return {
     table_number: ticket.tableNumber,
     splits: [...byTable.entries()]

@@ -1,0 +1,73 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "save": "Save",
+    "back": "Back",
+    "open": "Open",
+    "send": "Send",
+    "delete": "Delete",
+    "edit": "Edit",
+    "validate": "Validate",
+    "search": "Search",
+    "all": "All",
+    "none": "None",
+    "yes": "Yes",
+    "no": "No",
+    "table": "Table {number}",
+    "items": "{count} item | {count} items",
+    "language": "Language",
+    "logout": "Log out",
+    "nav": {
+      "pilot": "Pilot",
+      "orders": "Orders",
+      "caisse": "Till",
+      "service": "Service",
+      "stock": "Stock",
+      "cuisine": "Kitchen",
+      "alerts": "Alerts",
+      "profile": "Profile",
+      "quit": "Quit"
+    },
+    "roles": {
+      "OWNER": "Boss",
+      "MANAGER": "Manager",
+      "CUISINE": "Head chef",
+      "INVENTAIRE": "Inventory",
+      "VENTES": "Sales",
+      "ACHATS": "Purchasing",
+      "SERVEUR": "Waiter"
+    },
+    "titles": {
+      "pilot": "Pilot",
+      "stock": "Stock",
+      "notifications": "Notifications",
+      "orders": "Orders",
+      "profile": "Profile",
+      "receptions": "Deliveries",
+      "express": "Express inventory",
+      "stockDetail": "Stock session",
+      "caisse": "Till",
+      "cuisine": "Kitchen",
+      "service": "Service",
+      "serviceHistory": "Open orders",
+      "serviceProfile": "My profile",
+      "serviceOrder": "Order taking",
+      "customerDisplay": "Your bill",
+      "halls": "Floor plan"
+    },
+    "errors": {
+      "network": "Network unavailable.",
+      "networkNoCache": "Network unavailable. No cached data.",
+      "networkDownload": "Network unavailable. Unable to download the file.",
+      "sessionExpired": "Session expired. Please log in again.",
+      "unexpected": "Unexpected server response",
+      "generic": "Something went wrong",
+      "login": "Login error"
+    }
+  }
+}

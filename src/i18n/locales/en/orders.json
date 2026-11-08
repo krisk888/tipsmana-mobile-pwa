@@ -1,0 +1,30 @@
+{
+  "orders": {
+    "title": "Orders",
+    "subtitle": "Current orders — {count} waiting",
+    "loading": "Loading orders…",
+    "itemsShort": "{count} it.",
+    "status": {
+      "pending": "Waiting",
+      "printing": "Printing",
+      "printed": "Printed",
+      "preparing": "Cooking",
+      "ready": "Ready",
+      "served": "Served"
+    },
+    "actions": {
+      "prep": "Start",
+      "ready": "Ready"
+    },
+    "empty": {
+      "served": "No served orders",
+      "ready": "No dishes ready",
+      "preparing": "Nothing cooking",
+      "pending": "Everything is confirmed",
+      "all": "No orders yet"
+    },
+    "errors": {
+      "unreachable": "Server unreachable"
+    }
+  }
+}

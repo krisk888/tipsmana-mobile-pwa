@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '../shared/api'
+import { t, te } from '../i18n'
 import { login as authLogin, loadToken, logout as authLogout, saveToken } from '../shared/auth'
 
 // Établissement préféré (survit au logout) + instantané de session (survit au reload)
@@ -91,16 +92,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value || !!loadToken())
 
   const roleLabel = computed(() => {
-    const labels = {
-      OWNER: 'Boss',
-      MANAGER: 'Manager',
-      CUISINE: 'Chef cuisine',
-      INVENTAIRE: 'Inventaire',
-      VENTES: 'Ventes',
-      ACHATS: 'Achats',
-      SERVEUR: 'Serveur'
-    }
-    return labels[roleCode.value] || roleCode.value || '—'
+    const key = `common.roles.${roleCode.value}`
+    return roleCode.value && te(key) ? t(key) : (roleCode.value || '—')
   })
 
   // Route dédiée par rôle
@@ -120,12 +113,12 @@ export const useAuthStore = defineStore('auth', () => {
   // Onglets de navigation selon le rôle
   const navTabs = computed(() => {
     const allTabs = [
-      { path: '/pilot', iconName: 'pilote', label: 'Pilote', roles: ['OWNER', 'MANAGER'] },
-      { path: '/orders', iconName: 'orders', label: 'Commandes', roles: ['OWNER', 'MANAGER', 'CUISINE', 'VENTES', 'SERVEUR', 'ACHATS'], showNotifDot: true },
-      { path: '/caisse', iconName: 'caisse', label: 'Caisse', roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] },
-      { path: '/service', iconName: 'service', label: 'Service', roles: ['VENTES', 'SERVEUR'] },
-      { path: '/stock', iconName: 'stock', label: 'Stock', roles: ['OWNER', 'MANAGER', 'INVENTAIRE', 'ACHATS'] },
-      { path: '/cuisine', iconName: 'cuisine', label: 'Cuisine', roles: ['OWNER', 'MANAGER', 'CUISINE'], showNotifDot: true },
+      { path: '/pilot', iconName: 'pilote', label: t('common.nav.pilot'), roles: ['OWNER', 'MANAGER'] },
+      { path: '/orders', iconName: 'orders', label: t('common.nav.orders'), roles: ['OWNER', 'MANAGER', 'CUISINE', 'VENTES', 'SERVEUR', 'ACHATS'], showNotifDot: true },
+      { path: '/caisse', iconName: 'caisse', label: t('common.nav.caisse'), roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] },
+      { path: '/service', iconName: 'service', label: t('common.nav.service'), roles: ['VENTES', 'SERVEUR'] },
+      { path: '/stock', iconName: 'stock', label: t('common.nav.stock'), roles: ['OWNER', 'MANAGER', 'INVENTAIRE', 'ACHATS'] },
+      { path: '/cuisine', iconName: 'cuisine', label: t('common.nav.cuisine'), roles: ['OWNER', 'MANAGER', 'CUISINE'], showNotifDot: true },
     ]
     const code = roleCode.value
     if (!code) return allTabs

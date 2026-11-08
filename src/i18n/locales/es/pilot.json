@@ -1,0 +1,66 @@
+{
+  "pilot": {
+    "dashboard": {
+      "greeting": "Hola {name}",
+      "loadingKpis": "Cargando indicadores",
+      "connectionFailed": "No se puede conectar",
+      "serverUnreachable": "El servidor no responde. Comprueba tu conexión.",
+      "offlineData": "📡 Datos sin conexión — última sincronización: {time}",
+      "pendingOrders": "Pedidos en curso",
+      "pendingNone": "Ningún pedido pendiente",
+      "pendingCount": "{count} pedido pendiente | {count} pedidos pendientes",
+      "dayRevenue": "Facturación del día",
+      "transactions": "{count} transacción | {count} transacciones",
+      "floorplan": "Plano de sala",
+      "legend": {
+        "libre": "Libre",
+        "occupee": "Ocupada",
+        "addition": "Cuenta"
+      },
+      "tableState": {
+        "libre": "libre",
+        "occupee": "ocupada",
+        "addition": "cuenta"
+      },
+      "tableTitle": "Mesa {number} — {state}",
+      "tableTitleServer": "Mesa {number} — {state} ({server})",
+      "hourlyActivity": "Actividad por hora",
+      "hourlyUnavailable": "Datos por hora no disponibles",
+      "chartRevenueTitle": "{label} — Ventas: {amount}",
+      "chartOrdersTitle": "{label} — {count} pedido(s)",
+      "legendRevenue": "Ventas",
+      "legendOrders": "Pedidos",
+      "kpi": {
+        "todayRevenue": "Ventas de hoy",
+        "avgTicket": "Ticket medio",
+        "perTicket": "Ventas / ticket",
+        "grossMargin": "Margen bruto",
+        "activeProducts": "Productos activos",
+        "lowStock": "{count} con stock bajo"
+      },
+      "alerts": "Alertas",
+      "alertFallback": "Alerta",
+      "recentActivity": "Actividad reciente",
+      "quickActions": "Acciones rápidas",
+      "actionValidations": "✅ Validaciones",
+      "actionScan": "📷 Escanear",
+      "actionStock": "📦 Inventario",
+      "timeAgo": {
+        "justNow": "ahora mismo",
+        "minutes": "hace {n} min",
+        "hours": "hace {n} h"
+      }
+    },
+    "validations": {
+      "title": "✅ Validaciones",
+      "subtitle": "Facturas de proveedores pendientes",
+      "upToDate": "¡Todo al día!",
+      "unknownSupplier": "Proveedor desconocido",
+      "lines": "{count} línea | {count} líneas",
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "error": "Error: {message}",
+      "rejectReason": "¿Motivo del rechazo?"
+    }
+  }
+}

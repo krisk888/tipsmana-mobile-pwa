@@ -1,0 +1,21 @@
+{
+  "serviceProfile": {
+    "backToTables": "Back to tables",
+    "today": "Today",
+    "stats": {
+      "orders": "Orders",
+      "tablesHandled": "Tables served",
+      "openTables": "Open tables"
+    },
+    "tablesList": "Tables:",
+    "itemsSent": "{count} item sent from this device | {count} items sent from this device",
+    "openTablesError": "Open tables unavailable",
+    "notif": {
+      "enable": "Enable",
+      "granted": "On — you'll be alerted when an order is served",
+      "denied": "Blocked — allow them in your browser settings",
+      "default": "Not enabled yet",
+      "unsupported": "Not supported on this device"
+    }
+  }
+}

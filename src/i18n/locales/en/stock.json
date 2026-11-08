@@ -1,0 +1,160 @@
+{
+  "stock": {
+    "sessionFallback": "Session #{id}",
+    "startedAgo": "Started {ago}",
+    "productFallback": "Product",
+    "unitShort": "u",
+    "timeAgo": {
+      "justNow": "just now",
+      "minutes": "{n} min ago",
+      "hours": "{n}h ago"
+    },
+    "status": {
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "validated": "Validated",
+      "cancelled": "Cancelled"
+    },
+    "home": {
+      "title": "📦 Stock",
+      "subtitle": "Inventory and deliveries",
+      "activeSessions": "Sessions in progress",
+      "noActiveSession": "No active session",
+      "newSession": "+ New session",
+      "productsCount": "{count} product | {count} products",
+      "defaultSessionName": "Inventory {date}",
+      "createError": "Unable to create",
+      "links": {
+        "expressTitle": "Express inventory",
+        "expressDesc": "Count by zone, works offline",
+        "scanTitle": "Scan a product",
+        "scanDesc": "QR code or barcode",
+        "receptionsTitle": "Deliveries",
+        "receptionsDesc": "Pending deliveries"
+      }
+    },
+    "express": {
+      "title": "⚡ Express inventory",
+      "subtitle": "Count by zone — works offline",
+      "resumeSession": "Resume a session",
+      "noSession": "No express session in progress",
+      "badge": "Express",
+      "creating": "Creating…",
+      "newSession": "＋ New express inventory",
+      "defaultSessionName": "Express inventory {date}",
+      "createError": "Unable to create the session",
+      "completeError": "Unable to complete the session",
+      "apiError": "API error",
+      "zones": {
+        "subtitle": "Pick a count zone",
+        "changeSession": "← Change session",
+        "productsProgress": "{counted} / {total} products",
+        "eta": "⏱ estimated finish in ~{min} min ({speed}/min)",
+        "counted": "{n} counted",
+        "notStarted": "Not started",
+        "finishSession": "✔ Complete the session — view summary",
+        "done": "✔ Done",
+        "inProgress": "In progress",
+        "todo": "To do"
+      },
+      "areas": {
+        "salle": "🪑 Dining room",
+        "cuisine": "🍳 Kitchen",
+        "reserve": "📦 Storeroom",
+        "bar": "🍸 Bar"
+      },
+      "sections": {
+        "kitchen": "Kitchen",
+        "dining_room": "Dining room",
+        "bar": "Bar",
+        "reserve": "Storeroom"
+      },
+      "counting": {
+        "offline": "📴 Offline",
+        "pending": "⬆ {n} pending",
+        "manualHint": "Enter the code manually below",
+        "cameraPaused": "Camera paused — tap “Resume”",
+        "countedQty": "{count} counted | {count} counted",
+        "variance": "· variance {v}",
+        "manualPlaceholder": "Type the code / QR…",
+        "noCode": "🔍 No code",
+        "modeSet": "Location",
+        "modeAdd": "Per unit",
+        "ok": "✔ OK — {n}",
+        "zoneDoneNext": "🏁 Zone done → {zone}",
+        "zoneDoneFinish": "🏁 Zone done — complete the session",
+        "unknownCode": "Unknown code: {code}",
+        "synced": "⬆ {n} counts synced"
+      },
+      "camera": {
+        "unavailable": "Camera not available on this device",
+        "noDetector": "Auto-detection not supported — enter codes manually",
+        "openFailed": "Unable to open the camera — manual entry available"
+      },
+      "picker": {
+        "title": "Choose a product",
+        "search": "Search…",
+        "empty": "No products left to count 🎉"
+      },
+      "recap": {
+        "title": "📋 Summary",
+        "productsCounted": "products counted",
+        "totalVariance": "total variance",
+        "notCounted": "not counted",
+        "missing": "Missing ({n})",
+        "backToStock": "Back to stock"
+      }
+    },
+    "receptions": {
+      "title": "📬 Deliveries",
+      "subtitle": "Deliveries and stock entries",
+      "empty": "No deliveries recorded",
+      "movementFallback": "Movement",
+      "types": {
+        "delivery": "Delivery",
+        "reception": "Delivery",
+        "purchase": "Purchase",
+        "transfer_in": "Internal transfer in",
+        "adjustment": "Adjustment",
+        "loss": "Loss",
+        "transfer_out": "Internal transfer out",
+        "consumption": "Consumption"
+      }
+    },
+    "scan": {
+      "title": "📷 Scanner",
+      "subtitle": "Scan a QR code or barcode",
+      "tapToOpen": "Tap to open the camera",
+      "openCamera": "📸 Open camera",
+      "manualPlaceholder": "Or enter the barcode",
+      "ok": "OK",
+      "resultTitle": "Scan result",
+      "code": "Code:",
+      "product": "Product:",
+      "theoreticalStock": "Theoretical stock:",
+      "notDetected": "No code detected — enter it manually",
+      "scanFailed": "Scan failed",
+      "noProduct": "No product for code {code}",
+      "lookupFailed": "Lookup failed"
+    },
+    "detail": {
+      "fallbackTitle": "Stock session",
+      "type": "Type",
+      "startedBy": "Started by",
+      "completed": "Completed",
+      "validated": "Validated",
+      "notes": "Notes",
+      "complete": "✓ Complete the count",
+      "counts": "Counts ({n})",
+      "empty": "No products counted. Scan the first product.",
+      "scan": "📷 Scan",
+      "theoretical": "Theoretical: {n}",
+      "variance": "Variance: {v}",
+      "closeFailed": "Failed to close the session",
+      "types": {
+        "physical_count": "Physical count",
+        "theoretical": "Theoretical"
+      }
+    }
+  }
+}

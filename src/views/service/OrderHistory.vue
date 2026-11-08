@@ -2,12 +2,12 @@
   <div class="oh-shell">
     <!-- ═══ HEADER ═══ -->
     <header class="oh-header">
-      <button class="oh-back" title="Tables" @click="router.push('/service')">←</button>
+      <button class="oh-back" :title="t('service.backToTables')" @click="router.push('/service')">←</button>
       <div class="oh-header-main">
-        <h1 class="oh-title">🧾 Commandes</h1>
-        <span class="oh-subtitle">{{ activeCount }} table(s) en service</span>
+        <h1 class="oh-title">🧾 {{ t('service.orderHistory.title') }}</h1>
+        <span class="oh-subtitle">{{ t('service.orderHistory.activeTables', { count: activeCount }) }}</span>
       </div>
-      <button class="oh-icon-btn" :disabled="loading" title="Rafraîchir" @click="load()">
+      <button class="oh-icon-btn" :disabled="loading" :title="t('common.refresh')" @click="load()">
         <span :class="{ spinning: loading }">⟳</span>
       </button>
     </header>
@@ -28,15 +28,15 @@
     <!-- ═══ ÉTATS ═══ -->
     <div v-if="loading && !loaded" class="oh-state">
       <span class="oh-spinner"></span>
-      <span>Chargement des commandes…</span>
+      <span>{{ t('service.orderHistory.loading') }}</span>
     </div>
     <div v-else-if="error && !orders.length" class="oh-state oh-error">
       <p>⚠️ {{ error }}</p>
-      <button class="btn-primary" @click="load()">Réessayer</button>
+      <button class="btn-primary" @click="load()">{{ t('common.retry') }}</button>
     </div>
     <div v-else-if="!visibleOrders.length" class="oh-state">
       <span class="oh-empty-icon">✅</span>
-      <p>{{ filter === 'all' ? 'Aucune commande en cours' : 'Aucune commande dans ce statut' }}</p>
+      <p>{{ filter === 'all' ? t('service.orderHistory.emptyAll') : t('service.orderHistory.emptyFilter') }}</p>
     </div>
 
     <!-- ═══ LISTE PAR TABLE ═══ -->
@@ -49,9 +49,9 @@
       >
         <div class="oh-card-header" @click="toggle(o.ticket.id)">
           <div class="oh-card-left">
-            <span class="oh-card-table">Table {{ o.ticket.tableNumber }}</span>
+            <span class="oh-card-table">{{ t('common.table', { number: o.ticket.tableNumber }) }}</span>
             <span class="oh-badge" :class="'status-' + o.status">
-              {{ ORDER_STATUSES[o.status].icon }} {{ ORDER_STATUSES[o.status].label }}
+              {{ ORDER_STATUSES[o.status].icon }} {{ t(ORDER_STATUSES[o.status].labelKey) }}
             </span>
           </div>
           <div class="oh-card-right">
@@ -61,11 +61,11 @@
         </div>
         <div class="oh-card-meta">
           <span>👤{{ o.ticket.covers }}</span>
-          <span>{{ itemCount(o.ticket) }} art.</span>
+          <span>{{ t('service.itemsShort', { count: itemCount(o.ticket) }) }}</span>
           <span v-if="o.ticket.serveur">{{ o.ticket.serveur }}</span>
           <span v-if="o.ticket.openedAt">{{ timeLabel(o) }}</span>
-          <span v-if="o.readyCount" class="oh-ready">🔔 {{ o.readyCount }} prêt(s) à servir</span>
-          <span v-if="o.failedCount" class="oh-failed">⚠️ {{ o.failedCount }} non envoyé(s)</span>
+          <span v-if="o.readyCount" class="oh-ready">🔔 {{ t('service.orderHistory.readyToServe', { count: o.readyCount }) }}</span>
+          <span v-if="o.failedCount" class="oh-failed">⚠️ {{ t('service.orderHistory.notSent', { count: o.failedCount }) }}</span>
         </div>
 
         <div v-if="expanded[o.ticket.id]" class="oh-detail">
@@ -73,13 +73,13 @@
             <span class="oh-item-qty">{{ i.qty }}×</span>
             <span class="oh-item-info">
               <span class="oh-item-name">{{ i.name }}</span>
-              <span v-if="i.options || i.note" class="oh-item-sub">{{ [i.options, i.note].filter(Boolean).join(' · ') }}</span>
+              <span v-if="i.options || i.note" class="oh-item-sub">{{ [formatOptions(i.options), i.note].filter(Boolean).join(' · ') }}</span>
             </span>
             <span class="oh-item-price">{{ formatEur(i.qty * i.price) }}</span>
           </div>
 
           <div v-if="o.kitchenItems.length" class="oh-kitchen">
-            <div class="oh-kitchen-title">Suivi cuisine</div>
+            <div class="oh-kitchen-title">{{ t('service.orderHistory.kitchenTracking') }}</div>
             <div v-for="(k, idx) in o.kitchenItems" :key="idx" class="oh-kitchen-item">
               <span>{{ k.qty }}× {{ k.name }}</span>
               <span class="oh-kds" :class="'kds-' + k.status">{{ kdsLabel(k.status) }}</span>
@@ -87,16 +87,16 @@
           </div>
 
           <div class="oh-totals">
-            <span>HT {{ formatEur(o.ticket.totalHt) }}</span>
-            <span>TVA {{ formatEur(o.ticket.totalTtc - o.ticket.totalHt) }}</span>
-            <strong>TTC {{ formatEur(o.ticket.totalTtc) }}</strong>
+            <span>{{ t('service.orderHistory.ht', { amount: formatEur(o.ticket.totalHt) }) }}</span>
+            <span>{{ t('service.orderHistory.vat', { amount: formatEur(o.ticket.totalTtc - o.ticket.totalHt) }) }}</span>
+            <strong>{{ t('service.orderHistory.ttc', { amount: formatEur(o.ticket.totalTtc) }) }}</strong>
           </div>
 
           <button
             v-if="o.status !== 'solde'"
             class="btn-primary oh-open"
             @click="router.push({ name: 'ServiceOrder', params: { number: o.ticket.tableNumber } })"
-          >➕ Compléter la commande</button>
+          >➕ {{ t('service.orderHistory.complete') }}</button>
         </div>
       </div>
     </div>
@@ -107,11 +107,13 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  ORDER_STATUSES, formatEur, fetchOpenTickets, fetchKitchenItems,
+  ORDER_STATUSES, formatEur, formatOptions, fetchOpenTickets, fetchKitchenItems,
   syncHistory, getKitchenRecord, orderStatus, currentEstablishmentId,
 } from '../../shared/serviceOrders'
+import { useI18n } from '../../i18n'
 
 const router = useRouter()
+const { t, intlLocale } = useI18n()
 const estId = currentEstablishmentId()
 
 const orders = ref([])
@@ -124,13 +126,13 @@ const expanded = ref({})
 const POLL_INTERVAL = 20000
 let pollTimer = null
 
-const KDS_LABELS = { pending: 'En attente', preparing: 'En prépa', ready: 'Prêt', served: 'Servi' }
+const KDS_STATUSES = ['pending', 'preparing', 'ready', 'served']
 
 const filters = computed(() => [
-  { key: 'all', label: 'Toutes', count: orders.value.length },
+  { key: 'all', label: t('common.all'), count: orders.value.length },
   ...Object.entries(ORDER_STATUSES).map(([key, s]) => ({
     key,
-    label: s.label,
+    label: t(s.labelKey),
     count: orders.value.filter(o => o.status === key).length,
   })),
 ])
@@ -142,7 +144,7 @@ const visibleOrders = computed(() =>
 const activeCount = computed(() => orders.value.filter(o => o.status !== 'solde').length)
 
 function kdsLabel(status) {
-  return KDS_LABELS[status] || status || '—'
+  return KDS_STATUSES.includes(status) ? t(`service.orderHistory.kds.${status}`) : (status || '—')
 }
 
 function itemCount(ticket) {
@@ -153,8 +155,8 @@ function timeLabel(o) {
   const ts = o.closedAt || o.ticket.openedAt
   const d = new Date(ts)
   if (isNaN(d.getTime())) return ''
-  const hm = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  return o.closedAt ? `soldée ${hm}` : `ouverte ${hm}`
+  const hm = d.toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
+  return o.closedAt ? t('service.orderHistory.closedAt', { time: hm }) : t('service.orderHistory.openedAt', { time: hm })
 }
 
 function toggle(id) {
@@ -191,7 +193,7 @@ async function load(silent = false) {
     orders.value = built
     error.value = null
   } catch (e) {
-    if (!silent) error.value = e.message || 'Impossible de charger les commandes'
+    if (!silent) error.value = e.message || t('service.orderHistory.loadFailed')
   } finally {
     loading.value = false
     loaded.value = true

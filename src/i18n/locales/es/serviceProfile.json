@@ -1,0 +1,21 @@
+{
+  "serviceProfile": {
+    "backToTables": "Volver a las mesas",
+    "today": "Hoy",
+    "stats": {
+      "orders": "Pedidos",
+      "tablesHandled": "Mesas atendidas",
+      "openTables": "Mesas abiertas"
+    },
+    "tablesList": "Mesas:",
+    "itemsSent": "{count} artículo enviado desde este dispositivo | {count} artículos enviados desde este dispositivo",
+    "openTablesError": "Mesas abiertas no disponibles",
+    "notif": {
+      "enable": "Activar",
+      "granted": "Activadas: recibirá un aviso cuando se sirva un pedido",
+      "denied": "Bloqueadas: permítalas en los ajustes del navegador",
+      "default": "Aún no activadas",
+      "unsupported": "No compatibles con este dispositivo"
+    }
+  }
+}

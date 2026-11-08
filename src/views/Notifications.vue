@@ -2,25 +2,25 @@
   <div class="notifications-view">
     <header class="page-header">
       <div class="header-top">
-        <h2>🔔 Notifications</h2>
+        <h2>{{ t('notifications.title') }}</h2>
         <button
           v-if="notifications.length && unreadCount > 0"
           class="mark-all-btn"
           :disabled="busy"
           @click="markAllRead"
         >
-          Tout lu
+          {{ t('notifications.markAllRead') }}
         </button>
         <button
           v-if="unreadCount > 0 && newNotifIndicator"
           class="new-notif-btn"
           @click="refreshNow"
         >
-          ⬇️ Nouvelles notifications
+          {{ t('notifications.newNotifications') }}
         </button>
       </div>
       <p class="subtitle">
-        {{ unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? 's' : ''}` : 'Aucune notification non lue' }}
+        {{ unreadCount > 0 ? t('notifications.unread', { count: unreadCount }) : t('notifications.noUnread') }}
       </p>
     </header>
 
@@ -34,19 +34,19 @@
             @click="setFilter(p.value)"
           >
             <span class="chip-dot" :class="p.value || 'all'"></span>
-            {{ p.label }}
+            {{ t(p.labelKey) }}
           </button>
         </div>
         <button class="sort-btn" @click="toggleSort">
           <span v-if="sortAscending">↑</span>
           <span v-else>↓</span>
-          Date
+          {{ t('notifications.sortDate') }}
         </button>
       </div>
 
     <!-- Pull-to-refresh indicator -->
     <div v-if="pulling" class="pull-indicator">
-      <span>{{ pullState }}</span>
+      <span>{{ pullState ? t(`notifications.pull.${pullState}`) : '' }}</span>
     </div>
 
     <!-- Skeleton de chargement -->
@@ -61,7 +61,7 @@
     <!-- Liste vide -->
     <div v-else-if="!notifications.length && !loading" class="empty-state">
       <span class="empty-icon">🔔</span>
-      <p>Aucune notification pour le moment</p>
+      <p>{{ t('notifications.empty') }}</p>
     </div>
 
     <!-- Liste des notifications -->
@@ -93,7 +93,7 @@
     <!-- Pagination -->
     <div v-if="hasMore" class="load-more">
       <button class="btn-more" :disabled="loading" @click="loadMore">
-        {{ loading ? 'Chargement...' : 'Voir plus' }}
+        {{ loading ? t('common.loading') : t('notifications.loadMore') }}
       </button>
     </div>
 
@@ -104,6 +104,9 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../shared/api'
+import { useI18n } from '../i18n'
+
+const { t, intlLocale } = useI18n()
 
 const notifications = ref([])
 const loading = ref(false)
@@ -120,16 +123,16 @@ let pollTimer = null
 const filterPriority = ref('')
 const sortAscending = ref(false)
 const priorityOptions = [
-  { value: '', label: 'Toutes' },
-  { value: 'urgent', label: 'Urgente' },
-  { value: 'high', label: 'Haute' },
-  { value: 'medium', label: 'Moyenne' },
-  { value: 'low', label: 'Basse' },
+  { value: '', labelKey: 'common.all' },
+  { value: 'urgent', labelKey: 'notifications.priority.urgent' },
+  { value: 'high', labelKey: 'notifications.priority.high' },
+  { value: 'medium', labelKey: 'notifications.priority.medium' },
+  { value: 'low', labelKey: 'notifications.priority.low' },
 ]
 
 // Pull-to-refresh
 const pulling = ref(false)
-const pullState = ref('')
+const pullState = ref('') // '' | 'pull' | 'release' | 'refreshing' (clé notifications.pull.*)
 const touchStartY = ref(0)
 const listRef = ref(null)
 
@@ -165,7 +168,7 @@ async function fetchNotifications(append = false) {
       notifications.value = items
     }
   } catch (e) {
-    error.value = e.message || 'Erreur de chargement'
+    error.value = e.message || t('notifications.loadError')
   } finally {
     loading.value = false
   }
@@ -230,10 +233,10 @@ function onTouchMove(e) {
   const diff = e.touches[0].clientY - touchStartY.value
   if (diff > 60) {
     pulling.value = true
-    pullState.value = '🔄 Relâchez pour actualiser'
+    pullState.value = 'release'
   } else if (diff > 20) {
     pulling.value = true
-    pullState.value = '⬇️ Tirer pour actualiser'
+    pullState.value = 'pull'
   } else {
     pulling.value = false
     pullState.value = ''
@@ -241,9 +244,9 @@ function onTouchMove(e) {
 }
 
 async function onTouchEnd() {
-  if (pulling.value && pullState.value.includes('Relâchez')) {
+  if (pulling.value && pullState.value === 'release') {
     pulling.value = true
-    pullState.value = '🔄 Actualisation...'
+    pullState.value = 'refreshing'
     page.value = 1
     await fetchNotifications(false)
   }
@@ -256,13 +259,13 @@ function timeAgo(iso) {
   if (!iso) return ''
   const diff = Date.now() - new Date(iso).getTime()
   const min = Math.floor(diff / 60000)
-  if (min < 1) return "à l'instant"
-  if (min < 60) return `il y a ${min} min`
+  if (min < 1) return t('notifications.timeAgo.justNow')
+  if (min < 60) return t('notifications.timeAgo.minutes', { n: min })
   const h = Math.floor(min / 60)
-  if (h < 24) return `il y a ${h}h`
+  if (h < 24) return t('notifications.timeAgo.hours', { n: h })
   const d = Math.floor(h / 24)
-  if (d < 7) return `il y a ${d}j`
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  if (d < 7) return t('notifications.timeAgo.days', { n: d })
+  return new Date(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' })
 }
 
 // Real-time polling

@@ -1,0 +1,69 @@
+{
+  "kitchen": {
+    "title": "Kitchen",
+    "subtitle": "Kitchen display — orders in progress",
+    "online": "Online",
+    "offline": "Offline",
+    "unreadOrders": "Unread new orders",
+    "newOrder": "New order!",
+    "urgency": "Urgent!",
+    "loadingOrders": "Loading orders…",
+    "demoMode": "Demo mode",
+    "productFallback": "Product",
+    "status": {
+      "pending": "Waiting",
+      "printing": "Printing",
+      "printed": "Printed",
+      "preparing": "Cooking",
+      "ready": "Ready",
+      "served": "Served"
+    },
+    "kpi": {
+      "pending": "Waiting",
+      "preparing": "Cooking",
+      "ready": "Ready",
+      "oldest": "Oldest",
+      "items": "Items"
+    },
+    "age": {
+      "justNow": "just now",
+      "minutes": "{minutes} min",
+      "hours": "{hours}h",
+      "hoursMinutes": "{hours}h {minutes}min"
+    },
+    "empty": {
+      "served": "No served orders",
+      "ready": "No dishes ready",
+      "preparing": "Nothing cooking",
+      "pending": "Everything is confirmed",
+      "all": "All served, nothing waiting",
+      "sub": "The kitchen can breathe…"
+    },
+    "actions": {
+      "validate": "Confirm",
+      "ready": "Ready",
+      "served": "Served",
+      "validateAll": "Confirm all",
+      "allReady": "All ready",
+      "serve": "Serve"
+    },
+    "toast": {
+      "newOrders": "{count} new order! | {count} new orders!",
+      "courseCalled": "New course called",
+      "demoOn": "Demo mode enabled",
+      "itemUpdated": "Dish updated",
+      "failed": "Failed",
+      "orderValidated": "Order confirmed",
+      "orderReady": "Order ready",
+      "orderServed": "Order served",
+      "orderUpdated": "Order updated"
+    },
+    "errors": {
+      "unreachable": "Server unreachable"
+    },
+    "mock": {
+      "urgent": "{count} urgent",
+      "noOnion": "No onion"
+    }
+  }
+}

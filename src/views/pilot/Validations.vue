@@ -1,27 +1,27 @@
 <template>
   <div class="validations-view">
     <header class="page-header">
-      <h2>✅ Validations</h2>
-      <p class="subtitle">Factures fournisseurs en attente</p>
+      <h2>{{ t('pilot.validations.title') }}</h2>
+      <p class="subtitle">{{ t('pilot.validations.subtitle') }}</p>
     </header>
 
-    <div v-if="loading" class="loading-state">Chargement...</div>
+    <div v-if="loading" class="loading-state">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="error-state">{{ error }}</div>
     <div v-else-if="!invoices.length" class="empty-state">
       <p class="empty-icon">✅</p>
-      <p>Tout est à jour !</p>
+      <p>{{ t('pilot.validations.upToDate') }}</p>
     </div>
 
     <div v-else class="invoice-list">
       <div v-for="inv in invoices" :key="inv.id" class="invoice-card">
         <div class="inv-header">
-          <strong>{{ inv.supplier?.name || inv.invoice_number || 'Fournisseur inconnu' }}</strong>
+          <strong>{{ inv.supplier?.name || inv.invoice_number || t('pilot.validations.unknownSupplier') }}</strong>
           <span class="inv-amount">{{ formatEur(inv.total_ttc) }}</span>
         </div>
-        <p class="inv-meta">{{ inv.date }} • {{ inv.counts?.lines ?? 0 }} lignes</p>
+        <p class="inv-meta">{{ inv.date }} • {{ t('pilot.validations.lines', { count: inv.counts?.lines ?? 0 }) }}</p>
         <div class="inv-actions">
-          <button class="btn-approve" :disabled="busy[inv.id] || inv.workflow?.can_validate === false" @click="approve(inv.id)">Approuver</button>
-          <button class="btn-reject" :disabled="busy[inv.id]" @click="reject(inv.id)">Rejeter</button>
+          <button class="btn-approve" :disabled="busy[inv.id] || inv.workflow?.can_validate === false" @click="approve(inv.id)">{{ t('pilot.validations.approve') }}</button>
+          <button class="btn-reject" :disabled="busy[inv.id]" @click="reject(inv.id)">{{ t('pilot.validations.reject') }}</button>
         </div>
       </div>
     </div>
@@ -31,13 +31,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '../../shared/api'
+import { useI18n } from '../../i18n'
+
+const { t, intlLocale } = useI18n()
 
 const invoices = ref([])
 const loading = ref(true)
 const error = ref(null)
 const busy = ref({})
 
-function formatEur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v || 0) }
+function formatEur(v) { return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0) }
 
 async function load() {
   loading.value = true
@@ -60,7 +63,7 @@ async function run(id, call) {
     await call()
     invoices.value = invoices.value.filter(i => i.id !== id)
   } catch (e) {
-    alert('Erreur: ' + e.message)
+    alert(t('pilot.validations.error', { message: e.message }))
   } finally {
     busy.value[id] = false
   }
@@ -71,7 +74,7 @@ function approve(id) {
 }
 
 function reject(id) {
-  const reason = prompt('Motif du rejet ?')
+  const reason = prompt(t('pilot.validations.rejectReason'))
   if (!reason?.trim()) return
   return run(id, () => api.post(`/costs/invoices/${id}/reject`, { reason: reason.trim() }))
 }

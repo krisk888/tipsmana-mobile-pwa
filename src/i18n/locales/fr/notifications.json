@@ -1,0 +1,30 @@
+{
+  "notifications": {
+    "title": "🔔 Notifications",
+    "markAllRead": "Tout lu",
+    "newNotifications": "⬇️ Nouvelles notifications",
+    "unread": "{count} non lue | {count} non lues",
+    "noUnread": "Aucune notification non lue",
+    "priority": {
+      "urgent": "Urgente",
+      "high": "Haute",
+      "medium": "Moyenne",
+      "low": "Basse"
+    },
+    "sortDate": "Date",
+    "empty": "Aucune notification pour le moment",
+    "loadMore": "Voir plus",
+    "loadError": "Erreur de chargement",
+    "pull": {
+      "release": "🔄 Relâchez pour actualiser",
+      "pull": "⬇️ Tirer pour actualiser",
+      "refreshing": "🔄 Actualisation..."
+    },
+    "timeAgo": {
+      "justNow": "à l'instant",
+      "minutes": "il y a {n} min",
+      "hours": "il y a {n}h",
+      "days": "il y a {n}j"
+    }
+  }
+}

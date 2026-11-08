@@ -13,26 +13,26 @@
     <div class="offline-banner__content">
       <template v-if="isOnline && wasOffline">
         <span class="offline-banner__icon">✅</span>
-        <span class="offline-banner__text">Connexion rétablie</span>
+        <span class="offline-banner__text">{{ t('ui.offline.restored') }}</span>
         <span v-if="pendingCount > 0 && !isSyncing" class="offline-banner__action" @click="$emit('flush')">
-          Sync {{ pendingCount }} requête{{ pendingCount > 1 ? 's' : '' }}
+          {{ t('ui.offline.syncRequests', { count: pendingCount }) }}
         </span>
         <span v-if="isSyncing" class="offline-banner__syncing">
           <span class="offline-banner__spinner"></span>
-          Synchronisation...
+          {{ t('ui.offline.syncing') }}
         </span>
-        <span v-else-if="synced > 0" class="offline-banner__synced">{{ synced }} sync {{ synced > 1 ? 's' : '' }} ✓</span>
+        <span v-else-if="synced > 0" class="offline-banner__synced">{{ t('ui.offline.synced', { count: synced }) }}</span>
       </template>
       <template v-else-if="!isOnline">
         <span class="offline-banner__icon">📡</span>
-        <span class="offline-banner__text">Hors ligne</span>
+        <span class="offline-banner__text">{{ t('ui.offline.offline') }}</span>
         <span v-if="pendingCount > 0" class="offline-banner__count">
-          {{ pendingCount }} requête{{ pendingCount > 1 ? 's' : '' }} en attente
+          {{ t('ui.offline.pending', { count: pendingCount }) }}
         </span>
-        <span v-else class="offline-banner__count">Utilisation du cache</span>
+        <span v-else class="offline-banner__count">{{ t('ui.offline.usingCache') }}</span>
       </template>
     </div>
-    <button v-if="!isOnline || (isOnline && synced > 0)" class="offline-banner__dismiss" @click="dismiss" aria-label="Fermer">
+    <button v-if="!isOnline || (isOnline && synced > 0)" class="offline-banner__dismiss" @click="dismiss" :aria-label="t('common.close')">
       ✕
     </button>
   </div>
@@ -40,6 +40,9 @@
 
 <script setup>
 import { ref, watch, onUnmounted } from 'vue'
+import { useI18n } from '../i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   isOnline: { type: Boolean, default: true },

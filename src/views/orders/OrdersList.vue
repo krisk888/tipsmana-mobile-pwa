@@ -2,23 +2,23 @@
   <div class="orders-view">
     <header class="page-header">
       <div class="header-row">
-        <h2>📋 Commandes</h2>
-        <button class="header-btn" @click="loadOrders" title="Rafraîchir">↻</button>
+        <h2>📋 {{ t('orders.title') }}</h2>
+        <button class="header-btn" @click="loadOrders" :title="t('common.refresh')">↻</button>
       </div>
-      <p class="subtitle">Commandes en cours — {{ pendingCount }} en attente</p>
+      <p class="subtitle">{{ t('orders.subtitle', { count: pendingCount }) }}</p>
     </header>
 
     <!-- Loading -->
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <p>Chargement des commandes…</p>
+      <p>{{ t('orders.loading') }}</p>
     </div>
 
     <!-- Error -->
     <div v-else-if="error" class="error-state">
       <p class="error-icon">⚠️</p>
       <p class="error-text">{{ error }}</p>
-      <button class="btn-retry" @click="loadOrders">↻ Réessayer</button>
+      <button class="btn-retry" @click="loadOrders">↻ {{ t('common.retry') }}</button>
     </div>
 
     <!-- Filter bar -->
@@ -59,7 +59,7 @@
           </div>
           <div class="card-header-right">
             <span class="card-age">{{ ageDisplay(o) }}</span>
-            <span class="card-items-count">{{ itemCount(o) }} art.</span>
+            <span class="card-items-count">{{ t('orders.itemsShort', { count: itemCount(o) }) }}</span>
             <span class="chevron" :class="{ open: expanded[o.id] }">▾</span>
           </div>
         </div>
@@ -86,7 +86,7 @@
                 :disabled="actionLoading[o.id + '-' + idx]"
               >
                 <span v-if="actionLoading[o.id + '-' + idx]" class="action-spinner"></span>
-                <span v-else>🔥 En prépa</span>
+                <span v-else>🔥 {{ t('orders.actions.prep') }}</span>
               </button>
               <button
                 v-else-if="item.status === 'preparing'"
@@ -95,16 +95,16 @@
                 :disabled="actionLoading[o.id + '-' + idx]"
               >
                 <span v-if="actionLoading[o.id + '-' + idx]" class="action-spinner"></span>
-                <span v-else>✅ Prêt</span>
+                <span v-else>✅ {{ t('orders.actions.ready') }}</span>
               </button>
               <span
                 v-else-if="item.status === 'ready'"
                 class="item-status-badge item-status-ready"
-              >Prêt</span>
+              >{{ t('orders.status.ready') }}</span>
               <span
                 v-else-if="item.status === 'served'"
                 class="item-status-badge item-status-served"
-              >Servi</span>
+              >{{ t('orders.status.served') }}</span>
             </div>
           </div>
         </div>
@@ -116,6 +116,9 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
+import { useI18n } from '../../i18n'
+
+const { t } = useI18n()
 
 // ── State ──────────────────────────────────────────────
 const orders = ref([])
@@ -145,11 +148,11 @@ function ageClass(o) {
 
 // ── Filter definitions ──────────────────────────────────
 const filterOptions = computed(() => [
-  { key: 'all',     label: 'Toutes',     count: orders.value.length },
-  { key: 'pending',  label: 'En attente', count: ordersByStatus('pending').length },
-  { key: 'preparing',label: 'En prépa',   count: ordersByStatus('preparing').length },
-  { key: 'ready',   label: 'Prêt',       count: ordersByStatus('ready').length },
-  { key: 'served',  label: 'Servi',      count: ordersByStatus('served').length },
+  { key: 'all',      label: t('common.all'),              count: orders.value.length },
+  { key: 'pending',  label: t('orders.status.pending'),   count: ordersByStatus('pending').length },
+  { key: 'preparing',label: t('orders.status.preparing'), count: ordersByStatus('preparing').length },
+  { key: 'ready',    label: t('orders.status.ready'),     count: ordersByStatus('ready').length },
+  { key: 'served',   label: t('orders.status.served'),    count: ordersByStatus('served').length },
 ])
 
 function ordersByStatus(status) {
@@ -177,11 +180,10 @@ const pendingCount = computed(() =>
 )
 
 const emptyMessage = computed(() => {
-  if (filter.value === 'served') return 'Aucune commande servie'
-  if (filter.value === 'ready') return 'Aucun plat prêt'
-  if (filter.value === 'preparing') return 'Rien en préparation'
-  if (filter.value === 'pending') return 'Tout est validé'
-  return 'Aucune commande pour le moment'
+  if (['served', 'ready', 'preparing', 'pending'].includes(filter.value)) {
+    return t(`orders.empty.${filter.value}`)
+  }
+  return t('orders.empty.all')
 })
 
 // ── Helpers ─────────────────────────────────────────────
@@ -190,15 +192,8 @@ function shortId(id) {
 }
 
 function statusLabel(s) {
-  const map = {
-    pending: 'En attente',
-    printing: 'Impression',
-    printed: 'Imprimé',
-    preparing: 'En prépa',
-    ready: 'Prêt',
-    served: 'Servi',
-  }
-  return map[s] || s || '—'
+  const known = ['pending', 'printing', 'printed', 'preparing', 'ready', 'served']
+  return known.includes(s) ? t(`orders.status.${s}`) : (s || '—')
 }
 
 function ageDisplay(o) {
@@ -245,7 +240,7 @@ async function loadOrders() {
       expanded.value[firstPending.id] = true
     }
   } catch (e) {
-    error.value = e.message || 'Serveur injoignable'
+    error.value = e.message || t('orders.errors.unreachable')
     if (!orders.value.length) orders.value = []
   } finally {
     loading.value = false

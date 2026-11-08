@@ -1,0 +1,167 @@
+{
+  "service": {
+    "backToTables": "Mesas",
+    "itemsShort": "{count} art.",
+    "courses": {
+      "entree": "Entrante",
+      "plat": "Principal",
+      "dessert": "Postre",
+      "boisson": "Bebida",
+      "autre": "Otro"
+    },
+    "optionGroups": {
+      "cuisson": "Punto",
+      "garniture": "Guarnición"
+    },
+    "options": {
+      "bleu": "Vuelta y vuelta",
+      "saignant": "Poco hecho",
+      "aPoint": "Al punto",
+      "bienCuit": "Muy hecho",
+      "frites": "Patatas fritas",
+      "riz": "Arroz",
+      "legumes": "Verduras",
+      "salade": "Ensalada"
+    },
+    "notePresets": {
+      "glutenFree": "Sin gluten",
+      "lactoseFree": "Sin lactosa",
+      "nutAllergy": "Alergia a frutos secos",
+      "noOnions": "Sin cebolla"
+    },
+    "orderStatuses": {
+      "enCours": "En curso",
+      "enCuisine": "En cocina",
+      "servi": "Servido",
+      "solde": "Pagado"
+    },
+    "fallback": {
+      "category": "Categoría",
+      "article": "Artículo",
+      "space": "Sala",
+      "otherSpace": "Otras"
+    },
+    "errors": {
+      "noEstablishment": "Ningún establecimiento activo",
+      "emptyCart": "Carrito vacío",
+      "dispatchFailed": "No se pudo enviar a cocina",
+      "mergeOffline": "Se necesita conexión para unir o separar mesas",
+      "mergeMinTables": "Selecciona al menos 2 mesas",
+      "mergeTarget": "La mesa destino debe estar en la selección",
+      "splitNothing": "Ningún artículo movido a otra mesa"
+    },
+    "notifications": {
+      "title": "Tipsmana — Servicio",
+      "order": "Comanda",
+      "served": "✅ {table}: comanda servida",
+      "inKitchen": "🔥 {table}: comanda en cocina",
+      "updated": "{table}: estado actualizado"
+    },
+    "totals": {
+      "totalHt": "Total sin IVA",
+      "vat": "IVA",
+      "totalTtc": "Total con IVA"
+    },
+    "orderTaking": {
+      "onNote": "{amount} en la cuenta",
+      "newNote": "Nueva cuenta",
+      "ordersInProgress": "Comandas en curso",
+      "tabMenu": "Carta",
+      "tabNote": "Cuenta",
+      "failedAlert": "{count} artículo guardado pero no enviado a cocina | {count} artículos guardados pero no enviados a cocina",
+      "resend": "Reenviar",
+      "loadingMenu": "Cargando la carta…",
+      "emptyMenu": "No hay artículos activos en la carta.",
+      "optionsHint": "opciones",
+      "editProduct": "Cantidad, opciones, nota",
+      "emptyNote": "No hay artículos en la cuenta de esta mesa.",
+      "notSent": "no enviado",
+      "customerQr": "Cuenta cliente (QR)",
+      "splitByTable": "Separar por mesa",
+      "cart": "Carrito",
+      "editLine": "Nota, servicio, orden",
+      "tableTotalAfter": "Total mesa tras el envío",
+      "clearCart": "Vaciar carrito",
+      "sendToKitchen": "Enviar a cocina · {amount}",
+      "quantity": "Cantidad",
+      "course": "Servicio",
+      "orderInCourse": "Orden en el servicio",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "kitchenNote": "Nota para cocina",
+      "lineNotePlaceholder": "Punto, alérgeno…",
+      "sheetNotePlaceholder": "Sin cebolla, alergia…",
+      "removeTitle": "¿Eliminar el artículo?",
+      "removeText": "{qty}× {name} se quitará del carrito.",
+      "qrTitle": "Cuenta de la mesa {table}",
+      "qrText": "El cliente escanea este código para seguir su cuenta en el móvil.",
+      "qrAlt": "Código QR de la cuenta",
+      "openCustomerScreen": "Abrir pantalla del cliente",
+      "splitTitle": "Separar la cuenta",
+      "splitText": "Elige la mesa de cada artículo. Los que se dejen en la mesa {table} se quedan allí.",
+      "splitConfirm": "Separar ({count})",
+      "add": "Añadir",
+      "toasts": {
+        "menuUnavailable": "Carta no disponible",
+        "queued": "Sin conexión: comanda en cola, se enviará al reconectar",
+        "sent": "Mesa {table} enviada a cocina",
+        "savedDispatchFailed": "Cuenta guardada — fallo al enviar a cocina: {error}",
+        "sendFailed": "No se pudo enviar",
+        "qrFailed": "Código QR imposible (cuenta demasiado larga) — usa el enlace.",
+        "splitQueued": "Sin conexión: separación en cola",
+        "splitDone": "Cuenta separada por mesa",
+        "splitFailed": "No se pudo separar",
+        "retrySent": "Enviado a cocina",
+        "retryFailed": "Fallo al enviar a cocina: {error}"
+      }
+    },
+    "orderHistory": {
+      "title": "Comandas",
+      "activeTables": "{count} mesa en servicio | {count} mesas en servicio",
+      "loading": "Cargando comandas…",
+      "emptyAll": "No hay comandas en curso",
+      "emptyFilter": "No hay comandas con este estado",
+      "readyToServe": "{count} listo para servir | {count} listos para servir",
+      "notSent": "{count} no enviado | {count} no enviados",
+      "kitchenTracking": "Seguimiento de cocina",
+      "kds": {
+        "pending": "En espera",
+        "preparing": "En preparación",
+        "ready": "Listo",
+        "served": "Servido"
+      },
+      "ht": "Sin IVA {amount}",
+      "vat": "IVA {amount}",
+      "ttc": "Con IVA {amount}",
+      "complete": "Añadir a la comanda",
+      "closedAt": "pagada {time}",
+      "openedAt": "abierta {time}",
+      "loadFailed": "No se pudieron cargar las comandas"
+    },
+    "customerDisplay": {
+      "kicker": "Su cuenta",
+      "closedTitle": "Cuenta pagada",
+      "closedText": "¡Gracias por su visita, hasta pronto!",
+      "loading": "Cargando su cuenta…",
+      "unavailableTitle": "Cuenta no disponible",
+      "unavailableText": "Pida a su camarero que le muestre de nuevo el código QR.",
+      "empty": "Todavía no se ha pedido nada.",
+      "total": "Total",
+      "vatIncluded": "IVA incluido {amount}",
+      "offline": "Sin conexión — cuenta de las {time}",
+      "autoUpdate": "Actualización automática · {time}"
+    },
+    "qrScanner": {
+      "title": "Escanear una mesa",
+      "openingCamera": "Abriendo la cámara…",
+      "aimHint": "Apunta al código QR de la mesa",
+      "tableNumberLabel": "N.º de mesa",
+      "tableNumberPlaceholder": "N.º",
+      "cameraDenied": "Acceso a la cámara denegado — introduce el número de mesa.",
+      "noCamera": "No se detecta ninguna cámara — introduce el número de mesa.",
+      "cameraUnavailable": "Cámara no disponible — introduce el número de mesa.",
+      "cameraUnsupported": "Cámara no disponible en este dispositivo — introduce el número de mesa.",
+      "notRecognized": "Código QR no reconocido como mesa"
+    }
+  }
+}

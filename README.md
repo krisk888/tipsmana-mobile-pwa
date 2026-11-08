@@ -141,7 +141,14 @@ Dédiée aux équipes en salle, cuisine, stock et pilotage. Interface mobile-fir
    ├── main.js              # Entry point, Pinia + router init
    ├── router.js            # Routes + guard auth/rôle
    ├── style.css            # Global styles
+   ├── i18n/                # Multi-langue maison (fr par défaut, en, es)
+   │   ├── index.js         # t(), setLocale(), useI18n(), plugin $t
+   │   └── locales/
+   │       ├── fr/*.json    # Un fichier par namespace ({ "<ns>": { … } })
+   │       ├── fr.core.js   # Chunk chargé avant le mount (common, ui, login)
+   │       └── fr.full.js   # Chunk des écrans, chargé en arrière-plan
    ├── components/          # Composants réutilisables
+   │   ├── LanguageSwitcher.vue  # Sélecteur de langue (profils)
    │   ├── TipsIcon.vue     # Icônes SVG dynamiques
    │   └── HelloWorld.vue   # (demo)
    ├── shared/              # Couches partagées
@@ -163,6 +170,18 @@ Dédiée aux équipes en salle, cuisine, stock et pilotage. Interface mobile-fir
        └── stock/           # ScanQR, InventoryScan, ExpressScan,
                             # Receptions, StockDetail
 ```
+
+### Multi-langue (i18n)
+
+- `const { t } = useI18n()` dans les composants, `import { t } from '../i18n'` dans les modules JS (appel au moment de l'affichage, jamais au chargement du module).
+- Interpolation `t('common.table', { number: 4 })`, pluriel `"{count} article | {count} articles"` choisi par `count` (en français, le singulier couvre 0 et 1).
+- Choix mémorisé en `localStorage` (`tipsmana_locale`), sélecteur dans *Mon profil* (service) et *Profil*.
+- Les données envoyées au backend (notes cuisine, valeurs d'options, note comptable) restent en français ; seul l'affichage est traduit.
+- Ajouter une langue : dossier `locales/<code>/` (mêmes fichiers et clés que `fr/`, vérifié par les tests), `locales/<code>.core.js` + `.full.js`, entrée dans `LOCALES`.
+
+### Statut des tables (Service)
+
+🟢 libre · 🔴 occupée · 🟡 réservée · ⚪ en attente (addition demandée — statut backend `addition`). Badge + couleur de fond par table, légende avec compteurs, filtre « Masquer les tables libres » mémorisé sur l'appareil, rafraîchissement toutes les 30 s (suspendu quand l'onglet est masqué, relancé au retour).
 
 ### Flux de données
 
@@ -267,7 +286,7 @@ location /mobile/ {
 ```bash
 # Tests unitaires Vue (Vitest)
 npm run test:unit
-# → 2 suites, 23 tests
+# → 12 suites, 177 tests
 
 # Vérification endpoints API (statique)
 npm run test

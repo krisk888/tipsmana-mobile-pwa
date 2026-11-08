@@ -1,0 +1,131 @@
+{
+  "caisse": {
+    "header": {
+      "brand": "Till",
+      "logout": "Log out",
+      "noTable": "No table"
+    },
+    "home": {
+      "floorPlan": "Floor plan",
+      "tableNo": "Table no.",
+      "open": "✔ Open"
+    },
+    "catalog": {
+      "back": "← Menus",
+      "empty": "No items"
+    },
+    "totalBar": {
+      "total": "Total",
+      "count": "{count} items | {count} item | {count} items"
+    },
+    "covers": {
+      "title": "👥 Table {table}",
+      "label": "Number of covers",
+      "ok": "✔ OK"
+    },
+    "options": {
+      "add": "+ Add",
+      "groups": {
+        "cuisson": "Cooking",
+        "garniture": "Side",
+        "taille": "Size"
+      },
+      "values": {
+        "cuisson": {
+          "rare": "Rare",
+          "medium": "Medium",
+          "wellDone": "Well done"
+        },
+        "garniture": {
+          "fries": "Fries",
+          "rice": "Rice",
+          "vegetables": "Vegetables",
+          "salad": "Salad"
+        },
+        "taille": {
+          "small": "Small",
+          "normal": "Regular",
+          "large": "Large"
+        }
+      }
+    },
+    "reclaim": {
+      "title": "🔔 Chase",
+      "textTable": "Table {table} is chasing items already sent.",
+      "text": "Chase items already sent.",
+      "confirm": "Chase the kitchen",
+      "sentTitle": "Chase sent",
+      "sentTable": "The kitchen received the request for table {table}.",
+      "sent": "The kitchen received the request."
+    },
+    "addition": {
+      "title": "🧾 Provisional bill",
+      "totalHt": "Total excl. VAT",
+      "vat": "VAT ({rate}%)",
+      "totalTtc": "Total incl. VAT"
+    },
+    "payment": {
+      "title": "💶 Settle the table",
+      "summary": "Table {table} · {count} item(s)",
+      "ticketRef": "🎫 Ticket #MOB-{ref}",
+      "successTitle": "Payment: {method}",
+      "change": "Change given on {amount}",
+      "accepted": "Payment accepted",
+      "refused": "Payment declined",
+      "error": "Payment error",
+      "newSale": "New sale",
+      "methods": {
+        "cash": "Cash",
+        "card": "Card",
+        "ticketResto": "Meal voucher",
+        "bankTransfer": "Bank transfer"
+      }
+    },
+    "floor": {
+      "title": "🪑 Tables",
+      "empty": "No tables — set up the floor plan on the till.",
+      "emptyOccupied": "No occupied tables",
+      "free": "Free",
+      "busy": "In progress",
+      "bill": "Bill",
+      "defaultArea": "DINING ROOM"
+    },
+    "send": {
+      "errorTitle": "Send error",
+      "error": "Unable to send to the kitchen"
+    },
+    "courses": {
+      "entree": "Starter",
+      "plat": "Main",
+      "dessert": "Dessert",
+      "fallback": "Course"
+    },
+    "seller": "Cashier",
+    "days": "SUN,MON,TUE,WED,THU,FRI,SAT",
+    "cart": {
+      "title": "🧾 Orders",
+      "empty": "Empty order — tap an item",
+      "sent": "✓ Sent",
+      "next": "NEXT COURSE ➜",
+      "reclaim": "🔔 Chase",
+      "addition": "🧾 Bill",
+      "settle": "💶 Settle",
+      "sentToKitchen": "✓ Sent to kitchen",
+      "send": "📤 SEND"
+    },
+    "categories": {
+      "entrees": "Starters",
+      "plats": "Mains",
+      "suggestions": "Specials",
+      "snack": "Snacks",
+      "desserts": "Desserts",
+      "eaux": "Water",
+      "soft": "Soft drinks",
+      "bieres": "Beer",
+      "brunch": "Brunch",
+      "vins": "Wine",
+      "champagnes": "Champagne",
+      "cocktails": "Cocktails"
+    }
+  }
+}

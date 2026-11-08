@@ -1,0 +1,167 @@
+{
+  "service": {
+    "backToTables": "Tables",
+    "itemsShort": "{count} item | {count} items",
+    "courses": {
+      "entree": "Starter",
+      "plat": "Main",
+      "dessert": "Dessert",
+      "boisson": "Drink",
+      "autre": "Other"
+    },
+    "optionGroups": {
+      "cuisson": "Cooking",
+      "garniture": "Side"
+    },
+    "options": {
+      "bleu": "Blue",
+      "saignant": "Rare",
+      "aPoint": "Medium",
+      "bienCuit": "Well done",
+      "frites": "Fries",
+      "riz": "Rice",
+      "legumes": "Vegetables",
+      "salade": "Salad"
+    },
+    "notePresets": {
+      "glutenFree": "Gluten-free",
+      "lactoseFree": "Lactose-free",
+      "nutAllergy": "Nut allergy",
+      "noOnions": "No onions"
+    },
+    "orderStatuses": {
+      "enCours": "In progress",
+      "enCuisine": "In kitchen",
+      "servi": "Served",
+      "solde": "Paid"
+    },
+    "fallback": {
+      "category": "Category",
+      "article": "Item",
+      "space": "Room",
+      "otherSpace": "Other"
+    },
+    "errors": {
+      "noEstablishment": "No active establishment",
+      "emptyCart": "Cart is empty",
+      "dispatchFailed": "Could not send to kitchen",
+      "mergeOffline": "Connection required to merge or split tables",
+      "mergeMinTables": "Select at least 2 tables",
+      "mergeTarget": "The target table must be part of the selection",
+      "splitNothing": "No item moved to another table"
+    },
+    "notifications": {
+      "title": "Tipsmana — Service",
+      "order": "Order",
+      "served": "✅ {table}: order served",
+      "inKitchen": "🔥 {table}: order in the kitchen",
+      "updated": "{table}: status updated"
+    },
+    "totals": {
+      "totalHt": "Total excl. VAT",
+      "vat": "VAT",
+      "totalTtc": "Total incl. VAT"
+    },
+    "orderTaking": {
+      "onNote": "{amount} on the bill",
+      "newNote": "New bill",
+      "ordersInProgress": "Current orders",
+      "tabMenu": "Menu",
+      "tabNote": "Bill",
+      "failedAlert": "{count} item saved but not sent to the kitchen | {count} items saved but not sent to the kitchen",
+      "resend": "Resend",
+      "loadingMenu": "Loading menu…",
+      "emptyMenu": "No active items on the menu.",
+      "optionsHint": "options",
+      "editProduct": "Quantity, options, note",
+      "emptyNote": "No items on this table's bill.",
+      "notSent": "not sent",
+      "customerQr": "Customer bill (QR)",
+      "splitByTable": "Split by table",
+      "cart": "Cart",
+      "editLine": "Note, course, order",
+      "tableTotalAfter": "Table total after sending",
+      "clearCart": "Clear cart",
+      "sendToKitchen": "Send to kitchen · {amount}",
+      "quantity": "Quantity",
+      "course": "Course",
+      "orderInCourse": "Order within course",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "kitchenNote": "Kitchen note",
+      "lineNotePlaceholder": "Cooking, allergen…",
+      "sheetNotePlaceholder": "No onions, allergy…",
+      "removeTitle": "Remove item?",
+      "removeText": "{qty}× {name} will be removed from the cart.",
+      "qrTitle": "Table {table} bill",
+      "qrText": "The customer scans this code to follow their bill on their phone.",
+      "qrAlt": "Bill QR code",
+      "openCustomerScreen": "Open customer screen",
+      "splitTitle": "Split the bill",
+      "splitText": "Choose a table for each item. Items left on table {table} stay there.",
+      "splitConfirm": "Split ({count})",
+      "add": "Add",
+      "toasts": {
+        "menuUnavailable": "Menu unavailable",
+        "queued": "Offline: order queued, will be sent when back online",
+        "sent": "Table {table} sent to the kitchen",
+        "savedDispatchFailed": "Bill saved — sending to kitchen failed: {error}",
+        "sendFailed": "Could not send",
+        "qrFailed": "QR code unavailable (bill too long) — use the link.",
+        "splitQueued": "Offline: split queued",
+        "splitDone": "Bill split by table",
+        "splitFailed": "Could not split",
+        "retrySent": "Sent to the kitchen",
+        "retryFailed": "Sending to kitchen failed: {error}"
+      }
+    },
+    "orderHistory": {
+      "title": "Orders",
+      "activeTables": "{count} table in service | {count} tables in service",
+      "loading": "Loading orders…",
+      "emptyAll": "No current orders",
+      "emptyFilter": "No orders with this status",
+      "readyToServe": "{count} ready to serve",
+      "notSent": "{count} not sent",
+      "kitchenTracking": "Kitchen tracking",
+      "kds": {
+        "pending": "Waiting",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "served": "Served"
+      },
+      "ht": "Excl. VAT {amount}",
+      "vat": "VAT {amount}",
+      "ttc": "Incl. VAT {amount}",
+      "complete": "Add to order",
+      "closedAt": "paid {time}",
+      "openedAt": "opened {time}",
+      "loadFailed": "Could not load orders"
+    },
+    "customerDisplay": {
+      "kicker": "Your bill",
+      "closedTitle": "Bill paid",
+      "closedText": "Thank you for your visit, see you soon!",
+      "loading": "Loading your bill…",
+      "unavailableTitle": "Bill unavailable",
+      "unavailableText": "Ask your server to show you the QR code again.",
+      "empty": "Nothing ordered yet.",
+      "total": "Total",
+      "vatIncluded": "incl. VAT {amount}",
+      "offline": "Offline — bill as of {time}",
+      "autoUpdate": "Auto-update · {time}"
+    },
+    "qrScanner": {
+      "title": "Scan a table",
+      "openingCamera": "Opening camera…",
+      "aimHint": "Point at the QR code on the table",
+      "tableNumberLabel": "Table no.",
+      "tableNumberPlaceholder": "No.",
+      "cameraDenied": "Camera access denied — enter the table number.",
+      "noCamera": "No camera found — enter the table number.",
+      "cameraUnavailable": "Camera unavailable — enter the table number.",
+      "cameraUnsupported": "No camera on this device — enter the table number.",
+      "notRecognized": "QR code not recognised as a table"
+    }
+  }
+}

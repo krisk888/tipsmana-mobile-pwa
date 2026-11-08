@@ -1,0 +1,51 @@
+{
+  "profile": {
+    "title": "👤 Profil",
+    "subtitle": "Gérez votre compte et vos préférences",
+    "personalInfo": "Informations personnelles",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "email": "Email",
+    "emailPlaceholder": "email@exemple.fr",
+    "saving": "Enregistrement...",
+    "establishment": "Établissement",
+    "name": "Nom",
+    "role": "Rôle",
+    "type": "Type",
+    "notifications": "Notifications",
+    "pushNotifications": "Notifications push",
+    "emailNotifications": "Notifications email",
+    "autoSaveHint": "Les préférences sont sauvegardées automatiquement",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "updating": "Mise à jour...",
+    "payment": {
+      "title": "💳 Paiement",
+      "holder": "Titulaire",
+      "holderPlaceholder": "Nom du titulaire",
+      "bank": "Banque",
+      "bankPlaceholder": "Nom de la banque",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "Clé API SumUp",
+      "merchantId": "Merchant ID",
+      "merchantIdPlaceholder": "ID commerçant SumUp",
+      "saving": "Sauvegarde…",
+      "save": "💾 Sauvegarder",
+      "saved": "✅ Configuration sauvegardée",
+      "saveError": "❌ Erreur de sauvegarde",
+      "loadError": "❌ Impossible de charger les méthodes de paiement"
+    },
+    "messages": {
+      "noChanges": "Aucune modification",
+      "profileUpdated": "Profil mis à jour ✓",
+      "updateError": "Erreur de mise à jour",
+      "currentRequired": "Mot de passe actuel requis",
+      "minLength": "Minimum {n} caractères",
+      "mismatch": "Les mots de passe ne correspondent pas",
+      "passwordChanged": "Mot de passe changé ✓",
+      "passwordError": "Erreur de changement de mot de passe"
+    }
+  }
+}

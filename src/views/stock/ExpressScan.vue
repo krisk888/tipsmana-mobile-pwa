@@ -3,19 +3,19 @@
     <!-- ============ ÉTAPE 1 : CHOIX / CRÉATION SESSION ============ -->
     <div v-if="step === 'sessions'" class="pane">
       <header class="page-header">
-        <h2>⚡ Inventaire express</h2>
-        <p class="subtitle">Comptage par zones — fonctionne hors-ligne</p>
+        <h2>{{ t('stock.express.title') }}</h2>
+        <p class="subtitle">{{ t('stock.express.subtitle') }}</p>
       </header>
 
-      <div v-if="loading" class="loading-state">Chargement…</div>
+      <div v-if="loading" class="loading-state">{{ t('common.loading') }}</div>
       <div v-else-if="error" class="error-state">{{ error }}</div>
 
       <template v-else>
         <div class="sessions-section">
-          <h3>Reprendre une session</h3>
+          <h3>{{ t('stock.express.resumeSession') }}</h3>
           <div v-if="sessions.length === 0" class="empty-state">
             <span class="empty-icon">📭</span>
-            <p>Aucune session express en cours</p>
+            <p>{{ t('stock.express.noSession') }}</p>
           </div>
           <div
             v-for="s in sessions"
@@ -24,18 +24,18 @@
             @click="openSession(s)"
           >
             <div class="session-header">
-              <strong>{{ s.session_name || 'Session #' + shortId(s.id) }}</strong>
-              <span class="session-status">Express</span>
+              <strong>{{ s.session_name || t('stock.sessionFallback', { id: shortId(s.id) }) }}</strong>
+              <span class="session-status">{{ t('stock.express.badge') }}</span>
             </div>
             <div class="session-meta">
-              <span>Démarrée {{ timeAgo(s.started_at) }}</span>
+              <span>{{ t('stock.startedAgo', { ago: timeAgo(s.started_at) }) }}</span>
               <span v-if="s.total_variance_amount != null">{{ s.total_variance_amount }} €</span>
             </div>
           </div>
         </div>
 
         <button class="btn-primary btn-block" :disabled="creating" @click="createSession">
-          {{ creating ? 'Création…' : '＋ Nouvel inventaire express' }}
+          {{ creating ? t('stock.express.creating') : t('stock.express.newSession') }}
         </button>
       </template>
     </div>
@@ -44,22 +44,22 @@
     <div v-else-if="step === 'zones'" class="pane">
       <header class="page-header">
         <h2>⚡ {{ sessionName }}</h2>
-        <p class="subtitle">Choisis une zone de comptage</p>
-        <button class="btn-text" @click="backToSessions">← Changer de session</button>
+        <p class="subtitle">{{ t('stock.express.zones.subtitle') }}</p>
+        <button class="btn-text" @click="backToSessions">{{ t('stock.express.zones.changeSession') }}</button>
       </header>
 
-      <div v-if="loading" class="loading-state">Chargement…</div>
+      <div v-if="loading" class="loading-state">{{ t('common.loading') }}</div>
       <div v-else-if="error" class="error-state">{{ error }}</div>
 
       <template v-else>
         <div class="progress-overview">
           <div class="progress-bar"><div class="progress-fill" :style="{ width: progressPct + '%' }"></div></div>
           <div class="progress-labels">
-            <span>{{ progress.counted_products ?? 0 }} / {{ progress.total_products ?? 0 }} produits</span>
+            <span>{{ t('stock.express.zones.productsProgress', { counted: progress.counted_products ?? 0, total: progress.total_products ?? 0 }) }}</span>
             <span>{{ progressPct.toFixed(0) }}%</span>
           </div>
           <div v-if="progress.remaining_estimate_min != null" class="eta">
-            ⏱ fin estimée dans ~{{ progress.remaining_estimate_min }} min ({{ progress.speed_items_per_min }}/min)
+            {{ t('stock.express.zones.eta', { min: progress.remaining_estimate_min, speed: progress.speed_items_per_min }) }}
           </div>
         </div>
 
@@ -70,14 +70,14 @@
           </div>
           <div class="zone-meta">
             <span>{{ areaLabel(z.area) }}</span>
-            <span v-if="z.counted_products != null">{{ z.counted_products }} comptés</span>
-            <span v-else>Non démarrée</span>
+            <span v-if="z.counted_products != null">{{ t('stock.express.zones.counted', { n: z.counted_products }) }}</span>
+            <span v-else>{{ t('stock.express.zones.notStarted') }}</span>
           </div>
         </div>
 
         <div v-if="progress.zones_completed === progress.zones_total && progress.zones_total > 0" class="finish-zone">
           <button class="btn-primary btn-block" @click="completeSession">
-            ✔ Terminer la session — voir le récapitulatif
+            {{ t('stock.express.zones.finishSession') }}
           </button>
         </div>
       </template>
@@ -94,9 +94,9 @@
             {{ progress.counted_products ?? 0 }}/{{ progress.total_products ?? 0 }} · {{ chrono }}
           </span>
         </div>
-        <span v-if="!online" class="offline-badge">📴 Hors-ligne</span>
+        <span v-if="!online" class="offline-badge">{{ t('stock.express.counting.offline') }}</span>
         <span v-else-if="pendingCount > 0" class="offline-badge pending" @click="flushQueue">
-          ⬆ {{ pendingCount }} en attente
+          {{ t('stock.express.counting.pending', { n: pendingCount }) }}
         </span>
       </div>
 
@@ -108,10 +108,10 @@
         <div class="scan-frame"></div>
         <div v-if="cameraError" class="camera-fallback">
           <p>{{ cameraError }}</p>
-          <p class="hint">Saisis le code manuellement ci-dessous</p>
+          <p class="hint">{{ t('stock.express.counting.manualHint') }}</p>
         </div>
         <div v-if="!scanning && !cameraError" class="camera-fallback">
-          <p>Caméra en pause — appuie sur « Reprendre »</p>
+          <p>{{ t('stock.express.counting.cameraPaused') }}</p>
         </div>
       </div>
 
@@ -120,9 +120,9 @@
         <div v-if="lastScan" class="last-scan" :class="severityCls(lastScan.severity)">
           <div class="last-scan-info">
             <strong>{{ lastScan.product_name }}</strong>
-            <span>{{ lastScan.counted_quantity }} compté{{ lastScan.counted_quantity > 1 ? 's' : '' }}
+            <span>{{ t('stock.express.counting.countedQty', { count: lastScan.counted_quantity }) }}
               <span v-if="lastScan.variance_quantity != null">
-                · écart {{ lastScan.variance_quantity > 0 ? '+' : '' }}{{ fmtQty(lastScan.variance_quantity) }}
+                {{ t('stock.express.counting.variance', { v: (lastScan.variance_quantity > 0 ? '+' : '') + fmtQty(lastScan.variance_quantity) }) }}
               </span>
             </span>
           </div>
@@ -136,11 +136,11 @@
           v-model="manualCode"
           type="text"
           inputmode="numeric"
-          placeholder="Taper le code / QR…"
+          :placeholder="t('stock.express.counting.manualPlaceholder')"
           class="manual-input"
           @keyup.enter="submitManualCode"
         />
-        <button class="btn-secondary" @click="openPicker">🔍 Sans code</button>
+        <button class="btn-secondary" @click="openPicker">{{ t('stock.express.counting.noCode') }}</button>
       </div>
 
       <!-- clavier quantité -->
@@ -155,10 +155,10 @@
           </div>
           <div class="mode-toggle">
             <button class="mode-btn" :class="{ active: countMode === 'set' }" @click="countMode = 'set'">
-              Emplacement
+              {{ t('stock.express.counting.modeSet') }}
             </button>
             <button class="mode-btn" :class="{ active: countMode === 'add' }" @click="countMode = 'add'">
-              Unitaire
+              {{ t('stock.express.counting.modeAdd') }}
             </button>
           </div>
         </div>
@@ -168,22 +168,22 @@
           <button class="key key-back" @click="backspace">⌫</button>
         </div>
         <button class="btn-ok" :disabled="!qtyCount || submitting" @click="submitCount">
-          {{ submitting ? '…' : `✔ OK — ${qtyCount || 0}` }}
+          {{ submitting ? '…' : t('stock.express.counting.ok', { n: qtyCount || 0 }) }}
         </button>
       </div>
 
       <!-- footer zone -->
       <div class="zone-footer">
         <button class="btn-danger" :disabled="submitting" @click="finishZone">
-          🏁 Zone terminée{{ nextZone ? ` → ${nextZone.name}` : ' — terminer la session' }}
+          {{ nextZone ? t('stock.express.counting.zoneDoneNext', { zone: nextZone.name }) : t('stock.express.counting.zoneDoneFinish') }}
         </button>
       </div>
 
       <!-- picker sans code -->
       <div v-if="showPicker" class="modal" @click.self="showPicker = false">
         <div class="modal-body">
-          <h3>Choisir un produit</h3>
-          <input v-model="pickerSearch" placeholder="Rechercher…" class="manual-input" />
+          <h3>{{ t('stock.express.picker.title') }}</h3>
+          <input v-model="pickerSearch" :placeholder="t('stock.express.picker.search')" class="manual-input" />
           <div class="picker-list">
             <div
               v-for="p in filteredMissing"
@@ -195,7 +195,7 @@
               <span>{{ p.sku }} · {{ sectionLabel(p.section) }}</span>
             </div>
             <div v-if="filteredMissing.length === 0" class="empty-state small">
-              <p>{{ pickerLoading ? 'Chargement…' : 'Aucun produit en attente 🎉' }}</p>
+              <p>{{ pickerLoading ? t('common.loading') : t('stock.express.picker.empty') }}</p>
             </div>
           </div>
         </div>
@@ -205,36 +205,36 @@
     <!-- ============ ÉTAPE 4 : RÉCAPITULATIF ============ -->
     <div v-else-if="step === 'recap'" class="pane">
       <header class="page-header">
-        <h2>📋 Récapitulatif</h2>
+        <h2>{{ t('stock.express.recap.title') }}</h2>
         <p class="subtitle">{{ sessionName }}</p>
       </header>
-      <div v-if="loading" class="loading-state">Chargement…</div>
+      <div v-if="loading" class="loading-state">{{ t('common.loading') }}</div>
       <div v-else-if="error" class="error-state">{{ error }}</div>
       <template v-else-if="summary">
         <div class="recap-totals">
           <div class="recap-cell">
             <span class="recap-value">{{ summary.totals?.products_counted ?? 0 }}</span>
-            <span class="recap-label">produits comptés</span>
+            <span class="recap-label">{{ t('stock.express.recap.productsCounted') }}</span>
           </div>
           <div class="recap-cell">
             <span class="recap-value">{{ (summary.totals?.variance_value ?? 0).toFixed(2) }} €</span>
-            <span class="recap-label">écart total</span>
+            <span class="recap-label">{{ t('stock.express.recap.totalVariance') }}</span>
           </div>
           <div class="recap-cell">
             <span class="recap-value">{{ summary.missing_products_count ?? 0 }}</span>
-            <span class="recap-label">non comptés</span>
+            <span class="recap-label">{{ t('stock.express.recap.notCounted') }}</span>
           </div>
         </div>
 
         <div v-if="summary.missing_products?.length" class="missing-section">
-          <h3>Manquants ({{ summary.missing_products_count }})</h3>
+          <h3>{{ t('stock.express.recap.missing', { n: summary.missing_products_count }) }}</h3>
           <div v-for="m in summary.missing_products" :key="m.product_id" class="missing-item">
             <span>{{ m.name }}</span>
             <span class="muted">{{ m.sku }}</span>
           </div>
         </div>
 
-        <router-link to="/stock" class="btn-primary btn-block center">Retour au stock</router-link>
+        <router-link to="/stock" class="btn-primary btn-block center">{{ t('stock.express.recap.backToStock') }}</router-link>
       </template>
     </div>
   </div>
@@ -244,6 +244,9 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import api from '../../shared/api'
 import offlineStore from '../../shared/offlineStore'
+import { useI18n } from '../../i18n'
+
+const { t, intlLocale } = useI18n()
 
 // ---------------------------------------------------------------- état
 const step = ref('sessions') // sessions | zones | counting | recap
@@ -316,23 +319,23 @@ function timeAgo(iso) {
   if (!iso) return ''
   const diff = Date.now() - new Date(iso).getTime()
   const min = Math.floor(diff / 60000)
-  if (min < 1) return "à l'instant"
-  if (min < 60) return `${min} min`
-  if (min < 1440) return `${Math.floor(min / 60)}h`
-  return new Date(iso).toLocaleDateString('fr-FR')
+  if (min < 1) return t('stock.timeAgo.justNow')
+  if (min < 60) return t('stock.timeAgo.minutes', { n: min })
+  if (min < 1440) return t('stock.timeAgo.hours', { n: Math.floor(min / 60) })
+  return new Date(iso).toLocaleDateString(intlLocale())
 }
 function areaLabel(area) {
-  return { salle: '🪑 Salle', cuisine: '🍳 Cuisine', reserve: '📦 Réserve', bar: '🍸 Bar' }[area] || area
+  return ['salle', 'cuisine', 'reserve', 'bar'].includes(area) ? t(`stock.express.areas.${area}`) : area
 }
 function sectionLabel(section) {
-  return { kitchen: 'Cuisine', dining_room: 'Salle', bar: 'Bar', reserve: 'Réserve' }[section] || section
+  return ['kitchen', 'dining_room', 'bar', 'reserve'].includes(section) ? t(`stock.express.sections.${section}`) : section
 }
 function zoneState(z) {
   if (completedZoneIds.value.includes(z.id) || z.status === 'completed')
-    return { label: '✔ Terminée', cls: 'done' }
+    return { label: t('stock.express.zones.done'), cls: 'done' }
   if (z.status === 'in_progress' || z.status === 'started' || z.counted_products > 0)
-    return { label: 'En cours', cls: 'active' }
-  return { label: 'À faire', cls: 'todo' }
+    return { label: t('stock.express.zones.inProgress'), cls: 'active' }
+  return { label: t('stock.express.zones.todo'), cls: 'todo' }
 }
 function severityCls(s) {
   return { critical: 'sev-critical', warning: 'sev-warning' }[s] || ''
@@ -343,8 +346,8 @@ function fmtChrono(seconds) {
   return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
 const todayISO = (() => {
-  const t = new Date()
-  return [t.getFullYear(), String(t.getMonth() + 1).padStart(2, '0'), String(t.getDate()).padStart(2, '0')].join('-')
+  const d = new Date()
+  return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-')
 })()
 
 // ---------------------------------------------------------------- sessions
@@ -372,7 +375,7 @@ async function createSession() {
   error.value = null
   try {
     const res = await api.post('/inventory/sessions', {
-      session_name: `Inventaire express ${todayISO}`,
+      session_name: t('stock.express.defaultSessionName', { date: todayISO }),
       session_date: todayISO,
       session_type: 'express',
     })
@@ -385,7 +388,7 @@ async function createSession() {
     step.value = 'zones'
     lastScan.value = null
   } catch (e) {
-    error.value = e.message || 'Impossible de créer la session'
+    error.value = e.message || t('stock.express.createError')
   } finally {
     creating.value = false
   }
@@ -477,11 +480,11 @@ async function startCamera() {
   cameraError.value = null
   stopCamera()
   if (!navigator.mediaDevices?.getUserMedia) {
-    cameraError.value = 'Caméra non disponible sur cet appareil'
+    cameraError.value = t('stock.express.camera.unavailable')
     return
   }
   if (!('BarcodeDetector' in window)) {
-    cameraError.value = 'Détection auto non supportée — saisis les codes manuellement'
+    cameraError.value = t('stock.express.camera.noDetector')
     return
   }
   try {
@@ -498,7 +501,7 @@ async function startCamera() {
     scanLoop = setInterval(scanTick, 180)
   } catch (e) {
     console.warn('camera start failed', e)
-    cameraError.value = 'Impossible d’ouvrir la caméra — saisie manuelle disponible'
+    cameraError.value = t('stock.express.camera.openFailed')
   }
 }
 
@@ -506,7 +509,7 @@ function stopCamera() {
   scanning.value = false
   if (scanLoop) { clearInterval(scanLoop); scanLoop = null }
   if (stream) {
-    stream.getTracks().forEach(t => t.stop())
+    stream.getTracks().forEach(track => track.stop())
     stream = null
   }
   if (videoEl.value) videoEl.value.srcObject = null
@@ -633,14 +636,14 @@ async function submitOne({ code = null, productId = null, qty: quantity, mode })
       })
       await updatePendingCount()
       lastScan.value = {
-        product_name: code || 'Produit',
+        product_name: code || t('stock.productFallback'),
         counted_quantity: quantity,
         variance_quantity: null,
         severity: 'queued',
         queued: true,
       }
     } else {
-      const msg = e.message || 'Erreur API'
+      const msg = e.message || t('stock.express.apiError')
       error.value = msg
       setTimeout(() => { error.value = null }, 3000)
     }
@@ -651,7 +654,7 @@ async function submitOne({ code = null, productId = null, qty: quantity, mode })
 
 function notifyUnknown(code) {
   lastScan.value = {
-    product_name: `Code inconnu : ${code}`,
+    product_name: t('stock.express.counting.unknownCode', { code }),
     counted_quantity: 0,
     variance_quantity: null,
     severity: 'unknown',
@@ -682,7 +685,7 @@ async function flushQueue() {
     await offlineStore.clearSynced()
     await updatePendingCount()
     refreshProgress()
-    lastScan.value = { product_name: `⬆ ${res.data?.counted ?? pending.length} comptages synchronisés`, counted_quantity: 0, variance_quantity: null, severity: 'ok' }
+    lastScan.value = { product_name: t('stock.express.counting.synced', { n: res.data?.counted ?? pending.length }), counted_quantity: 0, variance_quantity: null, severity: 'ok' }
   } catch (e) {
     if (e.status !== undefined) {
       // refus permanent → on vide pour ne pas bloquer
@@ -732,7 +735,7 @@ async function completeSession() {
     step.value = 'recap'
     await loadRecap()
   } catch (e) {
-    error.value = e.message || 'Impossible de terminer la session'
+    error.value = e.message || t('stock.express.completeError')
   } finally {
     submitting.value = false
   }

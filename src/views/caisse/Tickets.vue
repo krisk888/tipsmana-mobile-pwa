@@ -8,19 +8,19 @@
       </div>
       <div class="header-center">
         <TipsIcon name="sales_overview" :size="20" class="header-brand-icon" />
-        <span class="header-brand">Caisse</span>
+        <span class="header-brand">{{ t('caisse.header.brand') }}</span>
       </div>
       <div class="header-right">
         <span class="header-user">{{ displayName }}</span>
-        <button class="header-logout-btn" @click="handleLogout" title="Déconnexion">
+        <button class="header-logout-btn" @click="handleLogout" :title="t('caisse.header.logout')">
           <TipsIcon name="quitter" :size="18" />
         </button>
         <button v-if="selectedTable !== null" class="table-badge" @click="openFloorPlan">
           <TipsIcon name="dashboard" :size="14" class="table-badge-icon" />
-          Table {{ selectedTable }}
+          {{ t('common.table', { number: selectedTable }) }}
         </button>
         <button v-else class="table-badge none" @click="openFloorPlan">
-          Aucune table
+          {{ t('caisse.header.noTable') }}
         </button>
       </div>
     </header>
@@ -30,7 +30,7 @@
       <!-- Grille catégories (2 colonnes max) -->
       <div class="cat-grid">
         <button
-          v-for="cat in categories"
+          v-for="cat in localizedCategories"
           :key="cat.id"
           class="cat-tile"
           :style="tileBg(cat)"
@@ -45,20 +45,20 @@
       <div class="home-actions">
         <button class="floor-btn" @click="openFloorPlan">
           <TipsIcon name="dashboard" :size="22" />
-          <span class="floor-label">Plan de salle</span>
+          <span class="floor-label">{{ t('caisse.home.floorPlan') }}</span>
           <span v-if="occupiedCount > 0" class="floor-badge">{{ occupiedCount }}</span>
         </button>
       </div>
 
       <div class="numpad">
         <div class="numpad-display" :class="{ active: numpadNumber }">
-          {{ numpadNumber ? numpadNumber : 'Table n°' }}
+          {{ numpadNumber ? numpadNumber : t('caisse.home.tableNo') }}
         </div>
         <div class="numpad-keys">
           <button v-for="d in ['1','2','3','4','5','6','7','8','9']" :key="d" class="np-key" @click="numpadPress(d)">{{ d }}</button>
           <button class="np-key" @click="numpadClear">⌫</button>
           <button class="np-key" @click="numpadPress('0')">0</button>
-          <button class="np-key np-ok" @click="numpadOpen">✔ Ouvrir</button>
+          <button class="np-key np-ok" @click="numpadOpen">{{ t('caisse.home.open') }}</button>
         </div>
       </div>
     </div>
@@ -66,7 +66,7 @@
     <!-- ═══ VUE CATALOGUE — produits de la catégorie ═══ -->
     <div v-else-if="view === 'catalog'" class="catalog-view">
       <div class="catalog-header">
-        <button class="back-btn" @click="view = 'home'">← Menus</button>
+        <button class="back-btn" @click="view = 'home'">{{ t('caisse.catalog.back') }}</button>
         <span class="catalog-title">{{ activeCat?.icon }} {{ activeCat?.name }}</span>
         <span class="catalog-spacer"></span>
       </div>
@@ -85,7 +85,7 @@
             <span v-if="hasOptions(prod)" class="prod-opt-hint">⚙️</span>
           </span>
         </button>
-        <div v-if="!filteredProducts.length" class="empty-state">Aucun article</div>
+        <div v-if="!filteredProducts.length" class="empty-state">{{ t('caisse.catalog.empty') }}</div>
       </div>
     </div>
 
@@ -96,7 +96,7 @@
       :course-mode="true"
       :current-course="currentCourse"
       :sealed-courses="sealedCourses"
-      :courses="courses"
+      :courses="localizedCourses"
       :table="selectedTable"
       :paying="paying"
       :ticket-sent="ticketSent"
@@ -113,11 +113,11 @@
     <!-- ═══ PERSISTENT TOTAL BAR — toujours visible ═══ -->
     <div v-if="selectedTable !== null" class="caisse-total-bar">
       <div class="total-bar-info">
-        <span class="total-bar-table">Table {{ selectedTable }}</span>
-        <span class="total-bar-count">{{ cart.length }} article{{ cart.length !== 1 ? 's' : '' }}</span>
+        <span class="total-bar-table">{{ t('common.table', { number: selectedTable }) }}</span>
+        <span class="total-bar-count">{{ t('caisse.totalBar.count', { count: cart.length }) }}</span>
       </div>
       <div class="total-bar-amount">
-        <span class="total-bar-label">Total</span>
+        <span class="total-bar-label">{{ t('caisse.totalBar.total') }}</span>
         <span class="total-bar-value">{{ formatEur(cartTotal) }}</span>
       </div>
     </div>
@@ -127,18 +127,18 @@
     <!-- MODAL COUVERTS -->
     <div v-if="coversModal" class="modal-overlay" @click.self="coversModal = null">
       <div class="modal-card">
-        <div class="modal-title">👥 Table {{ coversModal.table }}</div>
-        <p class="modal-text">Nombre de couverts</p>
+        <div class="modal-title">{{ t('caisse.covers.title', { table: coversModal.table }) }}</div>
+        <p class="modal-text">{{ t('caisse.covers.label') }}</p>
         <div class="covers-display">{{ coversInput || '—' }}</div>
         <div class="covers-keys">
           <button v-for="d in ['1','2','3','4','5','6','7','8','9']" :key="d" class="np-key" @click="coversInput = (coversInput + d).slice(0,2)">{{ d }}</button>
           <button class="np-key" @click="coversInput = ''">⌫</button>
           <button class="np-key" @click="coversInput = (coversInput + '0').slice(0,2)">0</button>
-          <button class="np-key np-ok" @click="confirmCovers">✔ OK</button>
+          <button class="np-key np-ok" @click="confirmCovers">{{ t('caisse.covers.ok') }}</button>
         </div>
         <div class="modal-actions">
-          <button class="btn-ghost" @click="coversModal = null">Annuler</button>
-          <button class="btn-primary" @click="confirmCovers">Ouvrir</button>
+          <button class="btn-ghost" @click="coversModal = null">{{ t('common.cancel') }}</button>
+          <button class="btn-primary" @click="confirmCovers">{{ t('common.open') }}</button>
         </div>
       </div>
     </div>
@@ -151,7 +151,7 @@
           <button class="modal-close" @click="optionModal = null">✕</button>
         </div>
         <div v-for="group in optionModal.groups" :key="group.key" class="opt-group">
-          <div class="opt-group-title">{{ group.label }}</div>
+          <div class="opt-group-title">{{ groupLabel(group) }}</div>
           <div class="opt-list">
             <button
               v-for="opt in group.options"
@@ -159,12 +159,12 @@
               class="opt-btn"
               :class="{ active: selectedOptions[group.key] === opt }"
               @click="selectedOptions[group.key] = opt"
-            >{{ opt }}</button>
+            >{{ optLabel(group, opt) }}</button>
           </div>
         </div>
         <div class="modal-actions">
           <span class="modal-price">{{ formatEur(optionModal.price) }}</span>
-          <button class="btn-primary" @click="addWithOptions">+ Ajouter</button>
+          <button class="btn-primary" @click="addWithOptions">{{ t('caisse.options.add') }}</button>
         </div>
       </div>
     </div>
@@ -172,13 +172,13 @@
     <!-- MODAL RÉCLAMER -->
     <div v-if="reclaimModal" class="modal-overlay" @click.self="reclaimModal = false">
       <div class="modal-card modal-sm">
-        <div class="modal-title">🔔 Réclamer</div>
+        <div class="modal-title">{{ t('caisse.reclaim.title') }}</div>
         <p class="modal-text">
-          {{ reclaimModal.table ? `La table ${reclaimModal.table} réclame des articles déjà envoyés.` : 'Réclamer des articles déjà envoyés.' }}
+          {{ reclaimModal.table ? t('caisse.reclaim.textTable', { table: reclaimModal.table }) : t('caisse.reclaim.text') }}
         </p>
         <div class="modal-actions">
-          <button class="btn-ghost" @click="reclaimModal = false">Fermer</button>
-          <button class="btn-danger" @click="confirmReclaim">Réclamer à la cuisine</button>
+          <button class="btn-ghost" @click="reclaimModal = false">{{ t('common.close') }}</button>
+          <button class="btn-danger" @click="confirmReclaim">{{ t('caisse.reclaim.confirm') }}</button>
         </div>
       </div>
     </div>
@@ -186,7 +186,7 @@
     <!-- MODAL ADDITION PROVISOIRE -->
     <div v-if="additionModal" class="modal-overlay" @click.self="additionModal = false">
       <div class="modal-card">
-        <div class="modal-title">🧾 Addition provisoire</div>
+        <div class="modal-title">{{ t('caisse.addition.title') }}</div>
         <div class="addition-lines">
           <div v-for="(item, i) in cart" :key="i" class="addition-line">
             <span>{{ item.name }} <em v-if="item.options">({{ item.options }})</em> × {{ item.qty }}</span>
@@ -194,12 +194,12 @@
           </div>
         </div>
         <div class="addition-totals">
-          <div class="addition-row"><span>Total HT</span><span>{{ formatEur(cartTotalHt) }}</span></div>
-          <div class="addition-row"><span>TVA ({{ tvaRate }}%)</span><span>{{ formatEur(cartTotal - cartTotalHt) }}</span></div>
-          <div class="addition-row addition-total"><span>Total TTC</span><span>{{ formatEur(cartTotal) }}</span></div>
+          <div class="addition-row"><span>{{ t('caisse.addition.totalHt') }}</span><span>{{ formatEur(cartTotalHt) }}</span></div>
+          <div class="addition-row"><span>{{ t('caisse.addition.vat', { rate: tvaRate }) }}</span><span>{{ formatEur(cartTotal - cartTotalHt) }}</span></div>
+          <div class="addition-row addition-total"><span>{{ t('caisse.addition.totalTtc') }}</span><span>{{ formatEur(cartTotal) }}</span></div>
         </div>
         <div class="modal-actions">
-          <button class="btn-ghost" @click="additionModal = false">Fermer</button>
+          <button class="btn-ghost" @click="additionModal = false">{{ t('common.close') }}</button>
         </div>
       </div>
     </div>
@@ -207,13 +207,13 @@
     <!-- MODAL SOLDER (paiement) -->
     <div v-if="paymentModal" class="modal-overlay" @click.self="paymentModal = false">
       <div class="modal-card">
-        <div class="modal-title">💶 Solder la table</div>
-        <p v-if="selectedTable !== null" class="modal-text">Table {{ selectedTable }} · {{ cart.length }} article(s)</p>
-        <p v-if="currentTicketId" class="modal-ticket-ref">🎫 Ticket #MOB-{{ currentTicketId.toString().slice(0,5).toUpperCase() }}</p>
+        <div class="modal-title">{{ t('caisse.payment.title') }}</div>
+        <p v-if="selectedTable !== null" class="modal-text">{{ t('caisse.payment.summary', { table: selectedTable, count: cart.length }) }}</p>
+        <p v-if="currentTicketId" class="modal-ticket-ref">{{ t('caisse.payment.ticketRef', { ref: currentTicketId.toString().slice(0,5).toUpperCase() }) }}</p>
         <div class="modal-total">{{ formatEur(cartTotal) }}</div>
         <div class="pay-methods">
           <button
-            v-for="m in paymentMethods"
+            v-for="m in localizedPaymentMethods"
             :key="m.key"
             class="pay-btn"
             :class="'pay-' + m.key"
@@ -231,7 +231,7 @@
     <div v-if="floorModal" class="modal-overlay" @click.self="floorModal = false">
       <div class="modal-card floor-card">
         <div class="floor-header">
-          <div class="floor-title">🪑 Tables
+          <div class="floor-title">{{ t('caisse.floor.title') }}
             <span class="floor-count" v-if="occupiedCount">({{ occupiedCount }})</span>
           </div>
           <div class="floor-header-actions">
@@ -243,7 +243,7 @@
         <!-- Onglets espaces -->
         <div v-if="floorAreas.length > 1" class="floor-tabs">
           <button
-            v-for="a in floorAreas"
+            v-for="a in localizedFloorAreas"
             :key="a.id"
             class="floor-tab"
             :class="{ active: activeArea === a.id }"
@@ -256,23 +256,23 @@
           <div class="floor-visual" v-if="activeAreaTables.length">
             <div class="floor-canvas">
               <div
-                v-for="t in activeAreaTables"
-                :key="t.number"
+                v-for="tb in activeAreaTables"
+                :key="tb.number"
                 class="floor-table-viz"
-                :class="[t.shape || 'round', t.size || 'medium', 'state-' + (t.state || 'libre')]"
-                :style="tablePosStyle(t)"
-                @click="tapTableInFloor(t)"
+                :class="[tb.shape || 'round', tb.size || 'medium', 'state-' + (tb.state || 'libre')]"
+                :style="tablePosStyle(tb)"
+                @click="tapTableInFloor(tb)"
               >
-                <span class="ft-num">{{ t.number }}</span>
-                <span v-if="t.state !== 'libre'" class="ft-total">{{ formatEur(t.total) }}</span>
+                <span class="ft-num">{{ tb.number }}</span>
+                <span v-if="tb.state !== 'libre'" class="ft-total">{{ formatEur(tb.total) }}</span>
               </div>
             </div>
           </div>
-          <div v-else class="floor-empty">Aucune table — configurez le plan sur la caisse.</div>
+          <div v-else class="floor-empty">{{ t('caisse.floor.empty') }}</div>
           <div class="floor-legend">
-            <span><span class="lgd lgd-libre"></span> Libre</span>
-            <span><span class="lgd lgd-occupee"></span> En cours</span>
-            <span><span class="lgd lgd-addition"></span> Addition</span>
+            <span><span class="lgd lgd-libre"></span> {{ t('caisse.floor.free') }}</span>
+            <span><span class="lgd lgd-occupee"></span> {{ t('caisse.floor.busy') }}</span>
+            <span><span class="lgd lgd-addition"></span> {{ t('caisse.floor.bill') }}</span>
           </div>
         </template>
 
@@ -280,22 +280,22 @@
         <template v-else>
           <div class="floor-list" v-if="allOccupiedTables.length">
             <div
-              v-for="t in allOccupiedTables"
-              :key="t.number"
+              v-for="tb in allOccupiedTables"
+              :key="tb.number"
               class="floor-row"
-              :class="'state-' + t.state"
-              @click="tapTableInFloor(t)"
+              :class="'state-' + tb.state"
+              @click="tapTableInFloor(tb)"
             >
-              <span class="floor-row-num">Table {{ t.number }}</span>
-              <span class="floor-row-covers" v-if="t.covers">👤{{ t.covers }}</span>
-              <span class="floor-row-state">{{ t.state === 'occupée' ? 'En cours' : 'Addition' }}</span>
-              <span class="floor-row-total">{{ formatEur(t.total) }}</span>
+              <span class="floor-row-num">{{ t('common.table', { number: tb.number }) }}</span>
+              <span class="floor-row-covers" v-if="tb.covers">👤{{ tb.covers }}</span>
+              <span class="floor-row-state">{{ tb.state === 'occupée' ? t('caisse.floor.busy') : t('caisse.floor.bill') }}</span>
+              <span class="floor-row-total">{{ formatEur(tb.total) }}</span>
             </div>
           </div>
-          <div v-else class="floor-empty">Aucune table occupée</div>
+          <div v-else class="floor-empty">{{ t('caisse.floor.emptyOccupied') }}</div>
           <div class="floor-legend">
-            <span><span class="lgd lgd-occupee"></span> En cours</span>
-            <span><span class="lgd lgd-addition"></span> Addition</span>
+            <span><span class="lgd lgd-occupee"></span> {{ t('caisse.floor.busy') }}</span>
+            <span><span class="lgd lgd-addition"></span> {{ t('caisse.floor.bill') }}</span>
           </div>
         </template>
       </div>
@@ -308,7 +308,7 @@
         <div class="confirm-title">{{ paymentResult.title }}</div>
         <p class="modal-text">{{ paymentResult.message }}</p>
         <div class="confirm-total">{{ formatEur(cartTotal) }}</div>
-        <button class="btn-primary" @click="finishPayment">Nouvelle vente</button>
+        <button class="btn-primary" @click="finishPayment">{{ t('caisse.payment.newSale') }}</button>
       </div>
     </div>
   </div>
@@ -321,21 +321,26 @@ import api from '../../shared/api'
 import { auth, getEstablishmentId } from '../../shared/auth'
 import CaisseCart from './CaisseCart.vue'
 import TipsIcon from '../../components/TipsIcon.vue'
+import { useI18n } from '../../i18n'
 
-/* ─── Defaults ─── */
+const { t, intlLocale } = useI18n()
+
+/* ─── Defaults ───
+   Les libellés par défaut portent une clé i18n (labelKey / nameKey), traduite
+   au rendu ; une config backend (pos_config) fournit ses propres libellés. */
 const DEFAULT_COURSES = [
-  { key: 'entree',  label: 'Entrée',  courseType: 'chaud', order: 0 },
-  { key: 'plat',    label: 'Plat',    courseType: 'chaud', order: 1 },
-  { key: 'dessert', label: 'Dessert', courseType: 'froid', order: 2 },
+  { key: 'entree',  label: 'Entrée',  labelKey: 'caisse.courses.entree',  courseType: 'chaud', order: 0 },
+  { key: 'plat',    label: 'Plat',    labelKey: 'caisse.courses.plat',    courseType: 'chaud', order: 1 },
+  { key: 'dessert', label: 'Dessert', labelKey: 'caisse.courses.dessert', courseType: 'froid', order: 2 },
 ]
 
 const DEFAULT_PAYMENT_METHODS = [
-  { key: 'cash',         label: 'Espèces',        icon: '💶' },
-  { key: 'card',         label: 'Carte bancaire', icon: '💳' },
+  { key: 'cash',         label: 'Espèces',        labelKey: 'caisse.payment.methods.cash',         icon: '💶' },
+  { key: 'card',         label: 'Carte bancaire', labelKey: 'caisse.payment.methods.card',         icon: '💳' },
   { key: 'sumup',        label: 'SumUp',          icon: '📱' },
-  { key: 'ticket_resto', label: 'Ticket resto',   icon: '🎟️' },
+  { key: 'ticket_resto', label: 'Ticket resto',   labelKey: 'caisse.payment.methods.ticketResto',  icon: '🎟️' },
   { key: 'amex',         label: 'AMEX',           icon: '🅰️' },
-  { key: 'bank_transfer',label: 'Virement',       icon: '🏦' },
+  { key: 'bank_transfer',label: 'Virement',       labelKey: 'caisse.payment.methods.bankTransfer', icon: '🏦' },
 ]
 
 /* Mapping icônes backend → emoji PWA (surcharge pour les codes connus) */
@@ -352,24 +357,25 @@ const PAYMENT_ICON_MAP = {
 }
 
 const DEFAULT_CATEGORIES = [
-  { id: 'entrees',     name: 'Entrées',     icon: '🥗', color: '#34d399' },
-  { id: 'plats',       name: 'Plat',        icon: '🍽', color: '#fbbf24' },
-  { id: 'suggestions', name: 'Suggestions', icon: '✨', color: '#fb7185' },
-  { id: 'snack',       name: 'Snack',       icon: '🍔', color: '#fb923c' },
-  { id: 'desserts',    name: 'Dessert',     icon: '🍰', color: '#f472b6' },
-  { id: 'eaux',        name: 'Eaux',        icon: '💧', color: '#38bdf8' },
-  { id: 'soft',        name: 'Soft',        icon: '🥤', color: '#22d3ee' },
-  { id: 'bieres',      name: 'Bière',       icon: '🍺', color: '#facc15' },
-  { id: 'brunch',      name: 'Brunch',      icon: '🥞', color: '#a78bfa' },
-  { id: 'vins',        name: 'Vins',        icon: '🍷', color: '#f87171' },
-  { id: 'champagnes',  name: 'Champagne',   icon: '🥂', color: '#fde68a' },
-  { id: 'cocktails',   name: 'Cocktails',   icon: '🍸', color: '#2dd4bf' },
+  { id: 'entrees',     name: 'Entrées',     nameKey: 'caisse.categories.entrees', icon: '🥗', color: '#34d399' },
+  { id: 'plats',       name: 'Plat',        nameKey: 'caisse.categories.plats', icon: '🍽', color: '#fbbf24' },
+  { id: 'suggestions', name: 'Suggestions', nameKey: 'caisse.categories.suggestions', icon: '✨', color: '#fb7185' },
+  { id: 'snack',       name: 'Snack',       nameKey: 'caisse.categories.snack', icon: '🍔', color: '#fb923c' },
+  { id: 'desserts',    name: 'Dessert',     nameKey: 'caisse.categories.desserts', icon: '🍰', color: '#f472b6' },
+  { id: 'eaux',        name: 'Eaux',        nameKey: 'caisse.categories.eaux', icon: '💧', color: '#38bdf8' },
+  { id: 'soft',        name: 'Soft',        nameKey: 'caisse.categories.soft', icon: '🥤', color: '#22d3ee' },
+  { id: 'bieres',      name: 'Bière',       nameKey: 'caisse.categories.bieres', icon: '🍺', color: '#facc15' },
+  { id: 'brunch',      name: 'Brunch',      nameKey: 'caisse.categories.brunch', icon: '🥞', color: '#a78bfa' },
+  { id: 'vins',        name: 'Vins',        nameKey: 'caisse.categories.vins', icon: '🍷', color: '#f87171' },
+  { id: 'champagnes',  name: 'Champagne',   nameKey: 'caisse.categories.champagnes', icon: '🥂', color: '#fde68a' },
+  { id: 'cocktails',   name: 'Cocktails',   nameKey: 'caisse.categories.cocktails', icon: '🍸', color: '#2dd4bf' },
 ]
 
+/* Groupes par défaut : options = clés i18n (caisse.options.values.<groupe>.<clé>) */
 const DEFAULT_OPTION_GROUPS = {
-  cuisson:   { key: 'cuisson',   label: 'Cuisson',    options: ['Saignant', 'À point', 'Bien cuit'] },
-  garniture: { key: 'garniture', label: 'Garniture',  options: ['Frites', 'Riz', 'Légumes', 'Salade'] },
-  taille:    { key: 'taille',    label: 'Taille',     options: ['Petit', 'Normal', 'Grand'] },
+  cuisson:   { key: 'cuisson',   label: 'Cuisson',    i18n: true, options: ['rare', 'medium', 'wellDone'] },
+  garniture: { key: 'garniture', label: 'Garniture',  i18n: true, options: ['fries', 'rice', 'vegetables', 'salad'] },
+  taille:    { key: 'taille',    label: 'Taille',     i18n: true, options: ['small', 'normal', 'large'] },
 }
 
 const DEFAULT_CATEGORY_OPTIONS = {
@@ -397,7 +403,7 @@ const categories = ref([...DEFAULT_CATEGORIES])
 const optionGroups = ref({ ...DEFAULT_OPTION_GROUPS })
 const categoryOptions = ref({ ...DEFAULT_CATEGORY_OPTIONS })
 const floorAreas = ref([
-  { id: 'salle', name: 'SALLE', icon: '🪑',
+  { id: 'salle', name: 'SALLE', nameKey: 'caisse.floor.defaultArea', icon: '🪑',
     tables: [
       { number: 1, x: 20, y: 80 }, { number: 2, x: 40, y: 80 }, { number: 3, x: 60, y: 80 }, { number: 4, x: 80, y: 80 },
       { number: 5, x: 20, y: 55 }, { number: 6, x: 40, y: 55 }, { number: 7, x: 60, y: 55 }, { number: 8, x: 80, y: 55 },
@@ -414,7 +420,7 @@ const tableCovers = ref({})
 const view = ref('home') // 'home' | 'catalog'
 const products = ref([])
 const activeCatId = ref(null)
-const activeCat = computed(() => categories.value.find(c => c.id === activeCatId.value) || null)
+const activeCat = computed(() => localizedCategories.value.find(c => c.id === activeCatId.value) || null)
 
 /* Panier / Table */
 const cart = ref([])
@@ -449,6 +455,21 @@ const floorView = ref('plan')
 const activeArea = ref(floorAreas.value[0].id)
 
 /* ═══ Computed ═══ */
+
+/* Libellés traduits pour les entrées par défaut (celles qui portent une clé i18n) */
+const withLabel = o => (o.labelKey ? { ...o, label: t(o.labelKey) } : o)
+const withName = o => (o.nameKey ? { ...o, name: t(o.nameKey) } : o)
+const localizedCourses = computed(() => courses.value.map(withLabel))
+const localizedPaymentMethods = computed(() => paymentMethods.value.map(withLabel))
+const localizedCategories = computed(() => categories.value.map(withName))
+const localizedFloorAreas = computed(() => floorAreas.value.map(withName))
+
+function groupLabel(group) {
+  return group.i18n ? t(`caisse.options.groups.${group.key}`) : group.label
+}
+function optLabel(group, opt) {
+  return group.i18n ? t(`caisse.options.values.${group.key}.${opt}`) : opt
+}
 
 const cartTotal = computed(() => cart.value.reduce((s, i) => s + i.qty * i.price, 0))
 const cartTotalHt = computed(() => cartTotal.value / (1 + tvaRate.value / 100))
@@ -498,7 +519,7 @@ const filteredProducts = computed(() => {
 })
 
 const displayName = computed(() =>
-  auth.user?.first_name || auth.user?.name || auth.user?.username || auth.user?.email || 'Vendeur'
+  auth.user?.first_name || auth.user?.name || auth.user?.username || auth.user?.email || t('caisse.seller')
 )
 
 /* ═══ Horloge ═══ */
@@ -506,7 +527,7 @@ const clock = ref({ date: '', time: '' })
 let clockTimer = null
 function updateClock() {
   const now = new Date()
-  const days = ['DIM','LUN','MAR','MER','JEU','VEN','SAM']
+  const days = t('caisse.days').split(',')
   const d = `${days[now.getDay()]} ${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`
   clock.value = { date: d, time: `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}` }
 }
@@ -677,7 +698,10 @@ function addWithOptions() {
   const prod = optionModal.value
   const opts = Object.entries(selectedOptions.value)
     .filter(([, v]) => v)
-    .map(([, v]) => v)
+    .map(([k, v]) => {
+      const group = prod.groups?.find(g => g.key === k)
+      return group ? optLabel(group, v) : v
+    })
   addToCart(prod, opts.length ? opts.join(' + ') : null)
   optionModal.value = null
 }
@@ -848,8 +872,8 @@ async function sendToKitchen() {
   } catch (e) {
     paymentResult.value = {
       icon: '❌',
-      title: 'Erreur d’envoi',
-      message: e.data?.message || e.message || "Impossible d'envoyer en cuisine",
+      title: t('caisse.send.errorTitle'),
+      message: e.data?.message || e.message || t('caisse.send.error'),
     }
   } finally {
     paying.value = false
@@ -869,8 +893,8 @@ function confirmReclaim() {
   reclaimModal.value = false
   paymentResult.value = {
     icon: '🔔',
-    title: 'Réclamation envoyée',
-    message: selectedTable.value ? `La cuisine a reçu la demande pour la table ${selectedTable.value}.` : 'La cuisine a reçu la demande.',
+    title: t('caisse.reclaim.sentTitle'),
+    message: selectedTable.value ? t('caisse.reclaim.sentTable', { table: selectedTable.value }) : t('caisse.reclaim.sent'),
   }
 }
 
@@ -887,7 +911,7 @@ function openPayment() {
 async function pay(method) {
   if (cart.value.length === 0) return
   paying.value = true
-  const meta = paymentMethods.value.find(m => m.key === method) || { label: method, icon: '💳' }
+  const meta = localizedPaymentMethods.value.find(m => m.key === method) || { label: method, icon: '💳' }
   try {
     // Build SalesEntry payload pour le backend
     const now = new Date()
@@ -905,15 +929,16 @@ async function pay(method) {
       date: dateStr,
       shift,
       entry_type: 'pos_integration',
-      notes: `Table ${selectedTable.value} — ${meta.label}${method === 'cash' ? '' : ''}`,
+      // Donnée comptable : libellé source (non traduit), identique quelle que soit la langue
+      notes: `Table ${selectedTable.value} — ${paymentMethods.value.find(m => m.key === method)?.label || method}`,
       line_items,
     })
     paymentResult.value = {
       icon: method === 'cash' ? '💶' : meta.icon,
-      title: `Paiement ${meta.label}`,
+      title: t('caisse.payment.successTitle', { method: meta.label }),
       message: method === 'cash'
-        ? 'Rendu monnaie sur ' + formatEur(cartTotal.value)
-        : 'Paiement accepté',
+        ? t('caisse.payment.change', { amount: formatEur(cartTotal.value) })
+        : t('caisse.payment.accepted'),
     }
     paymentModal.value = false
     if (selectedTable.value !== null) {
@@ -922,10 +947,10 @@ async function pay(method) {
       cartsByTable.value[selectedTable.value] = []
     }
   } catch (e) {
-    const errMsg = e?.data?.message || e?.response?.data?.detail || e.message || 'Erreur lors du paiement'
+    const errMsg = e?.data?.message || e?.response?.data?.detail || e.message || t('caisse.payment.error')
     paymentResult.value = {
       icon: '❌',
-      title: 'Paiement refusé',
+      title: t('caisse.payment.refused'),
       message: errMsg,
     }
     paymentModal.value = false
@@ -945,7 +970,7 @@ function finishPayment() {
 
 /* ═══ Utils ═══ */
 function formatEur(v) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v || 0)
+  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0)
 }
 
 /* ═══ Lifecycle ═══ */

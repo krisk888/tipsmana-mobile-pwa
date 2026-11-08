@@ -1,0 +1,27 @@
+{
+  "ui": {
+    "offline": {
+      "restored": "Connection restored",
+      "syncRequests": "Sync {count} request | Sync {count} requests",
+      "syncing": "Syncing...",
+      "synced": "{count} synced ✓ | {count} synced ✓",
+      "offline": "Offline",
+      "pending": "{count} pending request | {count} pending requests",
+      "usingCache": "Using cache"
+    },
+    "establishment": {
+      "activeAria": "Active establishment: {name}",
+      "active": "Active establishment",
+      "fallbackName": "Establishment {id}",
+      "switched": "Establishment: {name}"
+    },
+    "theme": {
+      "day": "Day",
+      "night": "Night",
+      "auto": "Auto",
+      "ariaDark": "Dark mode — click to switch to light mode",
+      "ariaLight": "Light mode — click to switch to auto mode",
+      "ariaAuto": "Auto mode (dark from 8 pm to 7 am) — click to switch to dark mode"
+    }
+  }
+}

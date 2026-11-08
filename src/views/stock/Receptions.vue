@@ -3,22 +3,22 @@
     <header class="page-header">
       <button class="back-btn" @click="$router.push('/stock')">←</button>
       <div>
-        <h2>📬 Réceptions</h2>
-        <p class="subtitle">Livraisons et entrées en stock</p>
+        <h2>{{ t('stock.receptions.title') }}</h2>
+        <p class="subtitle">{{ t('stock.receptions.subtitle') }}</p>
       </div>
     </header>
 
-    <div v-if="loading" class="state">Chargement…</div>
+    <div v-if="loading" class="state">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="state error">{{ error }}</div>
     <div v-else-if="movements.length === 0" class="state empty">
       <span class="empty-icon">🚚</span>
-      <p>Aucune réception enregistrée</p>
+      <p>{{ t('stock.receptions.empty') }}</p>
     </div>
 
     <div v-else class="mov-list">
       <div v-for="m in movements" :key="m.id" class="mov-card">
         <div class="mov-head">
-          <strong>{{ m.product_name || m.product_id || 'Produit' }}</strong>
+          <strong>{{ m.product_name || m.product_id || t('stock.productFallback') }}</strong>
           <span class="qty" :class="movClass(m.movement_type)">{{ sign(m.quantity) }} {{ unit(m) }}</span>
         </div>
         <div class="mov-meta">
@@ -34,6 +34,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '../../shared/api'
+import { useI18n } from '../../i18n'
+
+const { t, intlLocale } = useI18n()
 
 const movements = ref([])
 const loading = ref(true)
@@ -44,21 +47,19 @@ function sign(q) {
   return (isNaN(n) ? q : n > 0 ? '+' + n : n)
 }
 function unit(m) {
-  return m.unit || m.unit_name || (m.quantity != null ? 'u' : '')
+  return m.unit || m.unit_name || (m.quantity != null ? t('stock.unitShort') : '')
 }
-function typeLabel(t) {
-  return {
-    delivery: 'Réception', reception: 'Réception', purchase: 'Achat',
-    transfer_in: 'Entrée interne', adjustment: 'Ajustement', loss: 'Perte',
-    transfer_out: 'Sortie interne', consumption: 'Consommation',
-  }[t] || (t || 'Mouvement')
+const MOVEMENT_TYPES = ['delivery', 'reception', 'purchase', 'transfer_in', 'adjustment', 'loss', 'transfer_out', 'consumption']
+function typeLabel(type) {
+  if (MOVEMENT_TYPES.includes(type)) return t(`stock.receptions.types.${type}`)
+  return type || t('stock.receptions.movementFallback')
 }
-function movClass(t) {
-  return ['delivery', 'reception', 'purchase', 'transfer_in', 'adjustment'].includes(t) ? 'in' : 'out'
+function movClass(type) {
+  return ['delivery', 'reception', 'purchase', 'transfer_in', 'adjustment'].includes(type) ? 'in' : 'out'
 }
 function fmtDate(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+  return new Date(iso).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short' })
 }
 
 async function load() {

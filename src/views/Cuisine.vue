@@ -3,30 +3,36 @@
     <header class="cuisine-header">
       <div class="header-left">
         <button class="back-btn" @click="$router.push('/pilot')">←</button>
-        <h1>🍳 Cuisine</h1>
+        <h1>🍳 {{ t('kitchen.title') }}</h1>
       </div>
       <div class="header-right">
-        <span class="badge urgent">3 urgent</span>
+        <span class="badge urgent">{{ t('kitchen.mock.urgent', { count: 3 }) }}</span>
       </div>
     </header>
     <main class="cuisine-main">
       <div class="order-grid">
         <div class="order-card" v-for="n in 4" :key="n">
           <div class="order-header">
-            <span class="table-tag">Table 4{{ n }}</span>
+            <span class="table-tag">{{ t('common.table', { number: '4' + n }) }}</span>
             <span class="time">12:3{{ n }}</span>
           </div>
           <div class="order-items">
             <span class="item">Bourguignon ×2</span>
             <span class="item">Salade verte ×1</span>
-            <span class="item tag">Sans oignon</span>
+            <span class="item tag">{{ t('kitchen.mock.noOnion') }}</span>
           </div>
-          <button class="ready-btn">✅ Prêt</button>
+          <button class="ready-btn">✅ {{ t('kitchen.actions.ready') }}</button>
         </div>
       </div>
     </main>
   </div>
 </template>
+
+<script setup>
+import { useI18n } from '../i18n'
+
+const { t } = useI18n()
+</script>
 
 <style scoped>
 .cuisine-layout { min-height: 100vh; background: #1a1a2e; color: #e0e0e0; font-family: inherit; }

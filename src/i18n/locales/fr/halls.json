@@ -1,0 +1,19 @@
+{
+  "halls": {
+    "title": "🪑 Plan de salle",
+    "wsConnected": "Temps réel connecté",
+    "wsDisconnected": "Temps réel déconnecté",
+    "legend": {
+      "free": "Libre",
+      "order": "Commande",
+      "occupied": "Occupé",
+      "reserved": "Réservé"
+    },
+    "viewInCaisse": "Voir en caisse",
+    "noTables": "Aucune table configurée dans cet espace.",
+    "loading": "Chargement du plan de salle…",
+    "loadError": "Erreur de chargement du plan de salle",
+    "noSpaces": "Aucun espace configuré.",
+    "noSpacesHint": "Configurez le plan de salle depuis la caisse."
+  }
+}

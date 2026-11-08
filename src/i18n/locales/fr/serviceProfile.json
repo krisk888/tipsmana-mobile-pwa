@@ -1,0 +1,21 @@
+{
+  "serviceProfile": {
+    "backToTables": "Retour aux tables",
+    "today": "Aujourd'hui",
+    "stats": {
+      "orders": "Commandes",
+      "tablesHandled": "Tables gérées",
+      "openTables": "Tables ouvertes"
+    },
+    "tablesList": "Tables :",
+    "itemsSent": "{count} article envoyé depuis cet appareil | {count} articles envoyés depuis cet appareil",
+    "openTablesError": "Tables ouvertes indisponibles",
+    "notif": {
+      "enable": "Activer",
+      "granted": "Activées — vous serez alerté quand une commande est servie",
+      "denied": "Bloquées — autorisez-les dans les réglages du navigateur",
+      "default": "Pas encore activées",
+      "unsupported": "Non prises en charge sur cet appareil"
+    }
+  }
+}

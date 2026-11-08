@@ -1,0 +1,51 @@
+{
+  "profile": {
+    "title": "👤 Perfil",
+    "subtitle": "Gestiona tu cuenta y tus preferencias",
+    "personalInfo": "Información personal",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "phone": "Teléfono",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "correo@ejemplo.es",
+    "saving": "Guardando...",
+    "establishment": "Establecimiento",
+    "name": "Nombre",
+    "role": "Rol",
+    "type": "Tipo",
+    "notifications": "Notificaciones",
+    "pushNotifications": "Notificaciones push",
+    "emailNotifications": "Notificaciones por correo",
+    "autoSaveHint": "Las preferencias se guardan automáticamente",
+    "changePassword": "Cambiar la contraseña",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "updating": "Actualizando...",
+    "payment": {
+      "title": "💳 Pago",
+      "holder": "Titular",
+      "holderPlaceholder": "Nombre del titular",
+      "bank": "Banco",
+      "bankPlaceholder": "Nombre del banco",
+      "apiKey": "Clave API",
+      "apiKeyPlaceholder": "Clave API de SumUp",
+      "merchantId": "ID de comercio",
+      "merchantIdPlaceholder": "ID de comercio SumUp",
+      "saving": "Guardando…",
+      "save": "💾 Guardar",
+      "saved": "✅ Configuración guardada",
+      "saveError": "❌ Error al guardar",
+      "loadError": "❌ No se pueden cargar los métodos de pago"
+    },
+    "messages": {
+      "noChanges": "Sin cambios",
+      "profileUpdated": "Perfil actualizado ✓",
+      "updateError": "Error al actualizar",
+      "currentRequired": "Se requiere la contraseña actual",
+      "minLength": "Mínimo {n} caracteres",
+      "mismatch": "Las contraseñas no coinciden",
+      "passwordChanged": "Contraseña cambiada ✓",
+      "passwordError": "Error al cambiar la contraseña"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "login": {
+    "subtitle": "The Boss App",
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "password": "Password",
+    "connecting": "Signing in...",
+    "submit": "Sign in",
+    "quickLogin": "Quick login — choose a role",
+    "demo": "Demo"
+  }
+}

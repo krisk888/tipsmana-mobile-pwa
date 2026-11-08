@@ -10,6 +10,7 @@
  */
 
 import { offlineStore } from './offlineStore'
+import { t } from '../i18n'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1'
 
@@ -127,7 +128,7 @@ class ApiClient {
 
     // ── Mode HORS-LIGNE ──
     if (!navigator.onLine) {
-      if (replay) throw new Error('Réseau indisponible.')
+      if (replay) throw new Error(t('common.errors.network'))
       if (MUTATION_METHODS.has(method)) {
         // Mutation : on queue et on notifie
         await this._queueRequest(method, path, body)
@@ -138,7 +139,7 @@ class ApiClient {
         if (cached) {
           return { ...cached, offline: true, fromCache: true }
         }
-        throw new Error('Réseau indisponible. Aucune donnée en cache.')
+        throw new Error(t('common.errors.networkNoCache'))
       }
     }
 
@@ -159,7 +160,7 @@ class ApiClient {
       // Token expired & refresh failed → force logout
       if (res.status === 401) {
         this._forceLogout()
-        throw new Error('Session expirée. Veuillez vous reconnecter.')
+        throw new Error(t('common.errors.sessionExpired'))
       }
 
       return this._handleResponse(path, method, res)
@@ -190,7 +191,7 @@ class ApiClient {
       try { data = JSON.parse(text) } catch { data = { message: text.slice(0, 200) } }
     }
     if (!res.ok) {
-      const err = new Error(data.message || data.detail || 'API Error')
+      const err = new Error(data.message || data.detail || t('common.errors.generic'))
       err.status = res.status
       err.data = data
       throw err
@@ -267,7 +268,7 @@ class ApiClient {
     if (establishmentId) headers['X-Establishment-ID'] = establishmentId
 
     if (!navigator.onLine) {
-      throw new Error('Réseau indisponible. Impossible de télécharger le fichier.')
+      throw new Error(t('common.errors.networkDownload'))
     }
 
     const res = await fetch(`${this.baseUrl}${path}`, {

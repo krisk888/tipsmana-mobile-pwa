@@ -1,14 +1,14 @@
 <template>
   <div class="profile-view">
     <header class="page-header">
-      <h2>👤 Profil</h2>
-      <p class="subtitle">Gérez votre compte et vos préférences</p>
+      <h2>{{ t('profile.title') }}</h2>
+      <p class="subtitle">{{ t('profile.subtitle') }}</p>
     </header>
 
     <!-- Loading -->
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <p>Chargement...</p>
+      <p>{{ t('common.loading') }}</p>
     </div>
 
     <template v-else>
@@ -26,43 +26,43 @@
 
       <!-- Éditer le profil -->
       <section class="form-section">
-        <h4>Informations personnelles</h4>
+        <h4>{{ t('profile.personalInfo') }}</h4>
         <div class="field">
-          <label>Prénom</label>
-          <input v-model="editForm.first_name" type="text" placeholder="Prénom" />
+          <label>{{ t('profile.firstName') }}</label>
+          <input v-model="editForm.first_name" type="text" :placeholder="t('profile.firstName')" />
         </div>
         <div class="field">
-          <label>Nom</label>
-          <input v-model="editForm.last_name" type="text" placeholder="Nom" />
+          <label>{{ t('profile.lastName') }}</label>
+          <input v-model="editForm.last_name" type="text" :placeholder="t('profile.lastName')" />
         </div>
         <div class="field">
-          <label>Téléphone</label>
+          <label>{{ t('profile.phone') }}</label>
           <input v-model="editForm.phone" type="tel" placeholder="+336****5678" />
         </div>
         <div class="field">
-          <label>Email</label>
-          <input v-model="editForm.email" type="email" placeholder="email@exemple.fr" />
+          <label>{{ t('profile.email') }}</label>
+          <input v-model="editForm.email" type="email" :placeholder="t('profile.emailPlaceholder')" />
         </div>
         <p v-if="profileError" class="field-error">{{ profileError }}</p>
         <p v-if="profileSuccess" class="field-success">{{ profileSuccess }}</p>
         <button class="btn-save" :disabled="saving" @click="saveProfile">
-          {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+          {{ saving ? t('profile.saving') : t('common.save') }}
         </button>
       </section>
 
       <!-- Établissement -->
       <section class="info-section">
-        <h4>Établissement</h4>
+        <h4>{{ t('profile.establishment') }}</h4>
         <div class="info-row">
-          <span class="info-label">Nom</span>
+          <span class="info-label">{{ t('profile.name') }}</span>
           <span class="info-value">{{ establishment?.name || '—' }}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">Rôle</span>
+          <span class="info-label">{{ t('profile.role') }}</span>
           <span class="info-value">{{ roleLabel }}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">Type</span>
+          <span class="info-label">{{ t('profile.type') }}</span>
           <span class="info-value">{{ establishment?.business_type || '—' }}</span>
         </div>
         <!-- Établissement actif (boss multi-établissement) -->
@@ -73,50 +73,56 @@
 
       <!-- Préférences notifications -->
       <section class="form-section">
-        <h4>Notifications</h4>
+        <h4>{{ t('profile.notifications') }}</h4>
         <div class="toggle-row">
-          <span>Notifications push</span>
+          <span>{{ t('profile.pushNotifications') }}</span>
           <label class="toggle">
             <input v-model="notifPrefs.push" type="checkbox" @change="saveNotifPrefs" />
             <span class="toggle-slider"></span>
           </label>
         </div>
         <div class="toggle-row">
-          <span>Notifications email</span>
+          <span>{{ t('profile.emailNotifications') }}</span>
           <label class="toggle">
             <input v-model="notifPrefs.email" type="checkbox" @change="saveNotifPrefs" />
             <span class="toggle-slider"></span>
           </label>
         </div>
-        <p class="toggle-hint">Les préférences sont sauvegardées automatiquement</p>
+        <p class="toggle-hint">{{ t('profile.autoSaveHint') }}</p>
+      </section>
+
+      <!-- Langue -->
+      <section class="form-section">
+        <h4>{{ t('common.language') }}</h4>
+        <LanguageSwitcher />
       </section>
 
       <!-- Changer mot de passe -->
       <section class="form-section">
-        <h4>Changer le mot de passe</h4>
+        <h4>{{ t('profile.changePassword') }}</h4>
         <div class="field">
-          <label>Mot de passe actuel</label>
+          <label>{{ t('profile.currentPassword') }}</label>
           <input v-model="passwordForm.current" type="password" placeholder="••••••••" />
         </div>
         <div class="field">
-          <label>Nouveau mot de passe</label>
+          <label>{{ t('profile.newPassword') }}</label>
           <input v-model="passwordForm.newPass" type="password" placeholder="••••••••" />
         </div>
         <div class="field">
-          <label>Confirmer</label>
+          <label>{{ t('common.confirm') }}</label>
           <input v-model="passwordForm.confirm" type="password" placeholder="••••••••" />
         </div>
         <p v-if="passwordError" class="field-error">{{ passwordError }}</p>
         <p v-if="passwordSuccess" class="field-success">{{ passwordSuccess }}</p>
         <button class="btn-save" :disabled="changingPassword" @click="changePassword">
-          {{ changingPassword ? 'Mise à jour...' : 'Changer le mot de passe' }}
+          {{ changingPassword ? t('profile.updating') : t('profile.changePassword') }}
         </button>
       </section>
 
       <!-- ═══ Paiement ═══ -->
       <section class="form-section">
-        <h4>💳 Paiement</h4>
-        <div v-if="paymentLoading" class="loading-state">Chargement…</div>
+        <h4>{{ t('profile.payment.title') }}</h4>
+        <div v-if="paymentLoading" class="loading-state">{{ t('common.loading') }}</div>
         <template v-else>
           <p v-if="paymentErrorMsg" class="field-error">{{ paymentErrorMsg }}</p>
           <div
@@ -145,29 +151,29 @@
                 <input v-model="m._config.bic" class="bank-input" placeholder="ABCDEFGH" />
               </div>
               <div class="bank-field-row">
-                <label class="bank-field-label">Titulaire</label>
-                <input v-model="m._config.bank_holder" class="bank-input" placeholder="Nom du titulaire" />
+                <label class="bank-field-label">{{ t('profile.payment.holder') }}</label>
+                <input v-model="m._config.bank_holder" class="bank-input" :placeholder="t('profile.payment.holderPlaceholder')" />
               </div>
               <div class="bank-field-row">
-                <label class="bank-field-label">Banque</label>
-                <input v-model="m._config.bank_name" class="bank-input" placeholder="Nom de la banque" />
+                <label class="bank-field-label">{{ t('profile.payment.bank') }}</label>
+                <input v-model="m._config.bank_name" class="bank-input" :placeholder="t('profile.payment.bankPlaceholder')" />
               </div>
             </div>
             <!-- SumUp config -->
             <div v-if="m.method_code === 'sumup' && m.is_active" class="bank-fields">
               <div class="bank-field-row">
-                <label class="bank-field-label">API Key</label>
-                <input v-model="m._config.api_key" class="bank-input" placeholder="Clé API SumUp" type="password" />
+                <label class="bank-field-label">{{ t('profile.payment.apiKey') }}</label>
+                <input v-model="m._config.api_key" class="bank-input" :placeholder="t('profile.payment.apiKeyPlaceholder')" type="password" />
               </div>
               <div class="bank-field-row">
-                <label class="bank-field-label">Merchant ID</label>
-                <input v-model="m._config.merchant_id" class="bank-input" placeholder="ID commerçant SumUp" />
+                <label class="bank-field-label">{{ t('profile.payment.merchantId') }}</label>
+                <input v-model="m._config.merchant_id" class="bank-input" :placeholder="t('profile.payment.merchantIdPlaceholder')" />
               </div>
             </div>
           </div>
           <p v-if="paymentSaveMsg" class="payment-msg" :class="paymentSaveMsgClass">{{ paymentSaveMsg }}</p>
           <button class="btn-save" :disabled="paymentSaving" @click="savePaymentMethods">
-            {{ paymentSaving ? 'Sauvegarde…' : '💾 Sauvegarder' }}
+            {{ paymentSaving ? t('profile.payment.saving') : t('profile.payment.save') }}
           </button>
         </template>
       </section>
@@ -175,7 +181,7 @@
       <!-- Déconnexion -->
       <section class="danger-section">
         <button class="btn-logout" @click="handleLogout">
-          🚪 Se déconnecter
+          🚪 {{ t('common.logout') }}
         </button>
       </section>
     </template>
@@ -188,6 +194,10 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import api from '../shared/api'
 import EstablishmentSwitcher from '../components/EstablishmentSwitcher.vue'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import { useI18n } from '../i18n'
+
+const { t } = useI18n()
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -286,7 +296,7 @@ async function saveProfile() {
     if (editForm.email !== (user.value?.email || '')) body.email = editForm.email || null
 
     if (Object.keys(body).length === 0) {
-      profileSuccess.value = 'Aucune modification'
+      profileSuccess.value = t('profile.messages.noChanges')
       saving.value = false
       setTimeout(() => { profileSuccess.value = '' }, 3000)
       return
@@ -307,9 +317,9 @@ async function saveProfile() {
     editForm.phone = merged.phone || ''
     editForm.email = merged.email || ''
 
-    profileSuccess.value = 'Profil mis à jour ✓'
+    profileSuccess.value = t('profile.messages.profileUpdated')
   } catch (e) {
-    profileError.value = e.message || e.data?.message || 'Erreur de mise à jour'
+    profileError.value = e.message || e.data?.message || t('profile.messages.updateError')
   } finally {
     saving.value = false
     setTimeout(() => { profileSuccess.value = ''; profileError.value = '' }, 3000)
@@ -320,9 +330,9 @@ async function changePassword() {
   passwordError.value = ''
   passwordSuccess.value = ''
 
-  if (!passwordForm.current) { passwordError.value = 'Mot de passe actuel requis'; return }
-  if (passwordForm.newPass.length < 8) { passwordError.value = 'Minimum 8 caractères'; return }
-  if (passwordForm.newPass !== passwordForm.confirm) { passwordError.value = 'Les mots de passe ne correspondent pas'; return }
+  if (!passwordForm.current) { passwordError.value = t('profile.messages.currentRequired'); return }
+  if (passwordForm.newPass.length < 8) { passwordError.value = t('profile.messages.minLength', { n: 8 }); return }
+  if (passwordForm.newPass !== passwordForm.confirm) { passwordError.value = t('profile.messages.mismatch'); return }
 
   changingPassword.value = true
   try {
@@ -330,12 +340,12 @@ async function changePassword() {
       current_password: passwordForm.current,
       new_password: passwordForm.newPass,
     })
-    passwordSuccess.value = 'Mot de passe changé ✓'
+    passwordSuccess.value = t('profile.messages.passwordChanged')
     passwordForm.current = ''
     passwordForm.newPass = ''
     passwordForm.confirm = ''
   } catch (e) {
-    passwordError.value = e.message || 'Erreur de changement de mot de passe'
+    passwordError.value = e.message || t('profile.messages.passwordError')
   } finally {
     changingPassword.value = false
     setTimeout(() => { passwordSuccess.value = ''; passwordError.value = '' }, 3000)
@@ -354,7 +364,7 @@ async function loadPaymentMethods() {
       _config: m.config ? { ...m.config } : {}
     }))
   } catch {
-    paymentErrorMsg.value = '❌ Impossible de charger les méthodes de paiement'
+    paymentErrorMsg.value = t('profile.payment.loadError')
     paymentMethods.value = []
   } finally {
     paymentLoading.value = false
@@ -375,11 +385,11 @@ async function savePaymentMethods() {
       config: m._config
     }))
     await api.put('/settings/payment-methods/bulk', { methods })
-    paymentSaveMsg.value = '✅ Configuration sauvegardée'
+    paymentSaveMsg.value = t('profile.payment.saved')
     paymentSaveMsgClass.value = 'payment-success'
     await loadPaymentMethods()
   } catch (e) {
-    paymentSaveMsg.value = e.message || '❌ Erreur de sauvegarde'
+    paymentSaveMsg.value = e.message || t('profile.payment.saveError')
     paymentSaveMsgClass.value = 'payment-error'
   } finally {
     paymentSaving.value = false

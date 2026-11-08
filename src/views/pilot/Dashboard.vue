@@ -1,12 +1,12 @@
 <template>
   <div class="pilot-dashboard">
     <header class="page-header">
-      <h2>Bonjour {{ user?.first_name || 'Boss' }}</h2>
+      <h2>{{ t('pilot.dashboard.greeting', { name: user?.first_name || t('common.roles.OWNER') }) }}</h2>
       <p class="date">{{ today }}</p>
     </header>
 
     <!-- Skeleton de chargement : visible uniquement au 1er chargement sans cache -->
-    <div v-if="loading && !cacheAvailable" class="skeleton-grid" aria-busy="true" aria-label="Chargement des indicateurs">
+    <div v-if="loading && !cacheAvailable" class="skeleton-grid" aria-busy="true" :aria-label="t('pilot.dashboard.loadingKpis')">
       <div v-for="n in 3" :key="n" class="skeleton-card">
         <div class="skeleton-bar w-40"></div>
         <div class="skeleton-bar w-70 tall"></div>
@@ -17,38 +17,38 @@
     <!-- État d'erreur : échec API ET aucun cache disponible -->
     <div v-else-if="error && !cacheAvailable" class="error-state" role="alert">
       <span class="error-icon">⚠️</span>
-      <p class="error-title">Connexion impossible</p>
+      <p class="error-title">{{ t('pilot.dashboard.connectionFailed') }}</p>
       <p class="error-detail">{{ error }}</p>
-      <button class="retry-btn" @click="loadDashboard">Réessayer</button>
+      <button class="retry-btn" @click="loadDashboard">{{ t('common.retry') }}</button>
     </div>
 
     <!-- Données : fraîches OU issues du cache localStorage -->
     <template v-else>
       <div v-if="usingCache" class="offline-banner" role="status">
-        📡 Données hors ligne — dernière synchro : {{ lastSyncLabel }}
+        {{ t('pilot.dashboard.offlineData', { time: lastSyncLabel }) }}
       </div>
 
       <!-- ═══ Widget récapitulatif : commandes en cours + CA du jour ═══ -->
       <div class="summary-widget">
         <div class="summary-card">
-          <span class="summary-label">Commandes en cours</span>
+          <span class="summary-label">{{ t('pilot.dashboard.pendingOrders') }}</span>
           <span class="summary-value">{{ pendingOrdersCount }}</span>
           <span class="summary-delta">{{ pendingOrdersLabel }}</span>
         </div>
         <div class="summary-card">
-          <span class="summary-label">Chiffre d'affaires du jour</span>
+          <span class="summary-label">{{ t('pilot.dashboard.dayRevenue') }}</span>
           <span class="summary-value">{{ formatEur(dayRevenue) }}</span>
-          <span class="summary-delta">{{ dayTransactions }} transactions</span>
+          <span class="summary-delta">{{ t('pilot.dashboard.transactions', { count: dayTransactions }) }}</span>
         </div>
       </div>
 
       <!-- ═══ Plan de salle : occupation en direct ═══ -->
       <div class="floorplan-widget" v-if="floorplanSpaces.length">
-        <h3>Plan de salle
+        <h3>{{ t('pilot.dashboard.floorplan') }}
           <span class="floorplan-legend">
-            <span class="fp-legend-dot libre"></span> Libre
-            <span class="fp-legend-dot occupee"></span> Occupée
-            <span class="fp-legend-dot addition"></span> Addition
+            <span class="fp-legend-dot libre"></span> {{ t('pilot.dashboard.legend.libre') }}
+            <span class="fp-legend-dot occupee"></span> {{ t('pilot.dashboard.legend.occupee') }}
+            <span class="fp-legend-dot addition"></span> {{ t('pilot.dashboard.legend.addition') }}
           </span>
         </h3>
         <div class="fp-spaces">
@@ -56,19 +56,19 @@
             <div class="fp-space-header">
               <span class="fp-space-name">{{ sp.icon }} {{ sp.name }}</span>
               <span class="fp-space-counts">
-                <span class="fp-count libre">{{ sp.tables.filter(t => t.state === 'libre').length }}</span>
-                <span class="fp-count occupee">{{ sp.tables.filter(t => t.state === 'occupée').length }}</span>
-                <span class="fp-count addition">{{ sp.tables.filter(t => t.state === 'addition').length }}</span>
+                <span class="fp-count libre">{{ sp.tables.filter(tb => tb.state === 'libre').length }}</span>
+                <span class="fp-count occupee">{{ sp.tables.filter(tb => tb.state === 'occupée').length }}</span>
+                <span class="fp-count addition">{{ sp.tables.filter(tb => tb.state === 'addition').length }}</span>
               </span>
             </div>
             <div class="fp-mini-grid">
               <div
-                v-for="t in sp.tables"
-                :key="t.number"
+                v-for="tb in sp.tables"
+                :key="tb.number"
                 class="fp-mini-dot"
-                :class="t.state"
-                :title="'Table ' + t.number + ' — ' + t.state + (t.serveur !== '—' ? ' (' + t.serveur + ')' : '')"
-              >{{ t.number }}</div>
+                :class="tb.state"
+                :title="tableTitle(tb)"
+              >{{ tb.number }}</div>
             </div>
           </div>
         </div>
@@ -76,9 +76,9 @@
 
       <!-- ═══ Graphique : CA horaire et commandes/h ═══ -->
       <div class="chart-section">
-        <h3>Activité horaire</h3>
-        <div v-if="chartLoading" class="chart-loading">Chargement...</div>
-        <div v-else-if="chartError" class="chart-error">{{ chartError }}</div>
+        <h3>{{ t('pilot.dashboard.hourlyActivity') }}</h3>
+        <div v-if="chartLoading" class="chart-loading">{{ t('common.loading') }}</div>
+        <div v-else-if="chartError" class="chart-error">{{ t(chartError) }}</div>
         <svg v-else class="hourly-chart" :viewBox="'0 0 ' + chartWidth + ' ' + chartHeight" preserveAspectRatio="xMidYMid meet">
           <!-- Axe Y : lignes horizontales + labels -->
           <line v-for="(y, yi) in yGridLines" :key="'g'+yi"
@@ -92,13 +92,13 @@
           <rect v-for="(h, i) in hourlyStats" :key="'ca'+i"
             :x="barX(i)" :y="barCAY(h.ca)" :width="barWidth" :height="barCAH(h.ca)"
             fill="#6366f1" rx="3" opacity="0.85">
-            <title>{{ h.label }} — CA: {{ formatEur(h.ca) }}</title>
+            <title>{{ t('pilot.dashboard.chartRevenueTitle', { label: h.label, amount: formatEur(h.ca) }) }}</title>
           </rect>
           <!-- Barres commandes (vertes) -->
           <rect v-for="(h, i) in hourlyStats" :key="'co'+i"
             :x="barX(i) + barWidth + 2" :y="barOrdersY(h.orders)" :width="barWidth"
             :height="barOrdersH(h.orders)" fill="#10b981" rx="3" opacity="0.85">
-            <title>{{ h.label }} — {{ h.orders }} commande(s)</title>
+            <title>{{ t('pilot.dashboard.chartOrdersTitle', { label: h.label, count: h.orders }) }}</title>
           </rect>
           <!-- Axe X : heures -->
           <text v-for="(h, i) in hourlyStats" :key="'xl'+i"
@@ -108,37 +108,37 @@
           </text>
         </svg>
         <div class="chart-legend">
-          <span class="legend-item"><span class="legend-dot ca"></span> CA</span>
-          <span class="legend-item"><span class="legend-dot orders"></span> Commandes</span>
+          <span class="legend-item"><span class="legend-dot ca"></span> {{ t('pilot.dashboard.legendRevenue') }}</span>
+          <span class="legend-item"><span class="legend-dot orders"></span> {{ t('pilot.dashboard.legendOrders') }}</span>
         </div>
       </div>
       <div class="kpi-grid">
         <div class="kpi-card">
-          <span class="kpi-label">CA aujourd'hui</span>
+          <span class="kpi-label">{{ t('pilot.dashboard.kpi.todayRevenue') }}</span>
           <span class="kpi-value">{{ formatEur(dashboard.today_revenue) }}</span>
-          <span class="kpi-delta">{{ dashboard.today_transactions }} transactions</span>
+          <span class="kpi-delta">{{ t('pilot.dashboard.transactions', { count: dashboard.today_transactions }) }}</span>
         </div>
         <div class="kpi-card">
-          <span class="kpi-label">Ticket moyen</span>
+          <span class="kpi-label">{{ t('pilot.dashboard.kpi.avgTicket') }}</span>
           <span class="kpi-value">{{ formatEur(dashboard.avg_ticket) }}</span>
-          <span class="kpi-delta">CA / ticket</span>
+          <span class="kpi-delta">{{ t('pilot.dashboard.kpi.perTicket') }}</span>
         </div>
         <div class="kpi-card">
-          <span class="kpi-label">Marge brute</span>
+          <span class="kpi-label">{{ t('pilot.dashboard.kpi.grossMargin') }}</span>
           <span class="kpi-value">{{ formatEur(dashboard.margin) }}</span>
           <span class="kpi-delta" :class="dashboard.margin_pct >= 60 ? 'up' : 'down'">
             {{ dashboard.margin_pct }}%
           </span>
         </div>
         <div class="kpi-card">
-          <span class="kpi-label">Produits actifs</span>
+          <span class="kpi-label">{{ t('pilot.dashboard.kpi.activeProducts') }}</span>
           <span class="kpi-value">{{ dashboard.active_products }}</span>
-          <span class="kpi-delta">{{ dashboard.low_stock_items }} en stock faible</span>
+          <span class="kpi-delta">{{ t('pilot.dashboard.kpi.lowStock', { count: dashboard.low_stock_items }) }}</span>
         </div>
       </div>
 
       <div v-if="alerts.length" class="alerts-section">
-        <h3>Alertes</h3>
+        <h3>{{ t('pilot.dashboard.alerts') }}</h3>
         <div v-for="alert in alerts.slice(0,3)" :key="alert.id" class="alert-item" :class="alert.severity">
           <span class="alert-icon">{{ alert.severity === 'high' ? '🔴' : '🟡' }}</span>
           <span class="alert-text">{{ alert.message }}</span>
@@ -146,7 +146,7 @@
       </div>
 
       <div v-if="activities.length" class="activities-section">
-        <h3>Activité récente</h3>
+        <h3>{{ t('pilot.dashboard.recentActivity') }}</h3>
         <div v-for="a in activities.slice(0,4)" :key="a.id" class="activity-item">
           <span class="activity-dot"></span>
           <span class="activity-text">{{ a.description }} — {{ a.user_name }}</span>
@@ -156,11 +156,11 @@
     </template>
 
     <div class="quick-actions">
-      <h3>Actions rapides</h3>
+      <h3>{{ t('pilot.dashboard.quickActions') }}</h3>
       <div class="action-grid">
-        <router-link to="/validations" class="action-btn">✅ Validations</router-link>
-        <router-link to="/scan" class="action-btn">📷 Scanner</router-link>
-        <router-link to="/stock" class="action-btn">📦 Inventaire</router-link>
+        <router-link to="/validations" class="action-btn">{{ t('pilot.dashboard.actionValidations') }}</router-link>
+        <router-link to="/scan" class="action-btn">{{ t('pilot.dashboard.actionScan') }}</router-link>
+        <router-link to="/stock" class="action-btn">{{ t('pilot.dashboard.actionStock') }}</router-link>
       </div>
     </div>
   </div>
@@ -170,9 +170,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { auth } from '../../shared/auth'
 import api from '../../shared/api'
+import { useI18n } from '../../i18n'
+
+const { t, intlLocale } = useI18n()
 
 const user = computed(() => auth.user)
-const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+const today = computed(() => new Date().toLocaleDateString(intlLocale(), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 
 const dashboard = ref({
   today_revenue: 0, today_transactions: 0,
@@ -184,9 +187,8 @@ const dayRevenue = ref(0)
 const dayTransactions = ref(0)
 const pendingOrdersLabel = computed(() => {
   const n = pendingOrdersCount.value
-  if (n === 0) return 'Aucune commande en attente'
-  if (n === 1) return '1 commande en attente'
-  return `${n} commandes en attente`
+  if (n === 0) return t('pilot.dashboard.pendingNone')
+  return t('pilot.dashboard.pendingCount', { count: n })
 })
 const alerts = ref([])
 const activities = ref([])
@@ -280,7 +282,7 @@ async function loadHourlyStats() {
     }))
   } catch {
     // Fallback: generate placeholder data from the day's revenue split
-    chartError.value = 'Données horaires non disponibles'
+    chartError.value = 'pilot.dashboard.hourlyUnavailable'
     // Keep empty — user sees the error message
   } finally {
     chartLoading.value = false
@@ -335,30 +337,40 @@ function applyData(data, fromCache) {
   alerts.value = (data.active_alerts || []).map(a => ({
     id: a.id || Math.random(),
     severity: (a.severity || 'medium').toLowerCase(),
-    message: a.title || a.message || a.description || 'Alerte'
+    message: a.title || a.message || a.description || t('pilot.dashboard.alertFallback')
   }))
   activities.value = data.recent_activities || []
   usingCache.value = fromCache
 }
 
+// Les états viennent de l'API (libre / occupée / addition) : libellé traduit, sinon brut
+const TABLE_STATE_KEYS = { libre: 'libre', 'occupée': 'occupee', occupee: 'occupee', addition: 'addition' }
+function tableTitle(table) {
+  const key = TABLE_STATE_KEYS[table.state]
+  const state = key ? t(`pilot.dashboard.tableState.${key}`) : table.state
+  return table.serveur !== '—'
+    ? t('pilot.dashboard.tableTitleServer', { number: table.number, state, server: table.serveur })
+    : t('pilot.dashboard.tableTitle', { number: table.number, state })
+}
+
 function formatEur(amount) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount || 0)
+  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(amount || 0)
 }
 
 const lastSyncLabel = computed(() => {
   if (!lastSync.value) return ''
-  return new Date(lastSync.value).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  return new Date(lastSync.value).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
 })
 
 function timeAgo(iso) {
   if (!iso) return ''
   const diff = Date.now() - new Date(iso).getTime()
   const min = Math.floor(diff / 60000)
-  if (min < 1) return "à l'instant"
-  if (min < 60) return `il y a ${min} min`
+  if (min < 1) return t('pilot.dashboard.timeAgo.justNow')
+  if (min < 60) return t('pilot.dashboard.timeAgo.minutes', { n: min })
   const h = Math.floor(min / 60)
-  if (h < 24) return `il y a ${h} h`
-  return new Date(iso).toLocaleDateString('fr-FR')
+  if (h < 24) return t('pilot.dashboard.timeAgo.hours', { n: h })
+  return new Date(iso).toLocaleDateString(intlLocale())
 }
 
 // api.js avale l'offline (retour { success, offline, queued }) sans lever d'erreur :
@@ -389,7 +401,7 @@ async function loadDashboard() {
     } else {
       cacheAvailable.value = false
       const msg = (e && e.message && e.message !== 'offline') ? e.message : ''
-      error.value = msg || 'Le serveur est injoignable. Vérifiez votre connexion.'
+      error.value = msg || t('pilot.dashboard.serverUnreachable')
     }
   } finally {
     loading.value = false

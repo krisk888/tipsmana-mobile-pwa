@@ -3,9 +3,9 @@
     <!-- ═══ En-tête du panier (tap pour déplier/replier) ═══ -->
     <div class="cart-header" @click="expanded = !expanded">
       <span class="cart-title">
-        🧾 Commandes
-        <span v-if="table !== null" class="cart-table-badge">Table {{ table }}</span>
-        <span v-else class="cart-table-badge none">Aucune table</span>
+        {{ t('caisse.cart.title') }}
+        <span v-if="table !== null" class="cart-table-badge">{{ t('common.table', { number: table }) }}</span>
+        <span v-else class="cart-table-badge none">{{ t('caisse.header.noTable') }}</span>
       </span>
       <span class="cart-header-right">
         <span class="cart-total">{{ formatEur(cartTotal) }}</span>
@@ -15,14 +15,14 @@
 
     <!-- ═══ Corps du panier ═══ -->
     <div v-if="expanded" class="cart-body">
-      <div v-if="cart.length === 0" class="cart-empty">Panier vide — tapez un article</div>
+      <div v-if="cart.length === 0" class="cart-empty">{{ t('caisse.cart.empty') }}</div>
 
       <div v-else class="cart-items">
         <div v-for="(item, i) in cart" :key="i" class="cart-item" :class="{ sent: item.sent }">
           <div class="cart-item-info">
             <span class="cart-item-name">
               {{ item.name }}
-              <span v-if="item.sent" class="sent-badge">✓ Envoyé</span>
+              <span v-if="item.sent" class="sent-badge">{{ t('caisse.cart.sent') }}</span>
             </span>
             <span v-if="item.options" class="cart-item-options">⚙️ {{ item.options }}</span>
             <span class="course-badge" :class="'course-' + (item.course || 'entree')">
@@ -54,20 +54,20 @@
             <em>{{ c.label }}</em>
           </span>
         </div>
-        <button class="asuivre-btn" @click="$emit('à-suivre')">À SUIVRE ➜</button>
+        <button class="asuivre-btn" @click="$emit('à-suivre')">{{ t('caisse.cart.next') }}</button>
       </div>
 
       <!-- ═══ Bandeau actions table : Réclamer / Addition / Solder ═══ -->
       <div v-if="cart.length > 0 && table !== null && ticketSent" class="table-actions">
-        <button class="action-btn action-reclaim" @click="$emit('réclamer')">🔔 Réclamer</button>
-        <button class="action-btn action-addition" @click="$emit('addition')">🧾 Addition</button>
-        <button class="action-btn action-solder" @click="$emit('solder')">💶 Solder</button>
+        <button class="action-btn action-reclaim" @click="$emit('réclamer')">{{ t('caisse.cart.reclaim') }}</button>
+        <button class="action-btn action-addition" @click="$emit('addition')">{{ t('caisse.cart.addition') }}</button>
+        <button class="action-btn action-solder" @click="$emit('solder')">{{ t('caisse.cart.settle') }}</button>
       </div>
 
       <!-- ═══ Total + ENVOI ═══ -->
       <div class="cart-footer">
         <div class="total-line">
-          <span class="total-label">Total TTC</span>
+          <span class="total-label">{{ t('caisse.addition.totalTtc') }}</span>
           <span class="total-value">{{ formatEur(cartTotal) }}</span>
         </div>
         <button
@@ -76,7 +76,7 @@
           :disabled="cart.length === 0 || paying || ticketSent"
           @click="$emit('envoi')"
         >
-          {{ ticketSent ? '✓ Envoyé en cuisine' : '📤 ENVOI' }}
+          {{ ticketSent ? t('caisse.cart.sentToKitchen') : t('caisse.cart.send') }}
         </button>
       </div>
     </div>
@@ -85,6 +85,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from '../../i18n'
+
+const { t, intlLocale } = useI18n()
 
 const props = defineProps({
   cart: { type: Array, default: () => [] },
@@ -103,11 +106,11 @@ defineEmits(['à-suivre', 'envoi', 'réclamer', 'addition', 'solder', 'increment
 const expanded = ref(true)
 
 function formatEur(v) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v || 0)
+  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0)
 }
 
 function courseLabel(key) {
-  return props.courses.find(c => c.key === key)?.label || 'Service'
+  return props.courses.find(c => c.key === key)?.label || t('caisse.courses.fallback')
 }
 
 function courseSealed(key) {

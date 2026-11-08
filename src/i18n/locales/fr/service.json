@@ -1,0 +1,167 @@
+{
+  "service": {
+    "backToTables": "Tables",
+    "itemsShort": "{count} art.",
+    "courses": {
+      "entree": "Entrée",
+      "plat": "Plat",
+      "dessert": "Dessert",
+      "boisson": "Boisson",
+      "autre": "Autre"
+    },
+    "optionGroups": {
+      "cuisson": "Cuisson",
+      "garniture": "Garniture"
+    },
+    "options": {
+      "bleu": "Bleu",
+      "saignant": "Saignant",
+      "aPoint": "À point",
+      "bienCuit": "Bien cuit",
+      "frites": "Frites",
+      "riz": "Riz",
+      "legumes": "Légumes",
+      "salade": "Salade"
+    },
+    "notePresets": {
+      "glutenFree": "Sans gluten",
+      "lactoseFree": "Sans lactose",
+      "nutAllergy": "Allergie fruits à coque",
+      "noOnions": "Sans oignons"
+    },
+    "orderStatuses": {
+      "enCours": "En cours",
+      "enCuisine": "En cuisine",
+      "servi": "Servi",
+      "solde": "Soldé"
+    },
+    "fallback": {
+      "category": "Catégorie",
+      "article": "Article",
+      "space": "Salle",
+      "otherSpace": "Autres"
+    },
+    "errors": {
+      "noEstablishment": "Aucun établissement actif",
+      "emptyCart": "Panier vide",
+      "dispatchFailed": "Envoi cuisine impossible",
+      "mergeOffline": "Connexion requise pour fusionner ou séparer des tables",
+      "mergeMinTables": "Sélectionnez au moins 2 tables",
+      "mergeTarget": "La table cible doit faire partie de la sélection",
+      "splitNothing": "Aucun article déplacé vers une autre table"
+    },
+    "notifications": {
+      "title": "Tipsmana — Service",
+      "order": "Commande",
+      "served": "✅ {table} : commande servie",
+      "inKitchen": "🔥 {table} : commande en cuisine",
+      "updated": "{table} : statut mis à jour"
+    },
+    "totals": {
+      "totalHt": "Total HT",
+      "vat": "TVA",
+      "totalTtc": "Total TTC"
+    },
+    "orderTaking": {
+      "onNote": "{amount} sur la note",
+      "newNote": "Nouvelle note",
+      "ordersInProgress": "Commandes en cours",
+      "tabMenu": "Carte",
+      "tabNote": "Note",
+      "failedAlert": "{count} article(s) enregistré(s) mais non envoyé(s) en cuisine",
+      "resend": "Renvoyer",
+      "loadingMenu": "Chargement de la carte…",
+      "emptyMenu": "Aucun article actif à la carte.",
+      "optionsHint": "options",
+      "editProduct": "Quantité, options, note",
+      "emptyNote": "Aucun article sur la note de cette table.",
+      "notSent": "non envoyé",
+      "customerQr": "Note client (QR)",
+      "splitByTable": "Séparer par table",
+      "cart": "Panier",
+      "editLine": "Note, service, ordre",
+      "tableTotalAfter": "Total table après envoi",
+      "clearCart": "Vider le panier",
+      "sendToKitchen": "Envoyer en cuisine · {amount}",
+      "quantity": "Quantité",
+      "course": "Service",
+      "orderInCourse": "Ordre dans le service",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "kitchenNote": "Note cuisine",
+      "lineNotePlaceholder": "Cuisson, allergène…",
+      "sheetNotePlaceholder": "Sans oignons, allergie…",
+      "removeTitle": "Supprimer l'article ?",
+      "removeText": "{qty}× {name} sera retiré du panier.",
+      "qrTitle": "Note de la table {table}",
+      "qrText": "Le client scanne ce code pour suivre sa note sur son téléphone.",
+      "qrAlt": "QR code de la note",
+      "openCustomerScreen": "Ouvrir l'écran client",
+      "splitTitle": "Séparer la note",
+      "splitText": "Choisissez la table de chaque article. Les articles laissés sur la table {table} y restent.",
+      "splitConfirm": "Séparer ({count})",
+      "add": "Ajouter",
+      "toasts": {
+        "menuUnavailable": "Carte indisponible",
+        "queued": "Hors-ligne : commande mise en file, envoi à la reconnexion",
+        "sent": "Table {table} envoyée en cuisine",
+        "savedDispatchFailed": "Note enregistrée — envoi cuisine échoué : {error}",
+        "sendFailed": "Envoi impossible",
+        "qrFailed": "QR code impossible (note trop longue) — utilisez le lien.",
+        "splitQueued": "Hors-ligne : séparation mise en file",
+        "splitDone": "Note séparée par table",
+        "splitFailed": "Séparation impossible",
+        "retrySent": "Envoyé en cuisine",
+        "retryFailed": "Envoi cuisine échoué : {error}"
+      }
+    },
+    "orderHistory": {
+      "title": "Commandes",
+      "activeTables": "{count} table(s) en service",
+      "loading": "Chargement des commandes…",
+      "emptyAll": "Aucune commande en cours",
+      "emptyFilter": "Aucune commande dans ce statut",
+      "readyToServe": "{count} prêt(s) à servir",
+      "notSent": "{count} non envoyé(s)",
+      "kitchenTracking": "Suivi cuisine",
+      "kds": {
+        "pending": "En attente",
+        "preparing": "En prépa",
+        "ready": "Prêt",
+        "served": "Servi"
+      },
+      "ht": "HT {amount}",
+      "vat": "TVA {amount}",
+      "ttc": "TTC {amount}",
+      "complete": "Compléter la commande",
+      "closedAt": "soldée {time}",
+      "openedAt": "ouverte {time}",
+      "loadFailed": "Impossible de charger les commandes"
+    },
+    "customerDisplay": {
+      "kicker": "Votre note",
+      "closedTitle": "Note réglée",
+      "closedText": "Merci de votre visite, à bientôt !",
+      "loading": "Chargement de votre note…",
+      "unavailableTitle": "Note indisponible",
+      "unavailableText": "Demandez à votre serveur de vous présenter à nouveau le QR code.",
+      "empty": "Aucun article commandé pour le moment.",
+      "total": "Total",
+      "vatIncluded": "dont TVA {amount}",
+      "offline": "Hors connexion — note du {time}",
+      "autoUpdate": "Mise à jour automatique · {time}"
+    },
+    "qrScanner": {
+      "title": "Scanner une table",
+      "openingCamera": "Ouverture de la caméra…",
+      "aimHint": "Visez le QR code posé sur la table",
+      "tableNumberLabel": "N° de table",
+      "tableNumberPlaceholder": "N°",
+      "cameraDenied": "Accès à la caméra refusé — saisissez le numéro de table.",
+      "noCamera": "Aucune caméra détectée — saisissez le numéro de table.",
+      "cameraUnavailable": "Caméra indisponible — saisissez le numéro de table.",
+      "cameraUnsupported": "Caméra non disponible sur cet appareil — saisissez le numéro de table.",
+      "notRecognized": "QR code non reconnu comme une table"
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "tables": {
+    "title": "Service",
+    "scanQr": "Scan a table's QR code",
+    "loading": "Loading tables…",
+    "partial": "Partial data — some information could not be loaded.",
+    "otherSpace": "Other",
+    "hideFree": "Hide free tables",
+    "updatedAt": "Updated at {time} · refreshes every 30 s",
+    "tableAria": "Table {number} — {state}",
+    "itemsShort": "{count} item | {count} items",
+    "states": {
+      "libre": "Free",
+      "occupee": "Occupied",
+      "reservee": "Reserved",
+      "addition": "Waiting"
+    },
+    "filters": {
+      "free": "Free",
+      "busy": "Occupied"
+    },
+    "empty": {
+      "noTables": "No tables in the floor plan.",
+      "filter": "No tables match this filter.",
+      "allFreeHidden": "No occupied tables — free tables are hidden."
+    },
+    "manual": {
+      "label": "Other table",
+      "placeholder": "No."
+    },
+    "merge": {
+      "hint": "Tap the tables to combine on one bill (at least 2, including one occupied).",
+      "title": "Merge tables",
+      "button": "Merge",
+      "count": "{count} table | {count} tables",
+      "confirmTitle": "Merge {count} tables",
+      "confirmText": "The bills will be combined into one. Main table:",
+      "queued": "Offline: merge queued",
+      "done": "Tables {tables} merged into table {target}",
+      "failed": "Merge failed"
+    },
+    "covers": {
+      "title": "Number of covers",
+      "start": "Take the order"
+    },
+    "errors": {
+      "load": "Unable to load tables"
+    }
+  }
+}

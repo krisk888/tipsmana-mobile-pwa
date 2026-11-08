@@ -1,0 +1,19 @@
+{
+  "halls": {
+    "title": "🪑 Floor plan",
+    "wsConnected": "Real-time connected",
+    "wsDisconnected": "Real-time disconnected",
+    "legend": {
+      "free": "Free",
+      "order": "Order",
+      "occupied": "Occupied",
+      "reserved": "Reserved"
+    },
+    "viewInCaisse": "View at till",
+    "noTables": "No tables configured in this area.",
+    "loading": "Loading floor plan…",
+    "loadError": "Failed to load floor plan",
+    "noSpaces": "No areas configured.",
+    "noSpacesHint": "Set up the floor plan from the till."
+  }
+}
