@@ -58,7 +58,9 @@
       "serviceProfile": "Mi perfil",
       "serviceOrder": "Toma de pedido",
       "customerDisplay": "Su cuenta",
-      "halls": "Plano de sala"
+      "halls": "Plano de sala",
+      "kdsBoard": "Tablero de cocina",
+      "serviceReport": "Informe de servicio"
     },
     "errors": {
       "network": "Red no disponible.",

@@ -58,7 +58,9 @@
       "serviceProfile": "My profile",
       "serviceOrder": "Order taking",
       "customerDisplay": "Your bill",
-      "halls": "Floor plan"
+      "halls": "Floor plan",
+      "kdsBoard": "Kitchen board",
+      "serviceReport": "Service report"
     },
     "errors": {
       "network": "Network unavailable.",

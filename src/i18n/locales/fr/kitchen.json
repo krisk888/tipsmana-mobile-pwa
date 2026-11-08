@@ -64,6 +64,20 @@
     "mock": {
       "urgent": "{count} urgent",
       "noOnion": "Sans oignon"
+    },
+    "board": {
+      "title": "Tableau cuisine",
+      "hint": "Glissez un bon d'une colonne à l'autre",
+      "listView": "Vue liste",
+      "columns": {
+        "pending": "En attente",
+        "preparing": "En cours",
+        "ready": "Prêt"
+      },
+      "emptyColumn": "Aucun bon",
+      "elapsed": "Temps depuis la commande",
+      "moveTo": "Déplacer vers « {column} »",
+      "backwardUnsupported": "Retour en arrière impossible tant que le serveur ne le gère pas"
     }
   }
 }

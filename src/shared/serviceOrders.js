@@ -10,6 +10,8 @@
  *  - POST /table-tickets/{n}/items          → ajout d'articles (crée la note si besoin)
  *  - POST /cash/dispatch                    → envoi en cuisine (KDS), renvoie une réf MOB-XXXX
  *  - GET  /cash/tickets/{ref}/kitchen-status?ticket_ref=… → statut KDS des plats envoyés
+ *  - GET  /mobile/orders/{id}/status → statut d'une note (pas encore dans le backend :
+ *    repli sur kitchen-status)
  *
  * Le backend ne relie pas les bons cuisine (MOB-XXXX) aux notes de table : les
  * réfs envoyées depuis ce téléphone sont mémorisées localement, par établissement.
@@ -75,6 +77,7 @@ export const COURSE_OPTIONS = {
 export const ORDER_STATUSES = {
   en_cours:   translatable({ labelKey: 'service.orderStatuses.enCours',   icon: '📝' }),
   en_cuisine: translatable({ labelKey: 'service.orderStatuses.enCuisine', icon: '🔥' }),
+  pret:       translatable({ labelKey: 'service.orderStatuses.pret',      icon: '🛎️' }),
   servi:      translatable({ labelKey: 'service.orderStatuses.servi',     icon: '✅' }),
   solde:      translatable({ labelKey: 'service.orderStatuses.solde',     icon: '💶' }),
 }
@@ -568,12 +571,14 @@ export async function fetchKitchenItems(refs) {
  *  - soldé      : note fermée
  *  - en cours   : rien d'envoyé en cuisine depuis ce téléphone
  *  - servi      : tous les plats envoyés sont servis
+ *  - prêt       : tous les plats envoyés sont prêts (ou déjà servis)
  *  - en cuisine : sinon
  */
 export function orderStatus({ closed = false, refs = [], kitchenItems = [] }) {
   if (closed) return 'solde'
   if (!refs.length) return 'en_cours'
   if (kitchenItems.length && kitchenItems.every(i => i.status === 'served')) return 'servi'
+  if (kitchenItems.length && kitchenItems.every(i => i.status === 'ready' || i.status === 'served')) return 'pret'
   return 'en_cuisine'
 }
 
@@ -618,26 +623,82 @@ export function setKitchenStatus(estId, ticketId, status) {
   updateKitchenRecord(estId, ticketId, rec => ({ ...rec, status }))
 }
 
+// Statut renvoyé par GET /mobile/orders/{id}/status (KDS ou vocabulaire mobile)
+const REMOTE_STATUSES = {
+  pending: 'en_cuisine', printing: 'en_cuisine', printed: 'en_cuisine', preparing: 'en_cuisine',
+  in_progress: 'en_cuisine', en_cours: 'en_cuisine', en_cuisine: 'en_cuisine',
+  ready: 'pret', pret: 'pret', 'prêt': 'pret',
+  served: 'servi', servi: 'servi',
+}
+
+export function normalizeRemoteStatus(status) {
+  return REMOTE_STATUSES[String(status || '').toLowerCase()] || null
+}
+
+// GET /mobile/orders/{id}/status absent du backend (vérifié 2026-11-08) : après
+// un 404 « route inconnue », on passe directement par le statut KDS des bons
+let mobileStatusMissing = false
+export function resetOrderStatusEndpointCache() { mobileStatusMissing = false }
+
+function isUnknownRoute(err) {
+  return err?.status === 405 || (err?.status === 404 && err?.data?.detail === 'Not Found')
+}
+
+/**
+ * Statut cuisine d'une note suivie : en_cuisine | pret | servi, ou null si
+ * indéterminé (réponse partielle : on retentera).
+ */
+export async function fetchOrderStatus(rec) {
+  if (!mobileStatusMissing) {
+    try {
+      const data = unwrap(await api.get(`/mobile/orders/${encodeURIComponent(rec.ticketId)}/status`))
+      const status = normalizeRemoteStatus(data?.status)
+      if (status) return status
+    } catch (err) {
+      if (!isUnknownRoute(err)) return null // réseau : on retentera au prochain passage
+      mobileStatusMissing = true
+    }
+  }
+  const { items, failed } = await fetchKitchenItems(rec.refs)
+  if (failed) return null
+  return orderStatus({ refs: rec.refs, kitchenItems: items })
+}
+
+// Transitions notifiées : la cuisine a fini (prêt), puis le plat est en salle (servi)
+const NOTIFIED = { en_cuisine: ['pret', 'servi'], pret: ['servi'] }
+
 /**
  * Relève le statut cuisine des notes suivies et renvoie celles qui viennent
- * de passer « en cuisine » → « servi ». Un statut inconnu (note antérieure au
- * suivi) est mémorisé sans notifier.
+ * de passer « en cuisine » → « prêt » → « servi ». Un statut inconnu (note
+ * antérieure au suivi) est mémorisé sans notifier.
  */
 export async function checkKitchenTransitions(estId, now = Date.now()) {
   const transitions = []
   for (const rec of listKitchenRecords(estId)) {
     if (rec.status === 'servi') continue
     if (now - rec.at > WATCH_TTL) continue // bon jamais clôturé au KDS : on arrête de le suivre
-    const { items, failed } = await fetchKitchenItems(rec.refs)
-    if (failed) continue // statut partiel : on retentera au prochain passage
-    const status = orderStatus({ refs: rec.refs, kitchenItems: items })
-    if (status === rec.status) continue
+    const status = await fetchOrderStatus(rec)
+    if (!status || status === rec.status) continue
     setKitchenStatus(estId, rec.ticketId, status)
-    if (rec.status === 'en_cuisine' && status === 'servi') {
+    if (NOTIFIED[rec.status]?.includes(status)) {
       transitions.push({ ticketId: rec.ticketId, tableNumber: rec.tableNumber, from: rec.status, to: status })
     }
   }
   return transitions
+}
+
+/**
+ * Statut reçu par Web Push : mémorisé sur la note de la table pour que le
+ * suivi local ne notifie pas une seconde fois la même transition.
+ */
+export function applyPushedStatus(estId, tableNumber, remoteStatus) {
+  const status = normalizeRemoteStatus(remoteStatus)
+  if (!status) return
+  for (const rec of listKitchenRecords(estId)) {
+    if (String(rec.tableNumber) === String(tableNumber) && rec.status !== 'servi') {
+      setKitchenStatus(estId, rec.ticketId, status)
+    }
+  }
 }
 
 /* ═══ QR code table ═══ */

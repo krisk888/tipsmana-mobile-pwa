@@ -141,9 +141,10 @@ describe('serviceOrders — normalisation', () => {
 })
 
 describe('serviceOrders — statuts et historique', () => {
-  it('orderStatus : en cours / en cuisine / servi / soldé', () => {
+  it('orderStatus : en cours / en cuisine / prêt / servi / soldé', () => {
     expect(svc.orderStatus({ refs: [] })).toBe('en_cours')
-    expect(svc.orderStatus({ refs: ['MOB-1'], kitchenItems: [{ status: 'ready' }] })).toBe('en_cuisine')
+    expect(svc.orderStatus({ refs: ['MOB-1'], kitchenItems: [{ status: 'ready' }, { status: 'preparing' }] })).toBe('en_cuisine')
+    expect(svc.orderStatus({ refs: ['MOB-1'], kitchenItems: [{ status: 'ready' }, { status: 'served' }] })).toBe('pret')
     expect(svc.orderStatus({ refs: ['MOB-1'], kitchenItems: [{ status: 'served' }] })).toBe('servi')
     expect(svc.orderStatus({ closed: true, refs: ['MOB-1'] })).toBe('solde')
   })

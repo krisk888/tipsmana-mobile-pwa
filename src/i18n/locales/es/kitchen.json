@@ -64,6 +64,20 @@
     "mock": {
       "urgent": "{count} urgentes",
       "noOnion": "Sin cebolla"
+    },
+    "board": {
+      "title": "Tablero de cocina",
+      "hint": "Arrastra una comanda de una columna a otra",
+      "listView": "Vista lista",
+      "columns": {
+        "pending": "En espera",
+        "preparing": "En curso",
+        "ready": "Listo"
+      },
+      "emptyColumn": "Sin comandas",
+      "elapsed": "Tiempo desde el pedido",
+      "moveTo": "Mover a «{column}»",
+      "backwardUnsupported": "El servidor aún no permite retroceder"
     }
   }
 }

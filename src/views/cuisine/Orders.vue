@@ -17,6 +17,7 @@
       <div class="kds-title-row">
         <h2>🍳 {{ t('kitchen.title') }}</h2>
         <div class="kds-header-actions">
+          <router-link to="/cuisine/board" class="header-btn" :title="t('kitchen.board.title')">▦</router-link>
           <button class="header-btn" @click="loadOrders" :title="t('common.refresh')">↻</button>
           <div class="kds-header-status">
             <span class="status-dot" :class="{ connected, disconnected: !connected }"></span>
@@ -1147,6 +1148,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
   transition: background 0.15s;
 }
 .header-btn:active { background: #059669; }

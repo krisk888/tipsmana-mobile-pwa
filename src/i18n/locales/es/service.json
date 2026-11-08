@@ -33,7 +33,8 @@
       "enCours": "En curso",
       "enCuisine": "En cocina",
       "servi": "Servido",
-      "solde": "Pagado"
+      "solde": "Pagado",
+      "pret": "Listo"
     },
     "fallback": {
       "category": "Categoría",
@@ -55,7 +56,8 @@
       "order": "Comanda",
       "served": "✅ {table}: comanda servida",
       "inKitchen": "🔥 {table}: comanda en cocina",
-      "updated": "{table}: estado actualizado"
+      "updated": "{table}: estado actualizado",
+      "ready": "🛎️ {table}: pedido listo"
     },
     "totals": {
       "totalHt": "Total sin IVA",
@@ -162,6 +164,35 @@
       "cameraUnavailable": "Cámara no disponible — introduce el número de mesa.",
       "cameraUnsupported": "Cámara no disponible en este dispositivo — introduce el número de mesa.",
       "notRecognized": "Código QR no reconocido como mesa"
+    },
+    "report": {
+      "title": "Informe de fin de servicio",
+      "date": "Servicio del",
+      "loading": "Cargando informe…",
+      "unavailable": "Informe no disponible para esta fecha",
+      "kpi": {
+        "revenue": "Facturación",
+        "covers": "Cubiertos",
+        "tickets": "Tickets",
+        "tables": "Mesas",
+        "averageTicket": "Ticket medio",
+        "averageCover": "Media / cubierto"
+      },
+      "paymentsTitle": "Desglose de pagos",
+      "payments": {
+        "cash": "Efectivo",
+        "card": "Tarjeta",
+        "mealVoucher": "Ticket restaurante",
+        "amex": "AMEX",
+        "other": "Otro"
+      },
+      "topTitle": "Top 5 artículos",
+      "noSales": "Sin ventas",
+      "exportPdf": "Exportar PDF",
+      "share": "Compartir",
+      "shareTitle": "Informe de servicio — {date}",
+      "downloaded": "PDF descargado",
+      "generatedAt": "Generado el {date} — Tipsmana"
     }
   }
 }
