@@ -2,9 +2,9 @@
   <div class="sp-shell">
     <!-- ═══ HEADER ═══ -->
     <header class="sp-header">
-      <router-link to="/service" class="sp-icon-btn" title="Retour aux tables">←</router-link>
-      <h1 class="sp-title">Mon profil</h1>
-      <button class="sp-icon-btn" :disabled="loading" title="Rafraîchir" @click="load()">
+      <router-link to="/service" class="sp-icon-btn" :title="t('serviceProfile.backToTables')">←</router-link>
+      <h1 class="sp-title">{{ t('common.titles.serviceProfile') }}</h1>
+      <button class="sp-icon-btn" :disabled="loading" :title="t('common.refresh')" @click="load()">
         <span :class="{ spinning: loading }">⟳</span>
       </button>
     </header>
@@ -13,7 +13,7 @@
     <section class="sp-card sp-identity">
       <div class="sp-avatar">{{ initials }}</div>
       <div class="sp-identity-info">
-        <h2 class="sp-name">{{ fullName || 'Serveur' }}</h2>
+        <h2 class="sp-name">{{ fullName || t('common.roles.SERVEUR') }}</h2>
         <p class="sp-email">{{ user?.email || '—' }}</p>
         <span class="sp-role">{{ authStore.roleLabel }}</span>
       </div>
@@ -22,39 +22,45 @@
 
     <!-- ═══ STATISTIQUES ═══ -->
     <section class="sp-card">
-      <h3 class="sp-section-title">Aujourd'hui</h3>
+      <h3 class="sp-section-title">{{ t('serviceProfile.today') }}</h3>
       <div class="sp-stats">
         <div class="sp-stat">
           <span class="sp-stat-value">{{ stats.ordersToday }}</span>
-          <span class="sp-stat-label">Commandes</span>
+          <span class="sp-stat-label">{{ t('serviceProfile.stats.orders') }}</span>
         </div>
         <div class="sp-stat">
           <span class="sp-stat-value">{{ stats.tablesToday.length }}</span>
-          <span class="sp-stat-label">Tables gérées</span>
+          <span class="sp-stat-label">{{ t('serviceProfile.stats.tablesHandled') }}</span>
         </div>
         <div class="sp-stat">
           <span class="sp-stat-value">{{ openTables == null ? '—' : openTables.length }}</span>
-          <span class="sp-stat-label">Tables ouvertes</span>
+          <span class="sp-stat-label">{{ t('serviceProfile.stats.openTables') }}</span>
         </div>
       </div>
       <p v-if="stats.tablesToday.length" class="sp-tables">
-        Tables : <span v-for="n in stats.tablesToday" :key="n" class="sp-table-chip">{{ n }}</span>
+        {{ t('serviceProfile.tablesList') }} <span v-for="n in stats.tablesToday" :key="n" class="sp-table-chip">{{ n }}</span>
       </p>
-      <p class="sp-hint">{{ stats.itemsToday }} article{{ stats.itemsToday > 1 ? 's' : '' }} envoyé{{ stats.itemsToday > 1 ? 's' : '' }} depuis cet appareil</p>
-      <p v-if="openError" class="sp-warning">⚠️ Tables ouvertes indisponibles</p>
+      <p class="sp-hint">{{ t('serviceProfile.itemsSent', { count: stats.itemsToday }) }}</p>
+      <p v-if="openError" class="sp-warning">⚠️ {{ t('serviceProfile.openTablesError') }}</p>
     </section>
 
     <!-- ═══ NOTIFICATIONS ═══ -->
     <section class="sp-card sp-row">
       <div>
-        <h3 class="sp-section-title">Notifications</h3>
+        <h3 class="sp-section-title">{{ t('common.titles.notifications') }}</h3>
         <p class="sp-hint">{{ notifLabel }}</p>
       </div>
-      <button v-if="notifPermission === 'default'" class="btn-ghost" @click="enableNotifications">Activer</button>
+      <button v-if="notifPermission === 'default'" class="btn-ghost" @click="enableNotifications">{{ t('serviceProfile.notif.enable') }}</button>
+    </section>
+
+    <!-- ═══ LANGUE ═══ -->
+    <section class="sp-card">
+      <h3 class="sp-section-title">🌐 {{ t('common.language') }}</h3>
+      <LanguageSwitcher />
     </section>
 
     <!-- ═══ DÉCONNEXION ═══ -->
-    <button class="sp-logout" @click="logout">🚪 Se déconnecter</button>
+    <button class="sp-logout" @click="logout">🚪 {{ t('common.logout') }}</button>
   </div>
 </template>
 
@@ -64,9 +70,12 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore'
 import { fetchOpenTickets, getServiceStats, currentEstablishmentId } from '../../shared/serviceOrders'
 import { ensureNotificationPermission } from '../../shared/orderNotifications'
+import LanguageSwitcher from '../../components/LanguageSwitcher.vue'
+import { useI18n } from '../../i18n'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 const estId = currentEstablishmentId()
 
 const loading = ref(false)
@@ -87,13 +96,10 @@ const establishmentName = computed(() => authStore.establishment?.name || '')
 // Nom posé par le backend sur les notes (table-tickets : serveur_name)
 const serveurName = computed(() => fullName.value || user.value?.email || '')
 
-const NOTIF_LABELS = {
-  granted: 'Activées — vous serez alerté quand une commande est servie',
-  denied: 'Bloquées — autorisez-les dans les réglages du navigateur',
-  default: 'Pas encore activées',
-  unsupported: 'Non prises en charge sur cet appareil',
-}
-const notifLabel = computed(() => NOTIF_LABELS[notifPermission.value] || NOTIF_LABELS.default)
+const NOTIF_STATES = ['granted', 'denied', 'default', 'unsupported']
+const notifLabel = computed(() =>
+  t(`serviceProfile.notif.${NOTIF_STATES.includes(notifPermission.value) ? notifPermission.value : 'default'}`)
+)
 
 async function load() {
   loading.value = true

@@ -1,0 +1,66 @@
+{
+  "pilot": {
+    "dashboard": {
+      "greeting": "Hello {name}",
+      "loadingKpis": "Loading indicators",
+      "connectionFailed": "Unable to connect",
+      "serverUnreachable": "The server is unreachable. Check your connection.",
+      "offlineData": "📡 Offline data — last sync: {time}",
+      "pendingOrders": "Orders in progress",
+      "pendingNone": "No pending orders",
+      "pendingCount": "{count} pending order | {count} pending orders",
+      "dayRevenue": "Today's revenue",
+      "transactions": "{count} transaction | {count} transactions",
+      "floorplan": "Floor plan",
+      "legend": {
+        "libre": "Free",
+        "occupee": "Occupied",
+        "addition": "Bill"
+      },
+      "tableState": {
+        "libre": "free",
+        "occupee": "occupied",
+        "addition": "bill"
+      },
+      "tableTitle": "Table {number} — {state}",
+      "tableTitleServer": "Table {number} — {state} ({server})",
+      "hourlyActivity": "Hourly activity",
+      "hourlyUnavailable": "Hourly data unavailable",
+      "chartRevenueTitle": "{label} — Revenue: {amount}",
+      "chartOrdersTitle": "{label} — {count} order(s)",
+      "legendRevenue": "Revenue",
+      "legendOrders": "Orders",
+      "kpi": {
+        "todayRevenue": "Revenue today",
+        "avgTicket": "Average ticket",
+        "perTicket": "Revenue / ticket",
+        "grossMargin": "Gross margin",
+        "activeProducts": "Active products",
+        "lowStock": "{count} low in stock"
+      },
+      "alerts": "Alerts",
+      "alertFallback": "Alert",
+      "recentActivity": "Recent activity",
+      "quickActions": "Quick actions",
+      "actionValidations": "✅ Approvals",
+      "actionScan": "📷 Scan",
+      "actionStock": "📦 Inventory",
+      "timeAgo": {
+        "justNow": "just now",
+        "minutes": "{n} min ago",
+        "hours": "{n} h ago"
+      }
+    },
+    "validations": {
+      "title": "✅ Approvals",
+      "subtitle": "Pending supplier invoices",
+      "upToDate": "All caught up!",
+      "unknownSupplier": "Unknown supplier",
+      "lines": "{count} line | {count} lines",
+      "approve": "Approve",
+      "reject": "Reject",
+      "error": "Error: {message}",
+      "rejectReason": "Reason for rejection?"
+    }
+  }
+}

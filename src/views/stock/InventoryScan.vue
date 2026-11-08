@@ -1,28 +1,28 @@
 <template>
   <div class="stock-view">
     <header class="page-header">
-      <h2>📦 Stock</h2>
-      <p class="subtitle">Inventaire et réceptions</p>
+      <h2>{{ t('stock.home.title') }}</h2>
+      <p class="subtitle">{{ t('stock.home.subtitle') }}</p>
     </header>
 
-    <div v-if="loading" class="loading-state">Chargement…</div>
+    <div v-if="loading" class="loading-state">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="error-state">{{ error }}</div>
 
     <div v-else class="sessions-section">
-      <h3>Sessions en cours</h3>
+      <h3>{{ t('stock.home.activeSessions') }}</h3>
       <div v-if="sessions.length === 0" class="empty-state">
         <span class="empty-icon">📭</span>
-        <p>Aucune session active</p>
-        <button class="btn-primary" @click="startSession">+ Nouvelle session</button>
+        <p>{{ t('stock.home.noActiveSession') }}</p>
+        <button class="btn-primary" @click="startSession">{{ t('stock.home.newSession') }}</button>
       </div>
       <div v-for="s in sessions" :key="s.id" class="session-card" @click="$router.push('/stock/' + s.id)">
         <div class="session-header">
-          <strong>{{ s.session_name || 'Session #' + shortId(s.id) }}</strong>
+          <strong>{{ s.session_name || t('stock.sessionFallback', { id: shortId(s.id) }) }}</strong>
           <span class="session-status" :class="s.status">{{ statusLabel(s.status) }}</span>
         </div>
         <div class="session-meta">
-          <span>Démarrée {{ timeAgo(s.started_at) }}</span>
-          <span v-if="s.product_count != null">{{ s.product_count }} produits</span>
+          <span>{{ t('stock.startedAgo', { ago: timeAgo(s.started_at) }) }}</span>
+          <span v-if="s.product_count != null">{{ t('stock.home.productsCount', { count: s.product_count }) }}</span>
         </div>
       </div>
     </div>
@@ -31,22 +31,22 @@
       <router-link to="/stock/express" class="link-card express">
         <span class="link-icon">⚡</span>
         <div>
-          <strong>Inventaire express</strong>
-          <p>Comptage par zones, hors-ligne</p>
+          <strong>{{ t('stock.home.links.expressTitle') }}</strong>
+          <p>{{ t('stock.home.links.expressDesc') }}</p>
         </div>
       </router-link>
       <router-link to="/scan" class="link-card">
         <span class="link-icon">📷</span>
         <div>
-          <strong>Scanner un produit</strong>
-          <p>QR code ou code-barres</p>
+          <strong>{{ t('stock.home.links.scanTitle') }}</strong>
+          <p>{{ t('stock.home.links.scanDesc') }}</p>
         </div>
       </router-link>
       <router-link to="/stock/receptions" class="link-card">
         <span class="link-icon">📬</span>
         <div>
-          <strong>Réceptions</strong>
-          <p>Livraisons en attente</p>
+          <strong>{{ t('stock.home.links.receptionsTitle') }}</strong>
+          <p>{{ t('stock.home.links.receptionsDesc') }}</p>
         </div>
       </router-link>
     </div>
@@ -56,6 +56,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '../../shared/api'
+import { useI18n } from '../../i18n'
+
+const { t, intlLocale } = useI18n()
 
 const sessions = ref([])
 const loading = ref(true)
@@ -64,17 +67,17 @@ const error = ref(null)
 function shortId(id) { return id ? String(id).slice(0, 8) : '—' }
 function statusLabel(s) {
   // SessionStatus backend : in_progress | completed | validated | cancelled
-  return { in_progress: 'En cours', completed: 'Terminée', validated: 'Validée', cancelled: 'Annulée' }[s] || (s || '—')
+  return ['in_progress', 'completed', 'validated', 'cancelled'].includes(s) ? t(`stock.status.${s}`) : (s || '—')
 }
 function timeAgo(iso) {
   if (!iso) return ''
   const diff = Date.now() - new Date(iso).getTime()
   const min = Math.floor(diff / 60000)
-  if (min < 1) return "à l'instant"
-  if (min < 60) return `${min} min`
+  if (min < 1) return t('stock.timeAgo.justNow')
+  if (min < 60) return t('stock.timeAgo.minutes', { n: min })
   const h = Math.floor(min / 60)
-  if (h < 24) return `${h}h`
-  return new Date(iso).toLocaleDateString('fr-FR')
+  if (h < 24) return t('stock.timeAgo.hours', { n: h })
+  return new Date(iso).toLocaleDateString(intlLocale())
 }
 
 const todayISO = (() => {
@@ -105,12 +108,12 @@ async function load() {
 async function startSession() {
   try {
     await api.post('/inventory/sessions', {
-      session_name: `Inventaire ${todayISO}`,
+      session_name: t('stock.home.defaultSessionName', { date: todayISO }),
       session_date: todayISO,
     })
     await load()
   } catch (e) {
-    error.value = e.message || 'Impossible de créer'
+    error.value = e.message || t('stock.home.createError')
   }
 }
 

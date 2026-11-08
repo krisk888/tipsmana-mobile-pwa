@@ -1,0 +1,131 @@
+{
+  "caisse": {
+    "header": {
+      "brand": "Caisse",
+      "logout": "Déconnexion",
+      "noTable": "Aucune table"
+    },
+    "home": {
+      "floorPlan": "Plan de salle",
+      "tableNo": "Table n°",
+      "open": "✔ Ouvrir"
+    },
+    "catalog": {
+      "back": "← Menus",
+      "empty": "Aucun article"
+    },
+    "totalBar": {
+      "total": "Total",
+      "count": "{count} articles | {count} article | {count} articles"
+    },
+    "covers": {
+      "title": "👥 Table {table}",
+      "label": "Nombre de couverts",
+      "ok": "✔ OK"
+    },
+    "options": {
+      "add": "+ Ajouter",
+      "groups": {
+        "cuisson": "Cuisson",
+        "garniture": "Garniture",
+        "taille": "Taille"
+      },
+      "values": {
+        "cuisson": {
+          "rare": "Saignant",
+          "medium": "À point",
+          "wellDone": "Bien cuit"
+        },
+        "garniture": {
+          "fries": "Frites",
+          "rice": "Riz",
+          "vegetables": "Légumes",
+          "salad": "Salade"
+        },
+        "taille": {
+          "small": "Petit",
+          "normal": "Normal",
+          "large": "Grand"
+        }
+      }
+    },
+    "reclaim": {
+      "title": "🔔 Réclamer",
+      "textTable": "La table {table} réclame des articles déjà envoyés.",
+      "text": "Réclamer des articles déjà envoyés.",
+      "confirm": "Réclamer à la cuisine",
+      "sentTitle": "Réclamation envoyée",
+      "sentTable": "La cuisine a reçu la demande pour la table {table}.",
+      "sent": "La cuisine a reçu la demande."
+    },
+    "addition": {
+      "title": "🧾 Addition provisoire",
+      "totalHt": "Total HT",
+      "vat": "TVA ({rate}%)",
+      "totalTtc": "Total TTC"
+    },
+    "payment": {
+      "title": "💶 Solder la table",
+      "summary": "Table {table} · {count} article(s)",
+      "ticketRef": "🎫 Ticket #MOB-{ref}",
+      "successTitle": "Paiement {method}",
+      "change": "Rendu monnaie sur {amount}",
+      "accepted": "Paiement accepté",
+      "refused": "Paiement refusé",
+      "error": "Erreur lors du paiement",
+      "newSale": "Nouvelle vente",
+      "methods": {
+        "cash": "Espèces",
+        "card": "Carte bancaire",
+        "ticketResto": "Ticket resto",
+        "bankTransfer": "Virement"
+      }
+    },
+    "floor": {
+      "title": "🪑 Tables",
+      "empty": "Aucune table — configurez le plan sur la caisse.",
+      "emptyOccupied": "Aucune table occupée",
+      "free": "Libre",
+      "busy": "En cours",
+      "bill": "Addition",
+      "defaultArea": "SALLE"
+    },
+    "send": {
+      "errorTitle": "Erreur d’envoi",
+      "error": "Impossible d'envoyer en cuisine"
+    },
+    "courses": {
+      "entree": "Entrée",
+      "plat": "Plat",
+      "dessert": "Dessert",
+      "fallback": "Service"
+    },
+    "seller": "Vendeur",
+    "days": "DIM,LUN,MAR,MER,JEU,VEN,SAM",
+    "cart": {
+      "title": "🧾 Commandes",
+      "empty": "Panier vide — tapez un article",
+      "sent": "✓ Envoyé",
+      "next": "À SUIVRE ➜",
+      "reclaim": "🔔 Réclamer",
+      "addition": "🧾 Addition",
+      "settle": "💶 Solder",
+      "sentToKitchen": "✓ Envoyé en cuisine",
+      "send": "📤 ENVOI"
+    },
+    "categories": {
+      "entrees": "Entrées",
+      "plats": "Plat",
+      "suggestions": "Suggestions",
+      "snack": "Snack",
+      "desserts": "Dessert",
+      "eaux": "Eaux",
+      "soft": "Soft",
+      "bieres": "Bière",
+      "brunch": "Brunch",
+      "vins": "Vins",
+      "champagnes": "Champagne",
+      "cocktails": "Cocktails"
+    }
+  }
+}

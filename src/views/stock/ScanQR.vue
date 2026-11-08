@@ -1,14 +1,14 @@
 <template>
   <div class="scan-view">
     <header class="page-header">
-      <h2>📷 Scanner</h2>
-      <p class="subtitle">Scannez un QR code ou code-barres</p>
+      <h2>{{ t('stock.scan.title') }}</h2>
+      <p class="subtitle">{{ t('stock.scan.subtitle') }}</p>
     </header>
 
     <div class="camera-placeholder">
       <div class="camera-frame">
         <span class="camera-icon">📷</span>
-        <p>Appuyez pour ouvrir la caméra</p>
+        <p>{{ t('stock.scan.tapToOpen') }}</p>
       </div>
       <input
         ref="fileInput"
@@ -18,19 +18,19 @@
         @change="onFileCapture"
         style="display:none"
       />
-      <button class="btn-camera" :disabled="busy" @click="$refs.fileInput.click()">📸 Ouvrir la caméra</button>
+      <button class="btn-camera" :disabled="busy" @click="$refs.fileInput.click()">{{ t('stock.scan.openCamera') }}</button>
     </div>
 
     <form class="manual-entry" @submit.prevent="lookup(manualCode)">
-      <input v-model="manualCode" inputmode="numeric" placeholder="Ou saisir le code-barres" />
-      <button type="submit" :disabled="busy || !manualCode.trim()">OK</button>
+      <input v-model="manualCode" inputmode="numeric" :placeholder="t('stock.scan.manualPlaceholder')" />
+      <button type="submit" :disabled="busy || !manualCode.trim()">{{ t('stock.scan.ok') }}</button>
     </form>
 
     <div v-if="result" class="scan-result">
-      <h3>Résultat du scan</h3>
-      <p><strong>Code :</strong> {{ result.code }}</p>
-      <p><strong>Produit :</strong> {{ result.product_name }}</p>
-      <p v-if="result.quantity != null"><strong>Stock théorique :</strong> {{ result.quantity }}</p>
+      <h3>{{ t('stock.scan.resultTitle') }}</h3>
+      <p><strong>{{ t('stock.scan.code') }}</strong> {{ result.code }}</p>
+      <p><strong>{{ t('stock.scan.product') }}</strong> {{ result.product_name }}</p>
+      <p v-if="result.quantity != null"><strong>{{ t('stock.scan.theoreticalStock') }}</strong> {{ result.quantity }}</p>
     </div>
 
     <div v-if="error" class="error-msg">{{ error }}</div>
@@ -41,6 +41,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../shared/api'
+import { useI18n } from '../../i18n'
+
+const { t } = useI18n()
 
 const router = useRouter()
 const fileInput = ref(null)
@@ -74,13 +77,13 @@ async function onFileCapture(e) {
   try {
     const code = await decodeImage(file)
     if (!code) {
-      error.value = 'Code non détecté — saisissez-le manuellement'
+      error.value = t('stock.scan.notDetected')
       return
     }
     manualCode.value = code
     await lookup(code)
   } catch (e) {
-    error.value = e.message || 'Échec du scan'
+    error.value = e.message || t('stock.scan.scanFailed')
   }
 }
 
@@ -110,7 +113,7 @@ async function lookup(rawCode) {
       quantity: data.theoretical_stock,
     }
   } catch (e) {
-    error.value = e.status === 404 ? `Aucun produit pour le code ${code}` : (e.message || 'Échec de la recherche')
+    error.value = e.status === 404 ? t('stock.scan.noProduct', { code }) : (e.message || t('stock.scan.lookupFailed'))
   } finally {
     busy.value = false
   }

@@ -1,0 +1,69 @@
+{
+  "kitchen": {
+    "title": "Cuisine",
+    "subtitle": "Écran cuisine — commandes en préparation",
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "unreadOrders": "Nouvelles commandes non lues",
+    "newOrder": "Nouvelle commande !",
+    "urgency": "Urgence !",
+    "loadingOrders": "Chargement des commandes…",
+    "demoMode": "Mode démo",
+    "productFallback": "Produit",
+    "status": {
+      "pending": "En attente",
+      "printing": "Impression",
+      "printed": "Imprimé",
+      "preparing": "En prépa",
+      "ready": "Prêt",
+      "served": "Servi"
+    },
+    "kpi": {
+      "pending": "En attente",
+      "preparing": "En préparation",
+      "ready": "Prêt",
+      "oldest": "Plus ancienne",
+      "items": "Articles"
+    },
+    "age": {
+      "justNow": "à l'instant",
+      "minutes": "{minutes} min",
+      "hours": "{hours}h",
+      "hoursMinutes": "{hours}h {minutes}min"
+    },
+    "empty": {
+      "served": "Aucune commande servie",
+      "ready": "Aucun plat prêt",
+      "preparing": "Rien en préparation",
+      "pending": "Tout est validé",
+      "all": "Tout est servi, rien en attente",
+      "sub": "La cuisine respire…"
+    },
+    "actions": {
+      "validate": "Valider",
+      "ready": "Prêt",
+      "served": "Servi",
+      "validateAll": "Valider tout",
+      "allReady": "Tout prêt",
+      "serve": "Servir"
+    },
+    "toast": {
+      "newOrders": "{count} nouvelle commande ! | {count} nouvelles commandes !",
+      "courseCalled": "Nouveau service appelé",
+      "demoOn": "Mode démonstration activé",
+      "itemUpdated": "Plat mis à jour",
+      "failed": "Échec",
+      "orderValidated": "Commande validée",
+      "orderReady": "Commande prête",
+      "orderServed": "Commande servie",
+      "orderUpdated": "Commande mise à jour"
+    },
+    "errors": {
+      "unreachable": "Serveur injoignable"
+    },
+    "mock": {
+      "urgent": "{count} urgent",
+      "noOnion": "Sans oignon"
+    }
+  }
+}

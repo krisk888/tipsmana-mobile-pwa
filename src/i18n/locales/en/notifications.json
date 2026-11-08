@@ -1,0 +1,30 @@
+{
+  "notifications": {
+    "title": "🔔 Notifications",
+    "markAllRead": "Mark all read",
+    "newNotifications": "⬇️ New notifications",
+    "unread": "{count} unread | {count} unread",
+    "noUnread": "No unread notifications",
+    "priority": {
+      "urgent": "Urgent",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "sortDate": "Date",
+    "empty": "No notifications yet",
+    "loadMore": "Show more",
+    "loadError": "Loading error",
+    "pull": {
+      "release": "🔄 Release to refresh",
+      "pull": "⬇️ Pull to refresh",
+      "refreshing": "🔄 Refreshing..."
+    },
+    "timeAgo": {
+      "justNow": "just now",
+      "minutes": "{n} min ago",
+      "hours": "{n}h ago",
+      "days": "{n}d ago"
+    }
+  }
+}

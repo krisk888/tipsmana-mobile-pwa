@@ -1,0 +1,73 @@
+{
+  "common": {
+    "loading": "Cargando…",
+    "retry": "Reintentar",
+    "refresh": "Actualizar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "back": "Volver",
+    "open": "Abrir",
+    "send": "Enviar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "validate": "Validar",
+    "search": "Buscar",
+    "all": "Todas",
+    "none": "Ninguno",
+    "yes": "Sí",
+    "no": "No",
+    "table": "Mesa {number}",
+    "items": "{count} artículo | {count} artículos",
+    "language": "Idioma",
+    "logout": "Cerrar sesión",
+    "nav": {
+      "pilot": "Piloto",
+      "orders": "Pedidos",
+      "caisse": "Caja",
+      "service": "Servicio",
+      "stock": "Stock",
+      "cuisine": "Cocina",
+      "alerts": "Alertas",
+      "profile": "Perfil",
+      "quit": "Salir"
+    },
+    "roles": {
+      "OWNER": "Jefe",
+      "MANAGER": "Gerente",
+      "CUISINE": "Jefe de cocina",
+      "INVENTAIRE": "Inventario",
+      "VENTES": "Ventas",
+      "ACHATS": "Compras",
+      "SERVEUR": "Camarero"
+    },
+    "titles": {
+      "pilot": "Piloto",
+      "stock": "Stock",
+      "notifications": "Notificaciones",
+      "orders": "Pedidos",
+      "profile": "Perfil",
+      "receptions": "Recepciones",
+      "express": "Inventario exprés",
+      "stockDetail": "Sesión de stock",
+      "caisse": "Caja",
+      "cuisine": "Cocina",
+      "service": "Servicio",
+      "serviceHistory": "Pedidos en curso",
+      "serviceProfile": "Mi perfil",
+      "serviceOrder": "Toma de pedido",
+      "customerDisplay": "Su cuenta",
+      "halls": "Plano de sala"
+    },
+    "errors": {
+      "network": "Red no disponible.",
+      "networkNoCache": "Red no disponible. No hay datos en caché.",
+      "networkDownload": "Red no disponible. No se puede descargar el archivo.",
+      "sessionExpired": "Sesión caducada. Vuelva a iniciar sesión.",
+      "unexpected": "Respuesta inesperada del servidor",
+      "generic": "Se ha producido un error",
+      "login": "Error de conexión"
+    }
+  }
+}

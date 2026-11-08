@@ -1,0 +1,73 @@
+{
+  "common": {
+    "loading": "Chargement…",
+    "retry": "Réessayer",
+    "refresh": "Rafraîchir",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "back": "Retour",
+    "open": "Ouvrir",
+    "send": "Envoyer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "validate": "Valider",
+    "search": "Rechercher",
+    "all": "Toutes",
+    "none": "Aucun",
+    "yes": "Oui",
+    "no": "Non",
+    "table": "Table {number}",
+    "items": "{count} article | {count} articles",
+    "language": "Langue",
+    "logout": "Se déconnecter",
+    "nav": {
+      "pilot": "Pilote",
+      "orders": "Commandes",
+      "caisse": "Caisse",
+      "service": "Service",
+      "stock": "Stock",
+      "cuisine": "Cuisine",
+      "alerts": "Alertes",
+      "profile": "Profil",
+      "quit": "Quitter"
+    },
+    "roles": {
+      "OWNER": "Boss",
+      "MANAGER": "Manager",
+      "CUISINE": "Chef cuisine",
+      "INVENTAIRE": "Inventaire",
+      "VENTES": "Ventes",
+      "ACHATS": "Achats",
+      "SERVEUR": "Serveur"
+    },
+    "titles": {
+      "pilot": "Pilote",
+      "stock": "Stock",
+      "notifications": "Notifications",
+      "orders": "Commandes",
+      "profile": "Profil",
+      "receptions": "Réceptions",
+      "express": "Inventaire express",
+      "stockDetail": "Session stock",
+      "caisse": "Caisse",
+      "cuisine": "Cuisine",
+      "service": "Service",
+      "serviceHistory": "Commandes en cours",
+      "serviceProfile": "Mon profil",
+      "serviceOrder": "Prise de commande",
+      "customerDisplay": "Votre note",
+      "halls": "Plan de salle"
+    },
+    "errors": {
+      "network": "Réseau indisponible.",
+      "networkNoCache": "Réseau indisponible. Aucune donnée en cache.",
+      "networkDownload": "Réseau indisponible. Impossible de télécharger le fichier.",
+      "sessionExpired": "Session expirée. Veuillez vous reconnecter.",
+      "unexpected": "Réponse inattendue du serveur",
+      "generic": "Une erreur est survenue",
+      "login": "Erreur de connexion"
+    }
+  }
+}

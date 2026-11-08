@@ -4,6 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: '/mobile/',
+  // Aucun composant n'utilise l'Options API (tout en <script setup>) : retirée du runtime Vue
+  define: {
+    __VUE_OPTIONS_API__: false,
+    __VUE_PROD_DEVTOOLS__: false,
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
+  },
   plugins: [
     vue(),
     VitePWA({

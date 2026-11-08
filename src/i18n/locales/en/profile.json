@@ -1,0 +1,51 @@
+{
+  "profile": {
+    "title": "👤 Profile",
+    "subtitle": "Manage your account and preferences",
+    "personalInfo": "Personal information",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "saving": "Saving...",
+    "establishment": "Establishment",
+    "name": "Name",
+    "role": "Role",
+    "type": "Type",
+    "notifications": "Notifications",
+    "pushNotifications": "Push notifications",
+    "emailNotifications": "Email notifications",
+    "autoSaveHint": "Preferences are saved automatically",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "updating": "Updating...",
+    "payment": {
+      "title": "💳 Payment",
+      "holder": "Account holder",
+      "holderPlaceholder": "Account holder name",
+      "bank": "Bank",
+      "bankPlaceholder": "Bank name",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "SumUp API key",
+      "merchantId": "Merchant ID",
+      "merchantIdPlaceholder": "SumUp merchant ID",
+      "saving": "Saving…",
+      "save": "💾 Save",
+      "saved": "✅ Configuration saved",
+      "saveError": "❌ Save failed",
+      "loadError": "❌ Unable to load payment methods"
+    },
+    "messages": {
+      "noChanges": "No changes",
+      "profileUpdated": "Profile updated ✓",
+      "updateError": "Update failed",
+      "currentRequired": "Current password required",
+      "minLength": "Minimum {n} characters",
+      "mismatch": "Passwords do not match",
+      "passwordChanged": "Password changed ✓",
+      "passwordError": "Password change failed"
+    }
+  }
+}

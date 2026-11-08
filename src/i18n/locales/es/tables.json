@@ -1,0 +1,50 @@
+{
+  "tables": {
+    "title": "Servicio",
+    "scanQr": "Escanear el QR de una mesa",
+    "loading": "Cargando mesas…",
+    "partial": "Datos parciales: no se pudo cargar parte de la información.",
+    "otherSpace": "Otras",
+    "hideFree": "Ocultar mesas libres",
+    "updatedAt": "Actualizado a las {time} · se actualiza cada 30 s",
+    "tableAria": "Mesa {number} — {state}",
+    "itemsShort": "{count} art. | {count} art.",
+    "states": {
+      "libre": "Libre",
+      "occupee": "Ocupada",
+      "reservee": "Reservada",
+      "addition": "En espera"
+    },
+    "filters": {
+      "free": "Libres",
+      "busy": "Ocupadas"
+    },
+    "empty": {
+      "noTables": "No hay mesas en el plano de sala.",
+      "filter": "Ninguna mesa en este filtro.",
+      "allFreeHidden": "Ninguna mesa ocupada: las mesas libres están ocultas."
+    },
+    "manual": {
+      "label": "Otra mesa",
+      "placeholder": "N.º"
+    },
+    "merge": {
+      "hint": "Toque las mesas que quiere juntar en una sola cuenta (mínimo 2, al menos una ocupada).",
+      "title": "Juntar mesas",
+      "button": "Juntar",
+      "count": "{count} mesa | {count} mesas",
+      "confirmTitle": "Juntar {count} mesas",
+      "confirmText": "Las cuentas se unirán en una sola. Mesa principal:",
+      "queued": "Sin conexión: unión en cola",
+      "done": "Mesas {tables} unidas en la mesa {target}",
+      "failed": "No se pudieron juntar las mesas"
+    },
+    "covers": {
+      "title": "Número de comensales",
+      "start": "Tomar el pedido"
+    },
+    "errors": {
+      "load": "No se pueden cargar las mesas"
+    }
+  }
+}

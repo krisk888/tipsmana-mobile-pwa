@@ -3,58 +3,58 @@
     <!-- ═══ NOTIFICATION OVERLAY ═══ -->
     <div v-if="incomingPulse" class="new-order-pulse" @click="incomingPulse = false">
       <span class="pulse-icon">🔔</span>
-      <span class="pulse-text">Nouvelle commande !</span>
+      <span class="pulse-text">{{ t('kitchen.newOrder') }}</span>
     </div>
 
     <!-- ═══ URGENCY OVERLAY ═══ -->
     <div v-if="showUrgencyFlash" class="urgency-overlay">
       <span class="urgency-icon">🚨</span>
-      <span class="urgency-text">Urgence !</span>
+      <span class="urgency-text">{{ t('kitchen.urgency') }}</span>
     </div>
 
     <!-- ═══ HEADER ═══ -->
     <header class="kds-header">
       <div class="kds-title-row">
-        <h2>🍳 Cuisine</h2>
+        <h2>🍳 {{ t('kitchen.title') }}</h2>
         <div class="kds-header-actions">
-          <button class="header-btn" @click="loadOrders" title="Rafraîchir">↻</button>
+          <button class="header-btn" @click="loadOrders" :title="t('common.refresh')">↻</button>
           <div class="kds-header-status">
             <span class="status-dot" :class="{ connected, disconnected: !connected }"></span>
-            <span class="status-text">{{ connected ? 'En ligne' : 'Hors ligne' }}</span>
+            <span class="status-text">{{ connected ? t('kitchen.online') : t('kitchen.offline') }}</span>
           </div>
           <button
             v-if="newOrdersCount > 0"
             class="header-btn new-order-counter"
             @click="resetNewOrdersCounter"
-            title="Nouvelles commandes non lues"
+            :title="t('kitchen.unreadOrders')"
           >
             🆕<span class="counter-badge">{{ newOrdersCount > 99 ? '99+' : newOrdersCount }}</span>
           </button>
         </div>
       </div>
-      <p class="kds-subtitle">Écran cuisine — commandes en préparation</p>
+      <p class="kds-subtitle">{{ t('kitchen.subtitle') }}</p>
     </header>
 
     <!-- ═══ KPI STRIP ═══ -->
     <div class="kpi-row">
       <div class="kpi-card">
-        <span class="kpi-label">En attente</span>
+        <span class="kpi-label">{{ t('kitchen.kpi.pending') }}</span>
         <span class="kpi-value">{{ pendingCount }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">En préparation</span>
+        <span class="kpi-label">{{ t('kitchen.kpi.preparing') }}</span>
         <span class="kpi-value">{{ preparingCount }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Prêt</span>
+        <span class="kpi-label">{{ t('kitchen.kpi.ready') }}</span>
         <span class="kpi-value kpi-time">{{ readyCount }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Plus ancienne</span>
+        <span class="kpi-label">{{ t('kitchen.kpi.oldest') }}</span>
         <span class="kpi-value kpi-time" :class="{ urgent: oldestMinutes > 15 }">{{ oldestDisplay }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Articles</span>
+        <span class="kpi-label">{{ t('kitchen.kpi.items') }}</span>
         <span class="kpi-value">{{ totalItems }}</span>
       </div>
     </div>
@@ -82,22 +82,22 @@
     <!-- ═══ LOADING ═══ -->
     <div v-if="loading && !orders.length" class="kds-loading">
       <div class="spinner"></div>
-      <p>Chargement des commandes…</p>
+      <p>{{ t('kitchen.loadingOrders') }}</p>
     </div>
 
     <!-- ═══ ERROR ═══ -->
     <div v-else-if="error && !orders.length" class="kds-error">
       <p class="error-icon">⚠️</p>
       <p class="error-text">{{ error }}</p>
-      <button class="btn-retry" @click="loadOrders">↻ Réessayer</button>
-      <button class="btn-demo" @click="loadDemo">🎮 Mode démo</button>
+      <button class="btn-retry" @click="loadOrders">↻ {{ t('common.retry') }}</button>
+      <button class="btn-demo" @click="loadDemo">🎮 {{ t('kitchen.demoMode') }}</button>
     </div>
 
     <!-- ═══ EMPTY ═══ -->
     <div v-else-if="!filteredOrders.length" class="kds-empty">
       <p class="empty-icon">{{ filter === 'served' ? '📋' : '🍽️' }}</p>
       <p>{{ emptyMessage }}</p>
-      <p class="empty-sub">La cuisine respire…</p>
+      <p class="empty-sub">{{ t('kitchen.empty.sub') }}</p>
     </div>
 
     <!-- ═══ ORDER LIST ═══ -->
@@ -151,8 +151,8 @@
               <div class="item-main">
                 <span class="item-qty">{{ item.qty }}×</span>
                 <span class="item-name">{{ item.name }}</span>
-                <span v-if="item.status === 'ready'" class="item-badge badge-ready">✅ Prêt</span>
-                <span v-if="item.status === 'served'" class="item-badge badge-served">☑️ Servi</span>
+                <span v-if="item.status === 'ready'" class="item-badge badge-ready">✅ {{ t('kitchen.actions.ready') }}</span>
+                <span v-if="item.status === 'served'" class="item-badge badge-served">☑️ {{ t('kitchen.actions.served') }}</span>
               </div>
               <div v-if="item.note" class="item-note">📝 {{ item.note }}</div>
               <div class="item-timer" v-if="item.status === 'pending' || item.status === 'preparing'">
@@ -167,7 +167,7 @@
                   @click.stop="markItemReady(o.id, idx)"
                   :disabled="actionLoading[itemKey(o.id, idx)]"
                 >
-                  {{ actionLoading[itemKey(o.id, idx)] ? '…' : '🟢 Valider' }}
+                  {{ actionLoading[itemKey(o.id, idx)] ? '…' : '🟢 ' + t('kitchen.actions.validate') }}
                 </button>
                 <!-- Prêt : preparing→ready -->
                 <button
@@ -176,7 +176,7 @@
                   @click.stop="markItemReady(o.id, idx)"
                   :disabled="actionLoading[itemKey(o.id, idx)]"
                 >
-                  {{ actionLoading[itemKey(o.id, idx)] ? '…' : '✅ Prêt' }}
+                  {{ actionLoading[itemKey(o.id, idx)] ? '…' : '✅ ' + t('kitchen.actions.ready') }}
                 </button>
               </div>
             </div>
@@ -190,7 +190,7 @@
               @click.stop="markOrderReady(o.id)"
               :disabled="actionLoading[o.id]"
             >
-              {{ actionLoading[o.id] ? '…' : '🟢 Valider tout' }}
+              {{ actionLoading[o.id] ? '…' : '🟢 ' + t('kitchen.actions.validateAll') }}
             </button>
             <button
               v-if="canReadyOrder(o)"
@@ -198,7 +198,7 @@
               @click.stop="markOrderReady(o.id)"
               :disabled="actionLoading[o.id]"
             >
-              {{ actionLoading[o.id] ? '…' : '✅ Tout prêt' }}
+              {{ actionLoading[o.id] ? '…' : '✅ ' + t('kitchen.actions.allReady') }}
             </button>
             <button
               v-if="canServeOrder(o)"
@@ -206,7 +206,7 @@
               @click.stop="markOrderReady(o.id)"
               :disabled="actionLoading[o.id]"
             >
-              {{ actionLoading[o.id] ? '…' : '☑️ Servir' }}
+              {{ actionLoading[o.id] ? '…' : '☑️ ' + t('kitchen.actions.serve') }}
             </button>
           </div>
         </div>
@@ -222,6 +222,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
 import { offlineStore } from '../../shared/offlineStore'
+import { useI18n } from '../../i18n'
+
+const { t } = useI18n()
 
 // ── PWA Badge helper ────────────────────────────────────
 async function updateBadge(count) {
@@ -289,11 +292,11 @@ const FALLBACK_INTERVAL = 5000
 
 // ── Filter definitions ──────────────────────────────────
 const filterOptions = computed(() => [
-  { key: 'all',      label: 'Toutes',       count: pendingOrders.value.length },
-  { key: 'pending',  label: 'En attente',   count: ordersByStatus('pending').length + ordersByStatus('printing').length + ordersByStatus('printed').length },
-  { key: 'preparing',label: 'En prépa',     count: ordersByStatus('preparing').length },
-  { key: 'ready',    label: 'Prêt',         count: ordersByStatus('ready').length },
-  { key: 'served',   label: 'Servi',        count: ordersByStatus('served').length },
+  { key: 'all',      label: t('common.all'),               count: pendingOrders.value.length },
+  { key: 'pending',  label: t('kitchen.status.pending'),   count: ordersByStatus('pending').length + ordersByStatus('printing').length + ordersByStatus('printed').length },
+  { key: 'preparing',label: t('kitchen.status.preparing'), count: ordersByStatus('preparing').length },
+  { key: 'ready',    label: t('kitchen.status.ready'),     count: ordersByStatus('ready').length },
+  { key: 'served',   label: t('kitchen.status.served'),    count: ordersByStatus('served').length },
 ])
 
 // ── Helpers for computed ────────────────────────────────
@@ -344,17 +347,19 @@ const oldestMinutes = computed(() => {
 
 const oldestDisplay = computed(() => {
   const m = oldestMinutes.value
-  if (m < 1) return "à l'instant"
-  if (m < 60) return `${m} min`
-  return `${Math.floor(m / 60)}h${m % 60 ? ' ' + (m % 60) + 'min' : ''}`
+  if (m < 1) return t('kitchen.age.justNow')
+  if (m < 60) return t('kitchen.age.minutes', { minutes: m })
+  const hours = Math.floor(m / 60)
+  return m % 60
+    ? t('kitchen.age.hoursMinutes', { hours, minutes: m % 60 })
+    : t('kitchen.age.hours', { hours })
 })
 
 const emptyMessage = computed(() => {
-  if (filter.value === 'served') return "Aucune commande servie"
-  if (filter.value === 'ready') return "Aucun plat prêt"
-  if (filter.value === 'preparing') return "Rien en préparation"
-  if (filter.value === 'pending') return "Tout est validé"
-  return 'Tout est servi, rien en attente'
+  if (['served', 'ready', 'preparing', 'pending'].includes(filter.value)) {
+    return t(`kitchen.empty.${filter.value}`)
+  }
+  return t('kitchen.empty.all')
 })
 
 // ── Helpers ─────────────────────────────────────────────
@@ -363,15 +368,8 @@ function shortId(id) {
 }
 
 function statusLabel(s) {
-  const map = {
-    pending: 'En attente',
-    printing: 'Impression',
-    printed: 'Imprimé',
-    preparing: 'En prépa',
-    ready: 'Prêt',
-    served: 'Servi',
-  }
-  return map[s] || s || '—'
+  const known = ['pending', 'printing', 'printed', 'preparing', 'ready', 'served']
+  return known.includes(s) ? t(`kitchen.status.${s}`) : (s || '—')
 }
 
 function ageMinutes(dateStr) {
@@ -500,9 +498,9 @@ function playNotification() {
   try {
     const ctx = getAudioContext()
     if (!ctx) return
-    const t = ctx.currentTime
-    playNote(880, t, 0.4)
-    playNote(1108.73, t + 0.15, 0.3)
+    const t0 = ctx.currentTime
+    playNote(880, t0, 0.4)
+    playNote(1108.73, t0 + 0.15, 0.3)
   } catch (e) {
     // Silently ignore audio errors
   }
@@ -512,13 +510,13 @@ function playUrgencySound() {
   try {
     const ctx = getAudioContext()
     if (!ctx) return
-    const t = ctx.currentTime
+    const t0 = ctx.currentTime
     // Descending alarm: three short buzzy pulses
-    playNote(660, t, 0.15, 'square', 0.25)
-    playNote(440, t + 0.2, 0.15, 'square', 0.25)
-    playNote(330, t + 0.4, 0.2, 'square', 0.25)
+    playNote(660, t0, 0.15, 'square', 0.25)
+    playNote(440, t0 + 0.2, 0.15, 'square', 0.25)
+    playNote(330, t0 + 0.4, 0.2, 'square', 0.25)
     // One high alert note on top
-    playNote(1320, t + 0.1, 0.35, 'sawtooth', 0.15)
+    playNote(1320, t0 + 0.1, 0.35, 'sawtooth', 0.15)
   } catch (e) {
     // Silently ignore audio errors
   }
@@ -612,7 +610,7 @@ function handleWsMessage(msg) {
       showIncomingPulse()
       knownIds.add(msg.data.id)
       updateBadge(newOrdersCount.value)
-      showFlash('📦 Nouvelle commande !')
+      showFlash('📦 ' + t('kitchen.newOrder'))
       checkUrgency()
       break
 
@@ -635,7 +633,7 @@ function handleWsMessage(msg) {
 
     case 'course_called':
       // New course bons released — reload to pick them up
-      showFlash('📋 Nouveau service appelé')
+      showFlash('📋 ' + t('kitchen.toast.courseCalled'))
       loadOrders()
       break
 
@@ -811,7 +809,7 @@ async function loadOrders() {
         playNotification()
         showIncomingPulse()
         updateBadge(newOrdersCount.value)
-        showFlash(`📦 ${fresh.length} nouvelle${fresh.length > 1 ? 's' : ''} commande${fresh.length > 1 ? 's' : ''} !`)
+        showFlash('📦 ' + t('kitchen.toast.newOrders', { count: fresh.length }))
       }
       // Mark fresh items with _new for slide-in animation
       fresh.forEach(i => { i._new = true })
@@ -851,7 +849,7 @@ async function loadOrders() {
           ticket_ref: entry.ref_number || entry.number || entry.id,
           station: 'cuisine',
           items: (entry.line_items || []).map(li => ({
-            name: li.item_name_original || li.product_name || li.recipe_name || 'Produit',
+            name: li.item_name_original || li.product_name || li.recipe_name || t('kitchen.productFallback'),
             qty: Number(li.quantity) || 1,
             note: li.notes || li.comment || null,
             status: 'pending',
@@ -864,7 +862,7 @@ async function loadOrders() {
     } catch (e2) {
       console.warn('[KDS] Fallback échoué:', e2.message)
     }
-    error.value = e.message || 'Serveur injoignable'
+    error.value = e.message || t('kitchen.errors.unreachable')
     if (!orders.value.length) orders.value = []
   } finally {
     loading.value = false
@@ -914,7 +912,7 @@ function loadDemo() {
   ]
   orders.value.forEach(o => knownIds.add(o.id))
   playNotification()
-  showFlash('🎮 Mode démonstration activé')
+  showFlash('🎮 ' + t('kitchen.toast.demoOn'))
 }
 
 // ── Toggle ─────────────────────────────────────────────
@@ -937,9 +935,9 @@ async function markItemReady(orderId, itemIndex) {
       orders.value = [...orders.value]
     }
 
-    showFlash('✅ Plat mis à jour')
+    showFlash('✅ ' + t('kitchen.toast.itemUpdated'))
   } catch (e) {
-    showFlash('❌ ' + (e.message || 'Échec'), 'err')
+    showFlash('❌ ' + (e.message || t('kitchen.toast.failed')), 'err')
     // Reload on error to get real state
     await loadOrders()
   } finally {
@@ -969,11 +967,11 @@ async function markOrderReady(orderId) {
       orders.value = [...orders.value]
     }
 
-    const labels = { preparing: 'validée', ready: 'prête', served: 'servie' }
-    const label = labels[orders.value.find(o => o.id === orderId)?.status] || 'mise à jour'
-    showFlash(`✅ Commande ${label}`)
+    const labelKeys = { preparing: 'orderValidated', ready: 'orderReady', served: 'orderServed' }
+    const labelKey = labelKeys[orders.value.find(o => o.id === orderId)?.status] || 'orderUpdated'
+    showFlash('✅ ' + t(`kitchen.toast.${labelKey}`))
   } catch (e) {
-    showFlash('❌ ' + (e.message || 'Échec'), 'err')
+    showFlash('❌ ' + (e.message || t('kitchen.toast.failed')), 'err')
     await loadOrders()
   } finally {
     actionLoading.value[orderId] = false

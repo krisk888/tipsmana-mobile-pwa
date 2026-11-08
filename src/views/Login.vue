@@ -3,23 +3,23 @@
     <div class="login-card">
       <div class="login-logo">
         <img src="/images/logo_horizontal.jpg" class="login-logo-img" alt="Tipsmana" />
-        <p class="subtitle">L'App du Boss</p>
+        <p class="subtitle">{{ t('login.subtitle') }}</p>
       </div>
 
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="field">
-          <label>Email</label>
+          <label>{{ t('login.email') }}</label>
           <input
             v-model="email"
             type="email"
-            placeholder="email@exemple.fr"
+            :placeholder="t('login.emailPlaceholder')"
             required
             autocomplete="email"
           />
         </div>
 
         <div class="field">
-          <label>Mot de passe</label>
+          <label>{{ t('login.password') }}</label>
           <input
             v-model="password"
             type="password"
@@ -32,25 +32,25 @@
         <p v-if="error" class="error">{{ error }}</p>
 
         <button type="submit" class="btn-primary" :disabled="loading">
-          {{ loading ? 'Connexion...' : 'Se connecter' }}
+          {{ loading ? t('login.connecting') : t('login.submit') }}
         </button>
       </form>
 
       <!-- Quick-login par rôles — un clic = connexion directe -->
       <div class="demo-section">
-        <p class="demo-title">Connexion rapide — choisir un rôle</p>
+        <p class="demo-title">{{ t('login.quickLogin') }}</p>
         <div class="demo-grid">
           <button
             v-for="r in roles"
-            :key="r.label"
+            :key="r.role"
             class="demo-btn"
             :class="{ loading: authStore.loading && loadingRole === r.role }"
             :disabled="authStore.loading"
             @click="quickLoginAs(r)"
           >
             <span class="demo-emoji">{{ r.emoji }}</span>
-            <span class="demo-label">{{ r.label }}</span>
-            <span v-if="r.role === 'OWNER'" class="demo-role-badge">Démo</span>
+            <span class="demo-label">{{ t(`common.roles.${r.role}`) }}</span>
+            <span v-if="r.role === 'OWNER'" class="demo-role-badge">{{ t('login.demo') }}</span>
           </button>
         </div>
       </div>
@@ -63,6 +63,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { useI18n } from '../i18n'
+
+const { t } = useI18n()
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -70,15 +73,15 @@ const email = ref('boss@restoducoin.fr')
 const password = ref('RestoDuCoin2026!')
 const loadingRole = ref(null)
 
-// Rôles avec leur route de redirection dédiée
+// Rôles avec leur route de redirection dédiée (libellé : common.roles.<role>)
 const roles = [
-  { emoji: '👑', label: 'Boss',        role: 'OWNER',     route: '/pilot' },
-  { emoji: '📊', label: 'Manager',     role: 'MANAGER',   route: '/pilot' },
-  { emoji: '🍳', label: 'Chef cuisine',role: 'CUISINE',   route: '/cuisine' },
-  { emoji: '🧾', label: 'Inventaire',  role: 'INVENTAIRE',route: '/stock' },
-  { emoji: '📦', label: 'Ventes',      role: 'VENTES',    route: '/caisse' },
-  { emoji: '📊', label: 'Achats',      role: 'ACHATS',    route: '/stock/receptions' },
-  { emoji: '🍽', label: 'Serveur',     role: 'SERVEUR',   route: '/caisse' },
+  { emoji: '👑', role: 'OWNER',      route: '/pilot' },
+  { emoji: '📊', role: 'MANAGER',    route: '/pilot' },
+  { emoji: '🍳', role: 'CUISINE',    route: '/cuisine' },
+  { emoji: '🧾', role: 'INVENTAIRE', route: '/stock' },
+  { emoji: '📦', role: 'VENTES',     route: '/caisse' },
+  { emoji: '📊', role: 'ACHATS',     route: '/stock/receptions' },
+  { emoji: '🍽', role: 'SERVEUR',    route: '/caisse' },
 ]
 
 async function quickLoginAs(r) {

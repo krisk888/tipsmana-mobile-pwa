@@ -12,23 +12,19 @@
 <script setup>
 import { computed } from 'vue'
 import { useTheme } from './useTheme'
+import { useI18n } from '../i18n'
+
+const { t } = useI18n()
 
 const { preference, toggleTheme } = useTheme()
 
 const STATE = {
-  dark: { icon: '☀️', label: 'Jour' },
-  light: { icon: '🌙', label: 'Nuit' },
-  auto: { icon: '🌗', label: 'Auto' },
+  dark: { icon: '☀️', label: 'ui.theme.day', aria: 'ui.theme.ariaDark' },
+  light: { icon: '🌙', label: 'ui.theme.night', aria: 'ui.theme.ariaLight' },
+  auto: { icon: '🌗', label: 'ui.theme.auto', aria: 'ui.theme.ariaAuto' },
 }
 
 const icon = computed(() => STATE[preference.value].icon)
-const label = computed(() => STATE[preference.value].label)
-const ariaLabel = computed(
-  () =>
-    ({
-      dark: 'Mode sombre — cliquer pour passer en mode clair',
-      light: 'Mode clair — cliquer pour passer en mode auto',
-      auto: 'Mode auto (sombre de 20h à 7h) — cliquer pour passer en mode sombre',
-    })[preference.value]
-)
+const label = computed(() => t(STATE[preference.value].label))
+const ariaLabel = computed(() => t(STATE[preference.value].aria))
 </script>

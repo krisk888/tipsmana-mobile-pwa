@@ -1,0 +1,160 @@
+{
+  "stock": {
+    "sessionFallback": "Sesión #{id}",
+    "startedAgo": "Iniciada {ago}",
+    "productFallback": "Producto",
+    "unitShort": "u",
+    "timeAgo": {
+      "justNow": "ahora mismo",
+      "minutes": "hace {n} min",
+      "hours": "hace {n} h"
+    },
+    "status": {
+      "in_progress": "En curso",
+      "completed": "Terminada",
+      "validated": "Validada",
+      "cancelled": "Cancelada"
+    },
+    "home": {
+      "title": "📦 Stock",
+      "subtitle": "Inventario y recepciones",
+      "activeSessions": "Sesiones en curso",
+      "noActiveSession": "Ninguna sesión activa",
+      "newSession": "+ Nueva sesión",
+      "productsCount": "{count} producto | {count} productos",
+      "defaultSessionName": "Inventario {date}",
+      "createError": "No se pudo crear",
+      "links": {
+        "expressTitle": "Inventario exprés",
+        "expressDesc": "Recuento por zonas, sin conexión",
+        "scanTitle": "Escanear un producto",
+        "scanDesc": "Código QR o código de barras",
+        "receptionsTitle": "Recepciones",
+        "receptionsDesc": "Entregas pendientes"
+      }
+    },
+    "express": {
+      "title": "⚡ Inventario exprés",
+      "subtitle": "Recuento por zonas — funciona sin conexión",
+      "resumeSession": "Reanudar una sesión",
+      "noSession": "Ninguna sesión exprés en curso",
+      "badge": "Exprés",
+      "creating": "Creando…",
+      "newSession": "＋ Nuevo inventario exprés",
+      "defaultSessionName": "Inventario exprés {date}",
+      "createError": "No se pudo crear la sesión",
+      "completeError": "No se pudo terminar la sesión",
+      "apiError": "Error de la API",
+      "zones": {
+        "subtitle": "Elige una zona de recuento",
+        "changeSession": "← Cambiar de sesión",
+        "productsProgress": "{counted} / {total} productos",
+        "eta": "⏱ fin estimado en ~{min} min ({speed}/min)",
+        "counted": "{n} contados",
+        "notStarted": "Sin empezar",
+        "finishSession": "✔ Terminar la sesión — ver el resumen",
+        "done": "✔ Terminada",
+        "inProgress": "En curso",
+        "todo": "Pendiente"
+      },
+      "areas": {
+        "salle": "🪑 Sala",
+        "cuisine": "🍳 Cocina",
+        "reserve": "📦 Almacén",
+        "bar": "🍸 Barra"
+      },
+      "sections": {
+        "kitchen": "Cocina",
+        "dining_room": "Sala",
+        "bar": "Barra",
+        "reserve": "Almacén"
+      },
+      "counting": {
+        "offline": "📴 Sin conexión",
+        "pending": "⬆ {n} pendientes",
+        "manualHint": "Introduce el código manualmente abajo",
+        "cameraPaused": "Cámara en pausa — pulsa «Reanudar»",
+        "countedQty": "{count} contado | {count} contados",
+        "variance": "· diferencia {v}",
+        "manualPlaceholder": "Escribir el código / QR…",
+        "noCode": "🔍 Sin código",
+        "modeSet": "Ubicación",
+        "modeAdd": "Por unidad",
+        "ok": "✔ OK — {n}",
+        "zoneDoneNext": "🏁 Zona terminada → {zone}",
+        "zoneDoneFinish": "🏁 Zona terminada — terminar la sesión",
+        "unknownCode": "Código desconocido: {code}",
+        "synced": "⬆ {n} recuentos sincronizados"
+      },
+      "camera": {
+        "unavailable": "Cámara no disponible en este dispositivo",
+        "noDetector": "Detección automática no compatible — introduce los códigos manualmente",
+        "openFailed": "No se pudo abrir la cámara — entrada manual disponible"
+      },
+      "picker": {
+        "title": "Elegir un producto",
+        "search": "Buscar…",
+        "empty": "Ningún producto pendiente 🎉"
+      },
+      "recap": {
+        "title": "📋 Resumen",
+        "productsCounted": "productos contados",
+        "totalVariance": "diferencia total",
+        "notCounted": "sin contar",
+        "missing": "Faltantes ({n})",
+        "backToStock": "Volver al stock"
+      }
+    },
+    "receptions": {
+      "title": "📬 Recepciones",
+      "subtitle": "Entregas y entradas de stock",
+      "empty": "Ninguna recepción registrada",
+      "movementFallback": "Movimiento",
+      "types": {
+        "delivery": "Recepción",
+        "reception": "Recepción",
+        "purchase": "Compra",
+        "transfer_in": "Entrada interna",
+        "adjustment": "Ajuste",
+        "loss": "Pérdida",
+        "transfer_out": "Salida interna",
+        "consumption": "Consumo"
+      }
+    },
+    "scan": {
+      "title": "📷 Escáner",
+      "subtitle": "Escanea un código QR o código de barras",
+      "tapToOpen": "Pulsa para abrir la cámara",
+      "openCamera": "📸 Abrir la cámara",
+      "manualPlaceholder": "O introducir el código de barras",
+      "ok": "OK",
+      "resultTitle": "Resultado del escaneo",
+      "code": "Código:",
+      "product": "Producto:",
+      "theoreticalStock": "Stock teórico:",
+      "notDetected": "Código no detectado — introdúcelo manualmente",
+      "scanFailed": "Error al escanear",
+      "noProduct": "Ningún producto para el código {code}",
+      "lookupFailed": "Error en la búsqueda"
+    },
+    "detail": {
+      "fallbackTitle": "Sesión de stock",
+      "type": "Tipo",
+      "startedBy": "Iniciada por",
+      "completed": "Terminada",
+      "validated": "Validada",
+      "notes": "Notas",
+      "complete": "✓ Terminar el recuento",
+      "counts": "Recuentos ({n})",
+      "empty": "Ningún producto contado. Escanea el primer producto.",
+      "scan": "📷 Escanear",
+      "theoretical": "Teórico: {n}",
+      "variance": "Diferencia: {v}",
+      "closeFailed": "Error al cerrar la sesión",
+      "types": {
+        "physical_count": "Recuento físico",
+        "theoretical": "Teórico"
+      }
+    }
+  }
+}

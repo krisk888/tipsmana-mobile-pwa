@@ -1,0 +1,30 @@
+{
+  "orders": {
+    "title": "Commandes",
+    "subtitle": "Commandes en cours — {count} en attente",
+    "loading": "Chargement des commandes…",
+    "itemsShort": "{count} art.",
+    "status": {
+      "pending": "En attente",
+      "printing": "Impression",
+      "printed": "Imprimé",
+      "preparing": "En prépa",
+      "ready": "Prêt",
+      "served": "Servi"
+    },
+    "actions": {
+      "prep": "En prépa",
+      "ready": "Prêt"
+    },
+    "empty": {
+      "served": "Aucune commande servie",
+      "ready": "Aucun plat prêt",
+      "preparing": "Rien en préparation",
+      "pending": "Tout est validé",
+      "all": "Aucune commande pour le moment"
+    },
+    "errors": {
+      "unreachable": "Serveur injoignable"
+    }
+  }
+}

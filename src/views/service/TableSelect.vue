@@ -3,14 +3,14 @@
     <!-- ═══ HEADER ═══ -->
     <header class="svc-header">
       <div class="svc-header-left">
-        <h1 class="svc-title">🍽 Service</h1>
+        <h1 class="svc-title">🍽 {{ t('tables.title') }}</h1>
         <span class="svc-subtitle">{{ establishmentName }}</span>
       </div>
       <div class="svc-header-right">
-        <button class="svc-icon-btn svc-scan-btn" title="Scanner le QR d'une table" @click="scannerOpen = true">📷</button>
-        <router-link to="/service/history" class="svc-icon-btn" title="Commandes en cours">🧾</router-link>
-        <router-link to="/service/profile" class="svc-icon-btn" title="Mon profil">👤</router-link>
-        <button class="svc-icon-btn" :disabled="loading" title="Rafraîchir" @click="load()">
+        <button class="svc-icon-btn svc-scan-btn" :title="t('tables.scanQr')" @click="scannerOpen = true">📷</button>
+        <router-link to="/service/history" class="svc-icon-btn" :title="t('common.titles.serviceHistory')">🧾</router-link>
+        <router-link to="/service/profile" class="svc-icon-btn" :title="t('common.titles.serviceProfile')">👤</router-link>
+        <button class="svc-icon-btn" :disabled="loading" :title="t('common.refresh')" @click="load()">
           <span :class="{ spinning: loading }">⟳</span>
         </button>
       </div>
@@ -21,9 +21,7 @@
       <EstablishmentSwitcher />
     </div>
 
-    <p v-if="mergeMode" class="svc-merge-hint">
-      Touchez les tables à réunir sur une seule note (2 minimum, dont au moins une occupée).
-    </p>
+    <p v-if="mergeMode" class="svc-merge-hint">{{ t('tables.merge.hint') }}</p>
 
     <!-- ═══ FILTRES ═══ -->
     <div class="svc-chips">
@@ -39,9 +37,9 @@
       <button
         class="svc-merge-btn"
         :class="{ active: mergeMode }"
-        title="Fusionner des tables"
+        :title="t('tables.merge.title')"
         @click="toggleMergeMode"
-      >{{ mergeMode ? '✕ Annuler' : '🔗 Fusionner' }}</button>
+      >{{ mergeMode ? '✕ ' + t('common.cancel') : '🔗 ' + t('tables.merge.button') }}</button>
     </div>
 
     <div v-if="spaces.length > 1" class="svc-chips svc-spaces">
@@ -51,50 +49,70 @@
         class="svc-chip"
         :class="{ active: activeSpaceId === s.id }"
         @click="activeSpaceId = s.id"
-      >{{ s.icon }} {{ s.name }}</button>
+      >{{ s.icon }} {{ s.id === '__autres' ? t('tables.otherSpace') : s.name }}</button>
     </div>
+
+    <!-- ═══ LÉGENDE STATUTS + MASQUER LIBRES ═══ -->
+    <div v-if="loaded && spaceTables.length" class="svc-status-bar">
+      <div class="svc-legend">
+        <span
+          v-for="s in statusCounts"
+          :key="s.state"
+          class="svc-legend-item"
+          :class="'legend-' + s.state"
+          :title="t('tables.states.' + s.state)"
+        >{{ STATUS_DOTS[s.state] }} {{ t('tables.states.' + s.state) }} <b>{{ s.count }}</b></span>
+      </div>
+      <label class="svc-hide-free">
+        <input v-model="hideFree" type="checkbox" class="svc-hide-free-input" />
+        <span>{{ t('tables.hideFree') }}</span>
+      </label>
+    </div>
+    <p v-if="lastUpdate" class="svc-updated">{{ t('tables.updatedAt', { time: lastUpdate }) }}</p>
 
     <!-- ═══ ÉTATS ═══ -->
     <div v-if="loading && !loaded" class="svc-state">
       <span class="svc-spinner"></span>
-      <span>Chargement des tables…</span>
+      <span>{{ t('tables.loading') }}</span>
     </div>
     <div v-else-if="error && !spaces.length" class="svc-state svc-error">
       <p>⚠️ {{ error }}</p>
-      <button class="btn-primary" @click="load()">Réessayer</button>
+      <button class="btn-primary" @click="load()">{{ t('common.retry') }}</button>
     </div>
 
     <template v-else>
-      <p v-if="partial" class="svc-warning">⚠️ Données partielles — certaines informations n'ont pas pu être chargées.</p>
+      <p v-if="partial" class="svc-warning">⚠️ {{ t('tables.partial') }}</p>
 
       <!-- ═══ GRILLE TABLES ═══ -->
       <div v-if="visibleTables.length" class="svc-table-grid">
         <button
-          v-for="t in visibleTables"
-          :key="t.number"
+          v-for="table in visibleTables"
+          :key="table.number"
           class="svc-table"
-          :class="['state-' + t.state, { selected: mergeMode && selected.includes(t.number) }]"
-          @click="pickTable(t)"
+          :class="['state-' + table.state, { selected: mergeMode && selected.includes(table.number) }]"
+          :aria-label="t('tables.tableAria', { number: table.number, state: stateLabel(table.state) })"
+          @click="pickTable(table)"
         >
-          <span v-if="mergeMode && selected.includes(t.number)" class="svc-table-check">✓</span>
-          <span class="svc-table-num">{{ t.number }}</span>
-          <span class="svc-table-state">{{ stateLabel(t.state) }}</span>
-          <span v-if="t.linkedTo" class="svc-table-link">↔ T{{ t.linkedTo }}</span>
-          <span v-else-if="t.mergedWith?.length" class="svc-table-link">+ {{ t.mergedWith.join(', ') }}</span>
-          <span v-if="t.state !== 'libre'" class="svc-table-meta">
-            👤{{ t.covers || 1 }}<template v-if="t.itemCount"> · {{ t.itemCount }} art.</template>
+          <span v-if="mergeMode && selected.includes(table.number)" class="svc-table-check">✓</span>
+          <span v-else class="svc-table-badge" :class="'badge-' + table.state">{{ STATUS_DOTS[table.state] }}</span>
+          <span class="svc-table-num">{{ table.number }}</span>
+          <span class="svc-table-state">{{ stateLabel(table.state) }}</span>
+          <span v-if="table.linkedTo" class="svc-table-link">↔ T{{ table.linkedTo }}</span>
+          <span v-else-if="table.mergedWith?.length" class="svc-table-link">+ {{ table.mergedWith.join(', ') }}</span>
+          <span v-if="table.state !== 'libre'" class="svc-table-meta">
+            👤{{ table.covers || 1 }}<template v-if="table.itemCount"> · {{ t('tables.itemsShort', { count: table.itemCount }) }}</template>
           </span>
-          <span v-if="t.total" class="svc-table-total">{{ formatEur(t.total) }}</span>
+          <span v-if="table.total" class="svc-table-total">{{ formatEur(table.total) }}</span>
         </button>
       </div>
       <div v-else class="svc-state">
         <span class="svc-empty-icon">🪑</span>
-        <p>{{ filter === 'all' ? 'Aucune table dans le plan de salle.' : 'Aucune table dans ce filtre.' }}</p>
+        <p>{{ emptyLabel }}</p>
       </div>
 
       <!-- ═══ TABLE HORS PLAN ═══ -->
       <div class="svc-manual">
-        <label class="svc-manual-label" for="svc-manual-input">Autre table</label>
+        <label class="svc-manual-label" for="svc-manual-input">{{ t('tables.manual.label') }}</label>
         <input
           id="svc-manual-input"
           v-model="manualNumber"
@@ -103,26 +121,26 @@
           inputmode="numeric"
           min="1"
           max="999"
-          placeholder="N°"
+          :placeholder="t('tables.manual.placeholder')"
           @keydown.enter="openManual"
         />
-        <button class="btn-primary" :disabled="!manualValid" @click="openManual">Ouvrir</button>
+        <button class="btn-primary" :disabled="!manualValid" @click="openManual">{{ t('common.open') }}</button>
       </div>
     </template>
 
     <!-- ═══ BARRE DE FUSION ═══ -->
     <div v-if="mergeMode" class="svc-merge-bar">
       <span class="svc-merge-count">
-        {{ selected.length }} table(s)<template v-if="selected.length"> · {{ selected.join(', ') }}</template>
+        {{ t('tables.merge.count', { count: selected.length }) }}<template v-if="selected.length"> · {{ selected.join(', ') }}</template>
       </span>
-      <button class="btn-primary" :disabled="!canMerge" @click="openMergeConfirm">Fusionner</button>
+      <button class="btn-primary" :disabled="!canMerge" @click="openMergeConfirm">{{ t('tables.merge.button') }}</button>
     </div>
 
     <!-- ═══ CONFIRMATION FUSION ═══ -->
     <div v-if="mergeConfirm" class="modal-overlay" @click.self="mergeConfirm = null">
       <div class="modal-card">
-        <div class="modal-title">🔗 Fusionner {{ selected.length }} tables</div>
-        <p class="modal-text">Les notes seront réunies sur une seule note. Table principale :</p>
+        <div class="modal-title">🔗 {{ t('tables.merge.confirmTitle', { count: selected.length }) }}</div>
+        <p class="modal-text">{{ t('tables.merge.confirmText') }}</p>
         <div class="covers-grid">
           <button
             v-for="n in selected"
@@ -133,8 +151,8 @@
           >{{ n }}</button>
         </div>
         <div class="modal-actions">
-          <button class="btn-ghost" @click="mergeConfirm = null">Annuler</button>
-          <button class="btn-primary" :disabled="mergeConfirm.busy" @click="confirmMerge">Fusionner</button>
+          <button class="btn-ghost" @click="mergeConfirm = null">{{ t('common.cancel') }}</button>
+          <button class="btn-primary" :disabled="mergeConfirm.busy" @click="confirmMerge">{{ t('tables.merge.button') }}</button>
         </div>
       </div>
     </div>
@@ -145,8 +163,8 @@
     <!-- ═══ MODAL COUVERTS ═══ -->
     <div v-if="coversFor" class="modal-overlay" @click.self="coversFor = null">
       <div class="modal-card">
-        <div class="modal-title">👥 Table {{ coversFor.number }}</div>
-        <p class="modal-text">Nombre de couverts</p>
+        <div class="modal-title">👥 {{ t('common.table', { number: coversFor.number }) }}</div>
+        <p class="modal-text">{{ t('tables.covers.title') }}</p>
         <div class="covers-grid">
           <button
             v-for="n in 12"
@@ -157,8 +175,8 @@
           >{{ n }}</button>
         </div>
         <div class="modal-actions">
-          <button class="btn-ghost" @click="coversFor = null">Annuler</button>
-          <button class="btn-primary" @click="confirmCovers">Prendre la commande</button>
+          <button class="btn-ghost" @click="coversFor = null">{{ t('common.cancel') }}</button>
+          <button class="btn-primary" @click="confirmCovers">{{ t('tables.covers.start') }}</button>
         </div>
       </div>
     </div>
@@ -166,15 +184,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore'
 import EstablishmentSwitcher from '../../components/EstablishmentSwitcher.vue'
 import QrTableScanner from '../../components/QrTableScanner.vue'
-import { fetchTables, formatEur, TABLE_STATES, mergeTableTickets } from '../../shared/serviceOrders'
+import { fetchTables, formatEur, mergeTableTickets } from '../../shared/serviceOrders'
+import { useI18n } from '../../i18n'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t, intlLocale } = useI18n()
 
 const spaces = ref([])
 const activeSpaceId = ref(null)
@@ -190,8 +210,25 @@ const scannerOpen = ref(false)
 const mergeMode = ref(false)
 const selected = ref([])
 const mergeConfirm = ref(null)
+const lastUpdate = ref('')
 
-const POLL_INTERVAL = 15000
+// Badge par statut : 🟢 libre · 🔴 occupée · 🟡 réservée · ⚪ en attente (addition demandée)
+const STATUS_DOTS = { libre: '🟢', occupee: '🔴', reservee: '🟡', addition: '⚪' }
+const STATUS_ORDER = ['libre', 'occupee', 'reservee', 'addition']
+
+// « Masquer les tables libres » : mémorisé sur l'appareil
+const HIDE_FREE_KEY = 'tipsmana_hide_free_tables'
+const hideFree = ref(readHideFree())
+watch(hideFree, (v) => {
+  try { localStorage.setItem(HIDE_FREE_KEY, v ? '1' : '0') } catch { /* mode privé */ }
+})
+
+function readHideFree() {
+  try { return localStorage.getItem(HIDE_FREE_KEY) === '1' } catch { return false }
+}
+
+// Statut des tables rafraîchi toutes les 30 s (et au retour sur l'onglet)
+const POLL_INTERVAL = 30000
 let pollTimer = null
 
 const establishmentName = computed(() => authStore.establishment?.name || '')
@@ -205,16 +242,30 @@ const spaceTables = computed(() => activeSpace.value?.tables || [])
 const filters = computed(() => {
   const all = spaceTables.value
   return [
-    { key: 'all', label: 'Toutes', count: all.length },
-    { key: 'libre', label: 'Libres', count: all.filter(t => t.state === 'libre').length },
-    { key: 'occupee', label: 'Occupées', count: all.filter(t => t.state !== 'libre').length },
+    { key: 'all', label: t('common.all'), count: all.length },
+    { key: 'libre', label: t('tables.filters.free'), count: all.filter(x => x.state === 'libre').length },
+    { key: 'occupee', label: t('tables.filters.busy'), count: all.filter(x => x.state !== 'libre').length },
   ]
 })
 
+const statusCounts = computed(() =>
+  STATUS_ORDER.map(state => ({ state, count: spaceTables.value.filter(x => x.state === state).length }))
+    .filter(s => s.count || s.state === 'libre' || s.state === 'occupee')
+)
+
 const visibleTables = computed(() => {
-  if (filter.value === 'libre') return spaceTables.value.filter(t => t.state === 'libre')
-  if (filter.value === 'occupee') return spaceTables.value.filter(t => t.state !== 'libre')
-  return spaceTables.value
+  let list = spaceTables.value
+  if (filter.value === 'libre') list = list.filter(x => x.state === 'libre')
+  if (filter.value === 'occupee') list = list.filter(x => x.state !== 'libre')
+  // En mode fusion on garde les libres : elles peuvent rejoindre la note
+  if (hideFree.value && !mergeMode.value) list = list.filter(x => x.state !== 'libre')
+  return list
+})
+
+const emptyLabel = computed(() => {
+  if (!spaceTables.value.length) return t('tables.empty.noTables')
+  if (hideFree.value && filter.value !== 'occupee') return t('tables.empty.allFreeHidden')
+  return t('tables.empty.filter')
 })
 
 const manualValid = computed(() => {
@@ -227,7 +278,7 @@ const canMerge = computed(() =>
 )
 
 function stateLabel(state) {
-  return TABLE_STATES[state]?.label || 'Libre'
+  return t(`tables.states.${STATUS_DOTS[state] ? state : 'libre'}`)
 }
 
 async function load(silent = false) {
@@ -237,11 +288,12 @@ async function load(silent = false) {
     spaces.value = res.spaces
     partial.value = res.partial
     error.value = null
+    lastUpdate.value = new Date().toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
     if (!spaces.value.some(s => s.id === activeSpaceId.value)) {
       activeSpaceId.value = spaces.value[0]?.id || null
     }
   } catch (e) {
-    if (!silent) error.value = e.message || 'Impossible de charger les tables'
+    if (!silent) error.value = e.message || t('tables.errors.load')
   } finally {
     loading.value = false
     loaded.value = true
@@ -250,25 +302,25 @@ async function load(silent = false) {
 
 function findTable(number) {
   for (const s of spaces.value) {
-    const t = s.tables.find(x => x.number === number)
-    if (t) return t
+    const table = s.tables.find(x => x.number === number)
+    if (table) return table
   }
   return null
 }
 
-function pickTable(t) {
-  if (mergeMode.value) return toggleSelected(t)
+function pickTable(table) {
+  if (mergeMode.value) return toggleSelected(table)
   // Table rattachée à une note fusionnée : on ouvre la table principale
-  if (t.linkedTo) {
-    router.push({ name: 'ServiceOrder', params: { number: t.linkedTo } })
+  if (table.linkedTo) {
+    router.push({ name: 'ServiceOrder', params: { number: table.linkedTo } })
     return
   }
-  if (t.state === 'libre') {
+  if (table.state === 'libre') {
     covers.value = 2
-    coversFor.value = t
+    coversFor.value = table
     return
   }
-  router.push({ name: 'ServiceOrder', params: { number: t.number } })
+  router.push({ name: 'ServiceOrder', params: { number: table.number } })
 }
 
 /* ═══ Fusion ═══ */
@@ -282,8 +334,8 @@ function toggleMergeMode() {
   mergeConfirm.value = null
 }
 
-function toggleSelected(t) {
-  const n = t.linkedTo || t.number
+function toggleSelected(table) {
+  const n = table.linkedTo || table.number
   selected.value = selected.value.includes(n)
     ? selected.value.filter(x => x !== n)
     : [...selected.value, n].sort((a, b) => a - b)
@@ -307,21 +359,21 @@ async function confirmMerge() {
     mergeMode.value = false
     selected.value = []
     if (res.queued) {
-      toast('Hors-ligne : fusion mise en file', 'warning')
+      toast(t('tables.merge.queued'), 'warning')
       return
     }
-    toast(`Tables ${tables} fusionnées sur la table ${conf.target}`)
+    toast(t('tables.merge.done', { tables, target: conf.target }))
     router.push({ name: 'ServiceOrder', params: { number: conf.target } })
   } catch (e) {
     conf.busy = false
-    toast(e.data?.detail || e.message || 'Fusion impossible', 'error')
+    toast(e.data?.detail || e.message || t('tables.merge.failed'), 'error')
   }
 }
 
 function confirmCovers() {
-  const t = coversFor.value
+  const table = coversFor.value
   coversFor.value = null
-  router.push({ name: 'ServiceOrder', params: { number: t.number }, query: { covers: covers.value, open: 1 } })
+  router.push({ name: 'ServiceOrder', params: { number: table.number }, query: { covers: covers.value, open: 1 } })
 }
 
 function openManual() {
@@ -340,13 +392,25 @@ function onScanned(number) {
   openNumber(number)
 }
 
+// Onglet en arrière-plan : pas de requête ; au retour, rafraîchissement immédiat
+function poll() {
+  if (typeof document !== 'undefined' && document.hidden) return
+  load(true)
+}
+
+function onVisibility() {
+  if (!document.hidden) load(true)
+}
+
 onMounted(() => {
   load()
-  pollTimer = setInterval(() => load(true), POLL_INTERVAL)
+  pollTimer = setInterval(poll, POLL_INTERVAL)
+  document.addEventListener('visibilitychange', onVisibility)
 })
 
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
+  document.removeEventListener('visibilitychange', onVisibility)
 })
 </script>
 
@@ -426,16 +490,27 @@ onUnmounted(() => {
 .svc-table-state { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
 .svc-table-meta { font-size: 11px; color: var(--muted, #8a8aa0); }
 .svc-table-total { font-size: 12px; font-weight: 800; }
-.svc-table.state-libre { border-color: rgba(16, 185, 129, 0.45); }
+.svc-table-badge { position: absolute; top: 5px; right: 6px; font-size: 11px; line-height: 1; }
+
+/* Couleur de fond par statut : vert libre, rouge occupée, jaune réservée, gris en attente */
+.svc-table.state-libre { border-color: rgba(16, 185, 129, 0.55); background: rgba(16, 185, 129, 0.10); }
 .svc-table.state-libre .svc-table-state { color: var(--success, #10b981); }
-.svc-table.state-occupee { border-color: var(--amber, #f59e0b); background: rgba(245, 158, 11, 0.12); }
+.svc-table.state-occupee { border-color: var(--danger, #ef4444); background: rgba(239, 68, 68, 0.14); }
 .svc-table.state-occupee .svc-table-state,
-.svc-table.state-occupee .svc-table-total { color: var(--amber, #f59e0b); }
-.svc-table.state-addition { border-color: var(--danger, #ef4444); background: rgba(239, 68, 68, 0.12); }
+.svc-table.state-occupee .svc-table-total { color: var(--danger, #ef4444); }
+.svc-table.state-reservee { border-color: #eab308; background: rgba(234, 179, 8, 0.14); }
+.svc-table.state-reservee .svc-table-state { color: #eab308; }
+.svc-table.state-addition { border-color: #9ca3af; background: rgba(156, 163, 175, 0.16); }
 .svc-table.state-addition .svc-table-state,
-.svc-table.state-addition .svc-table-total { color: var(--danger, #ef4444); }
-.svc-table.state-reservee { border-color: #8b5cf6; background: rgba(139, 92, 246, 0.12); }
-.svc-table.state-reservee .svc-table-state { color: #a78bfa; }
+.svc-table.state-addition .svc-table-total { color: #9ca3af; }
+
+/* ─── Légende statuts ─── */
+.svc-status-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.svc-legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11px; font-weight: 700; color: var(--muted, #8a8aa0); }
+.svc-legend-item b { color: var(--text, #fff); margin-left: 1px; }
+.svc-hide-free { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.svc-hide-free-input { width: 16px; height: 16px; accent-color: var(--primary, #10b981); }
+.svc-updated { margin: -4px 0 0; font-size: 10px; color: var(--muted, #8a8aa0); }
 
 /* ─── Saisie manuelle ─── */
 .svc-manual {

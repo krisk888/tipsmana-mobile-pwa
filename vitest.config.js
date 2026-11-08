@@ -6,6 +6,7 @@ export default defineConfig(
     test: {
       include: ['tests/unit/**/*.test.mjs'],
       environment: 'happy-dom',
+      setupFiles: ['tests/unit/setup-i18n.mjs'],
     },
     resolve: {
       alias: {

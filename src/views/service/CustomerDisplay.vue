@@ -3,34 +3,34 @@
     <header class="cd-header">
       <img src="/images/logo_icon_m.jpg" alt="" class="cd-logo" />
       <div class="cd-header-main">
-        <div class="cd-kicker">Votre note</div>
-        <div class="cd-title">Table {{ note?.tableNumber || tableNumber || '—' }}</div>
+        <div class="cd-kicker">{{ t('service.customerDisplay.kicker') }}</div>
+        <div class="cd-title">{{ t('common.table', { number: note?.tableNumber || tableNumber || '—' }) }}</div>
       </div>
     </header>
 
     <!-- Note réglée -->
     <div v-if="closed" class="cd-state">
       <span class="cd-state-icon">✅</span>
-      <p class="cd-state-title">Note réglée</p>
-      <p class="cd-state-text">Merci de votre visite, à bientôt !</p>
+      <p class="cd-state-title">{{ t('service.customerDisplay.closedTitle') }}</p>
+      <p class="cd-state-text">{{ t('service.customerDisplay.closedText') }}</p>
     </div>
 
     <div v-else-if="!note && loading" class="cd-state">
       <span class="cd-spinner"></span>
-      <p class="cd-state-text">Chargement de votre note…</p>
+      <p class="cd-state-text">{{ t('service.customerDisplay.loading') }}</p>
     </div>
 
     <div v-else-if="!note" class="cd-state">
       <span class="cd-state-icon">🧾</span>
-      <p class="cd-state-title">Note indisponible</p>
-      <p class="cd-state-text">Demandez à votre serveur de vous présenter à nouveau le QR code.</p>
+      <p class="cd-state-title">{{ t('service.customerDisplay.unavailableTitle') }}</p>
+      <p class="cd-state-text">{{ t('service.customerDisplay.unavailableText') }}</p>
     </div>
 
     <template v-else>
       <main class="cd-list">
-        <p v-if="!note.items.length" class="cd-state-text">Aucun article commandé pour le moment.</p>
+        <p v-if="!note.items.length" class="cd-state-text">{{ t('service.customerDisplay.empty') }}</p>
         <section v-for="g in groups" :key="g.key" class="cd-group">
-          <h2 class="cd-group-title">{{ g.label }}</h2>
+          <h2 class="cd-group-title">{{ t(g.labelKey) }}</h2>
           <div v-for="i in g.lines" :key="i.id" class="cd-line">
             <span class="cd-qty">{{ i.qty }}</span>
             <span class="cd-name">{{ i.name }}</span>
@@ -41,15 +41,15 @@
 
       <footer class="cd-footer">
         <div class="cd-total">
-          <span>Total</span>
+          <span>{{ t('service.customerDisplay.total') }}</span>
           <span class="cd-total-amount">{{ formatEur(note.totalTtc) }}</span>
         </div>
         <div class="cd-sub">
-          dont TVA {{ formatEur(note.totalTtc - note.totalHt) }} · {{ itemCount }} article{{ itemCount > 1 ? 's' : '' }}
+          {{ t('service.customerDisplay.vatIncluded', { amount: formatEur(note.totalTtc - note.totalHt) }) }} · {{ t('common.items', { count: itemCount }) }}
         </div>
         <div class="cd-status" :class="{ stale }">
-          <template v-if="stale">Hors connexion — note du {{ formatTime(updatedAt) }}</template>
-          <template v-else>Mise à jour automatique · {{ formatTime(updatedAt) }}</template>
+          <template v-if="stale">{{ t('service.customerDisplay.offline', { time: formatTime(updatedAt) }) }}</template>
+          <template v-else>{{ t('service.customerDisplay.autoUpdate', { time: formatTime(updatedAt) }) }}</template>
         </div>
       </footer>
     </template>
@@ -60,6 +60,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { decodeSnapshot, fetchCustomerNote, groupByCourse, formatEur, toNumber } from '../../shared/serviceOrders'
+import { useI18n } from '../../i18n'
+
+const { t, intlLocale } = useI18n()
 
 const REFRESH_MS = 10000
 
@@ -82,7 +85,7 @@ const itemCount = computed(() => (note.value?.items || []).reduce((s, i) => s + 
 
 function formatTime(ts) {
   if (!ts) return '—'
-  return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  return new Date(ts).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
 }
 
 async function refresh() {

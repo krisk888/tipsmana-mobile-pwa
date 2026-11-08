@@ -13,6 +13,7 @@
  */
 import { checkKitchenTransitions } from './serviceOrders'
 import { initPushSubscription } from './push'
+import { t } from '../i18n'
 
 const ASKED_KEY = 'tipsmana_notif_asked'
 const DEFAULT_INTERVAL = 20000
@@ -63,10 +64,10 @@ async function showSystemNotification(title, options) {
 }
 
 export function statusMessage({ tableNumber, to }) {
-  const table = tableNumber ? `Table ${tableNumber}` : 'Commande'
-  if (to === 'servi') return `✅ ${table} : commande servie`
-  if (to === 'en_cuisine') return `🔥 ${table} : commande en cuisine`
-  return `${table} : statut mis à jour`
+  const table = tableNumber ? t('common.table', { number: tableNumber }) : t('service.notifications.order')
+  if (to === 'servi') return t('service.notifications.served', { table })
+  if (to === 'en_cuisine') return t('service.notifications.inKitchen', { table })
+  return t('service.notifications.updated', { table })
 }
 
 /**
@@ -77,7 +78,7 @@ export async function notifyOrderStatus(transition) {
   const message = statusMessage(transition)
   toast(message)
   if (typeof document !== 'undefined' && document.visibilityState === 'visible') return
-  await showSystemNotification('Tipsmana — Service', {
+  await showSystemNotification(t('service.notifications.title'), {
     body: message,
     tag: `order-${transition.ticketId || transition.tableNumber}`,
     icon: '/mobile/icons/icon-192.png',

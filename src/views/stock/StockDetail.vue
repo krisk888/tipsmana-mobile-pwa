@@ -3,40 +3,40 @@
     <header class="page-header">
       <button class="back-btn" @click="$router.push('/stock')">←</button>
       <div>
-        <h2>{{ session.session_name || 'Session stock' }}</h2>
+        <h2>{{ session.session_name || t('stock.detail.fallbackTitle') }}</h2>
         <p class="subtitle">{{ statusLabel(session.status) }} · {{ fmtDate(session.session_date) }}</p>
       </div>
     </header>
 
-    <div v-if="loading" class="state">Chargement…</div>
+    <div v-if="loading" class="state">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="state error">{{ error }}</div>
 
     <template v-else>
       <div class="info-card">
-        <div class="info-row"><span>Type</span><b>{{ typeLabel(session.session_type) }}</b></div>
-        <div class="info-row"><span>Démarrée par</span><b>{{ session.started_by_user_name || '—' }}</b></div>
-        <div class="info-row" v-if="session.completed_at"><span>Terminée</span><b>{{ fmtDateTime(session.completed_at) }}</b></div>
-        <div class="info-row" v-if="session.validated_at"><span>Validée</span><b>{{ fmtDateTime(session.validated_at) }}</b></div>
-        <div class="info-row" v-if="session.notes"><span>Notes</span><b>{{ session.notes }}</b></div>
+        <div class="info-row"><span>{{ t('stock.detail.type') }}</span><b>{{ typeLabel(session.session_type) }}</b></div>
+        <div class="info-row"><span>{{ t('stock.detail.startedBy') }}</span><b>{{ session.started_by_user_name || '—' }}</b></div>
+        <div class="info-row" v-if="session.completed_at"><span>{{ t('stock.detail.completed') }}</span><b>{{ fmtDateTime(session.completed_at) }}</b></div>
+        <div class="info-row" v-if="session.validated_at"><span>{{ t('stock.detail.validated') }}</span><b>{{ fmtDateTime(session.validated_at) }}</b></div>
+        <div class="info-row" v-if="session.notes"><span>{{ t('stock.detail.notes') }}</span><b>{{ session.notes }}</b></div>
       </div>
 
       <div class="actions" v-if="session.status === 'in_progress'">
-        <button class="btn-complete" @click="completeSession">✓ Terminer le comptage</button>
+        <button class="btn-complete" @click="completeSession">{{ t('stock.detail.complete') }}</button>
       </div>
 
-      <h3 class="section-title">Décomptes ({{ counts.length }})</h3>
+      <h3 class="section-title">{{ t('stock.detail.counts', { n: counts.length }) }}</h3>
       <div v-if="counts.length === 0" class="state empty">
-        <p>Aucun produit compté. Scanne le premier produit.</p>
-        <router-link to="/scan" class="btn-scan">📷 Scanner</router-link>
+        <p>{{ t('stock.detail.empty') }}</p>
+        <router-link to="/scan" class="btn-scan">{{ t('stock.detail.scan') }}</router-link>
       </div>
       <div v-for="c in counts" :key="c.id" class="count-card">
         <div class="count-head">
           <strong>{{ c.product_name || c.product_id }}</strong>
-          <span class="count-qty">{{ c.quantity != null ? c.quantity : '—' }} {{ c.unit || 'u' }}</span>
+          <span class="count-qty">{{ c.quantity != null ? c.quantity : '—' }} {{ c.unit || t('stock.unitShort') }}</span>
         </div>
         <div class="count-meta" v-if="c.expected_quantity != null">
-          <span>Théorique : {{ c.expected_quantity }}</span>
-          <span :class="varianceClass(c)">Écart : {{ variance(c) }}</span>
+          <span>{{ t('stock.detail.theoretical', { n: c.expected_quantity }) }}</span>
+          <span :class="varianceClass(c)">{{ t('stock.detail.variance', { v: variance(c) }) }}</span>
         </div>
       </div>
     </template>
@@ -47,6 +47,9 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../../shared/api'
+import { useI18n } from '../../i18n'
+
+const { t, intlLocale } = useI18n()
 
 const route = useRoute()
 const session = ref({})
@@ -55,18 +58,18 @@ const loading = ref(true)
 const error = ref(null)
 
 function statusLabel(s) {
-  return { in_progress: 'En cours', completed: 'Terminée', validated: 'Validée', cancelled: 'Annulée' }[s] || (s || '—')
+  return ['in_progress', 'completed', 'validated', 'cancelled'].includes(s) ? t(`stock.status.${s}`) : (s || '—')
 }
-function typeLabel(t) {
-  return { physical_count: 'Comptage physique', theoretical: 'Théorique' }[t] || (t || '—')
+function typeLabel(type) {
+  return ['physical_count', 'theoretical'].includes(type) ? t(`stock.detail.types.${type}`) : (type || '—')
 }
 function fmtDate(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(iso).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short', year: 'numeric' })
 }
 function fmtDateTime(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleString(intlLocale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 function variance(c) {
   if (c.quantity == null || c.expected_quantity == null) return '—'
@@ -102,7 +105,7 @@ async function completeSession() {
     await api.put(`/inventory/sessions/${route.params.id}/complete`, {})
     await load()
   } catch (e) {
-    error.value = e.message || 'Échec de la clôture'
+    error.value = e.message || t('stock.detail.closeFailed')
   }
 }
 

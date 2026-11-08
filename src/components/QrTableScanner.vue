@@ -2,8 +2,8 @@
   <div class="qr-overlay" @click.self="$emit('close')">
     <div class="qr-card">
       <div class="qr-head">
-        <span class="qr-title">📷 Scanner une table</span>
-        <button class="qr-close" aria-label="Fermer" @click="$emit('close')">✕</button>
+        <span class="qr-title">📷 {{ t('service.qrScanner.title') }}</span>
+        <button class="qr-close" :aria-label="t('common.close')" @click="$emit('close')">✕</button>
       </div>
 
       <div v-if="!cameraError" class="qr-viewport">
@@ -11,17 +11,17 @@
         <div class="qr-frame"></div>
         <div v-if="starting" class="qr-viewport-state">
           <span class="qr-spinner"></span>
-          <span>Ouverture de la caméra…</span>
+          <span>{{ t('service.qrScanner.openingCamera') }}</span>
         </div>
       </div>
-      <p v-else class="qr-error">⚠️ {{ cameraError }}</p>
+      <p v-else class="qr-error">⚠️ {{ t(cameraError) }}</p>
 
-      <p v-if="hint" class="qr-hint">{{ hint }}</p>
-      <p v-else-if="!cameraError" class="qr-hint">Visez le QR code posé sur la table</p>
+      <p v-if="hint" class="qr-hint">{{ t(hint) }}</p>
+      <p v-else-if="!cameraError" class="qr-hint">{{ t('service.qrScanner.aimHint') }}</p>
 
       <!-- Repli : saisie manuelle -->
       <div class="qr-manual">
-        <label class="qr-manual-label" for="qr-manual-input">N° de table</label>
+        <label class="qr-manual-label" for="qr-manual-input">{{ t('service.qrScanner.tableNumberLabel') }}</label>
         <input
           id="qr-manual-input"
           v-model="manualNumber"
@@ -30,10 +30,10 @@
           inputmode="numeric"
           min="1"
           max="999"
-          placeholder="N°"
+          :placeholder="t('service.qrScanner.tableNumberPlaceholder')"
           @keydown.enter="submitManual"
         />
-        <button class="qr-btn" :disabled="!manualValid" @click="submitManual">Ouvrir</button>
+        <button class="qr-btn" :disabled="!manualValid" @click="submitManual">{{ t('common.open') }}</button>
       </div>
     </div>
     <canvas ref="canvasEl" class="qr-canvas"></canvas>
@@ -43,12 +43,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { parseTableQr } from '../shared/serviceOrders'
+import { useI18n } from '../i18n'
 
 const emit = defineEmits(['detected', 'close'])
+const { t } = useI18n()
 
 const videoEl = ref(null)
 const canvasEl = ref(null)
 const starting = ref(true)
+// Clés i18n (traduites au rendu : suit un changement de langue)
 const cameraError = ref('')
 const hint = ref('')
 const manualNumber = ref('')
@@ -87,9 +90,9 @@ function stopCamera() {
 }
 
 function cameraErrorMessage(e) {
-  if (e?.name === 'NotAllowedError' || e?.name === 'SecurityError') return 'Accès à la caméra refusé — saisissez le numéro de table.'
-  if (e?.name === 'NotFoundError' || e?.name === 'OverconstrainedError') return 'Aucune caméra détectée — saisissez le numéro de table.'
-  return 'Caméra indisponible — saisissez le numéro de table.'
+  if (e?.name === 'NotAllowedError' || e?.name === 'SecurityError') return 'service.qrScanner.cameraDenied'
+  if (e?.name === 'NotFoundError' || e?.name === 'OverconstrainedError') return 'service.qrScanner.noCamera'
+  return 'service.qrScanner.cameraUnavailable'
 }
 
 function scanFrame(now) {
@@ -112,12 +115,12 @@ function scanFrame(now) {
 
   const number = parseTableQr(code.data)
   if (number) finish(number)
-  else hint.value = 'QR code non reconnu comme une table'
+  else hint.value = 'service.qrScanner.notRecognized'
 }
 
 async function startCamera() {
   if (!navigator.mediaDevices?.getUserMedia) {
-    cameraError.value = 'Caméra non disponible sur cet appareil — saisissez le numéro de table.'
+    cameraError.value = 'service.qrScanner.cameraUnsupported'
     starting.value = false
     return
   }

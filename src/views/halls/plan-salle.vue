@@ -6,13 +6,13 @@
         <button class="ps-back-btn" @click="goBack">
           <TipsIcon name="quitter" :size="20" />
         </button>
-        <h1 class="ps-title">🪑 Plan de salle</h1>
+        <h1 class="ps-title">{{ t('halls.title') }}</h1>
       </div>
       <div class="ps-header-right">
-        <span class="ps-ws-status" :class="{ connected }" :title="connected ? 'Temps réel connecté' : 'Temps réel déconnecté'">
+        <span class="ps-ws-status" :class="{ connected }" :title="connected ? t('halls.wsConnected') : t('halls.wsDisconnected')">
           <span class="ps-ws-dot"></span>
         </span>
-        <button class="ps-refresh-btn" @click="loadSpaces" :disabled="loading" title="Rafraîchir">
+        <button class="ps-refresh-btn" @click="loadSpaces" :disabled="loading" :title="t('common.refresh')">
           <span :class="{ spinning: loading }">⟳</span>
         </button>
       </div>
@@ -35,10 +35,10 @@
     <!-- ═══ CANEVAS PLAN ═══ -->
     <div class="ps-canvas-wrap" v-if="activeSpace">
       <div class="ps-legend">
-        <span><span class="lgd lgd-libre"></span> Libre</span>
-        <span><span class="lgd lgd-commande"></span> Commande</span>
-        <span><span class="lgd lgd-occupee"></span> Occupé</span>
-        <span><span class="lgd lgd-reservee"></span> Réservé</span>
+        <span><span class="lgd lgd-libre"></span> {{ t('halls.legend.free') }}</span>
+        <span><span class="lgd lgd-commande"></span> {{ t('halls.legend.order') }}</span>
+        <span><span class="lgd lgd-occupee"></span> {{ t('halls.legend.occupied') }}</span>
+        <span><span class="lgd lgd-reservee"></span> {{ t('halls.legend.reserved') }}</span>
       </div>
 
       <div
@@ -51,46 +51,46 @@
         @mouseleave="onDragEnd"
       >
         <div
-          v-for="t in activeSpace.tables"
-          :key="t.number"
+          v-for="tb in activeSpace.tables"
+          :key="tb.number"
           class="ps-table"
           :class="[
-            t.shape || 'round',
-            t.size || 'medium',
-            'state-' + (t.state || 'libre'),
-            { dragging: isDragging && dragTable && dragTable.number === t.number }
+            tb.shape || 'round',
+            tb.size || 'medium',
+            'state-' + (tb.state || 'libre'),
+            { dragging: isDragging && dragTable && dragTable.number === tb.number }
           ]"
-          :style="tableStyle(t)"
-          @touchstart.prevent="onTouchStart(t, $event)"
-          @mousedown.prevent="onTableMouseDown(t, $event)"
-          @click.stop="onTableClick(t)"
+          :style="tableStyle(tb)"
+          @touchstart.prevent="onTouchStart(tb, $event)"
+          @mousedown.prevent="onTableMouseDown(tb, $event)"
+          @click.stop="onTableClick(tb)"
         >
-          <span class="ps-table-num">{{ t.number }}</span>
-          <span v-if="t.state !== 'libre'" class="ps-table-info">
-            <span class="ps-table-covers">👤{{ t.covers || 1 }}</span>
-            <span class="ps-table-serveur">{{ t.serveur }}</span>
+          <span class="ps-table-num">{{ tb.number }}</span>
+          <span v-if="tb.state !== 'libre'" class="ps-table-info">
+            <span class="ps-table-covers">👤{{ tb.covers || 1 }}</span>
+            <span class="ps-table-serveur">{{ tb.serveur }}</span>
           </span>
           <!-- Floating action: navigate to caisse -->
           <div
-            v-if="tableActionsShown === t.number"
+            v-if="tableActionsShown === tb.number"
             class="ps-table-actions"
             @click.stop
           >
             <button
               class="ps-ta-btn"
-              @click.stop="navigateToCaisse(t)"
-              title="Voir en caisse"
+              @click.stop="navigateToCaisse(tb)"
+              :title="t('halls.viewInCaisse')"
             >🛒</button>
             <button
               class="ps-ta-btn ps-ta-close"
               @click.stop="hideTableActions"
-              title="Fermer"
+              :title="t('common.close')"
             >✕</button>
           </div>
         </div>
 
         <div v-if="!activeSpace.tables.length" class="ps-empty">
-          Aucune table configurée dans cet espace.
+          {{ t('halls.noTables') }}
         </div>
       </div>
     </div>
@@ -98,16 +98,16 @@
     <!-- ═══ LOADING / ERROR ═══ -->
     <div v-if="loading && !spaces.length" class="ps-loading">
       <span class="ps-spinner"></span>
-      <span>Chargement du plan de salle…</span>
+      <span>{{ t('halls.loading') }}</span>
     </div>
     <div v-else-if="error" class="ps-error">
       <p>❌ {{ error }}</p>
-      <button class="ps-retry-btn" @click="loadSpaces">Réessayer</button>
+      <button class="ps-retry-btn" @click="loadSpaces">{{ t('common.retry') }}</button>
     </div>
     <div v-else-if="!spaces.length && !loading" class="ps-empty-full">
       <span class="ps-empty-icon">🪑</span>
-      <p>Aucun espace configuré.</p>
-      <p class="ps-empty-hint">Configurez le plan de salle depuis la caisse.</p>
+      <p>{{ t('halls.noSpaces') }}</p>
+      <p class="ps-empty-hint">{{ t('halls.noSpacesHint') }}</p>
     </div>
   </div>
 </template>
@@ -117,6 +117,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../shared/api'
 import TipsIcon from '../../components/TipsIcon.vue'
+import { useI18n } from '../../i18n'
+
+const { t } = useI18n()
 
 const router = useRouter()
 
@@ -171,7 +174,7 @@ async function loadSpaces() {
       activeSpaceId.value = list[0].id
     }
   } catch (e) {
-    error.value = e.message || 'Erreur de chargement du plan de salle'
+    error.value = e.message || t('halls.loadError')
   } finally {
     loading.value = false
   }

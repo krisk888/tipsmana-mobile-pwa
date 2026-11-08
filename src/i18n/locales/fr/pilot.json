@@ -1,0 +1,66 @@
+{
+  "pilot": {
+    "dashboard": {
+      "greeting": "Bonjour {name}",
+      "loadingKpis": "Chargement des indicateurs",
+      "connectionFailed": "Connexion impossible",
+      "serverUnreachable": "Le serveur est injoignable. Vérifiez votre connexion.",
+      "offlineData": "📡 Données hors ligne — dernière synchro : {time}",
+      "pendingOrders": "Commandes en cours",
+      "pendingNone": "Aucune commande en attente",
+      "pendingCount": "{count} commande en attente | {count} commandes en attente",
+      "dayRevenue": "Chiffre d'affaires du jour",
+      "transactions": "{count} transactions",
+      "floorplan": "Plan de salle",
+      "legend": {
+        "libre": "Libre",
+        "occupee": "Occupée",
+        "addition": "Addition"
+      },
+      "tableState": {
+        "libre": "libre",
+        "occupee": "occupée",
+        "addition": "addition"
+      },
+      "tableTitle": "Table {number} — {state}",
+      "tableTitleServer": "Table {number} — {state} ({server})",
+      "hourlyActivity": "Activité horaire",
+      "hourlyUnavailable": "Données horaires non disponibles",
+      "chartRevenueTitle": "{label} — CA: {amount}",
+      "chartOrdersTitle": "{label} — {count} commande(s)",
+      "legendRevenue": "CA",
+      "legendOrders": "Commandes",
+      "kpi": {
+        "todayRevenue": "CA aujourd'hui",
+        "avgTicket": "Ticket moyen",
+        "perTicket": "CA / ticket",
+        "grossMargin": "Marge brute",
+        "activeProducts": "Produits actifs",
+        "lowStock": "{count} en stock faible"
+      },
+      "alerts": "Alertes",
+      "alertFallback": "Alerte",
+      "recentActivity": "Activité récente",
+      "quickActions": "Actions rapides",
+      "actionValidations": "✅ Validations",
+      "actionScan": "📷 Scanner",
+      "actionStock": "📦 Inventaire",
+      "timeAgo": {
+        "justNow": "à l'instant",
+        "minutes": "il y a {n} min",
+        "hours": "il y a {n} h"
+      }
+    },
+    "validations": {
+      "title": "✅ Validations",
+      "subtitle": "Factures fournisseurs en attente",
+      "upToDate": "Tout est à jour !",
+      "unknownSupplier": "Fournisseur inconnu",
+      "lines": "{count} lignes",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "error": "Erreur: {message}",
+      "rejectReason": "Motif du rejet ?"
+    }
+  }
+}

@@ -53,19 +53,19 @@
             <span v-if="notifCount > 0" class="notif-badge">{{ notifCount > 99 ? '99+' : notifCount }}</span>
             <span v-if="pendingCount > 0 && !isOnline" class="offline-dot"></span>
           </span>
-          <span class="nav-label">Alertes</span>
+          <span class="nav-label">{{ t('common.nav.alerts') }}</span>
         </router-link>
 
         <router-link to="/profile" class="nav-item" :class="{ active: $route.path === '/profile' }">
           <span class="nav-icon-wrap">
             <TipsIcon name="users_edit_users" :size="20" class="nav-icon" />
           </span>
-          <span class="nav-label">Profil</span>
+          <span class="nav-label">{{ t('common.nav.profile') }}</span>
         </router-link>
 
         <button class="nav-item nav-logout" @click="handleLogout">
           <TipsIcon name="quitter" :size="22" class="nav-icon" />
-          <span class="nav-label">Quitter</span>
+          <span class="nav-label">{{ t('common.nav.quit') }}</span>
         </button>
       </nav>
     </div>
@@ -73,22 +73,24 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
 import { useOffline } from './shared/useOffline'
 import TipsIcon from './components/TipsIcon.vue'
 import OfflineBanner from './components/OfflineBanner.vue'
-import EstablishmentSwitcher from './components/EstablishmentSwitcher.vue'
 import api from './shared/api'
+import { useI18n } from './i18n'
 import { offlineStore } from './shared/offlineStore'
-import { initPushSubscription } from './shared/push'
-import { startOrderStatusWatcher } from './shared/orderNotifications'
-import { currentEstablishmentId } from './shared/serviceOrders'
+
+// Hors du bundle initial : bascule (boss multi-établissement seulement),
+// push et suivi des commandes (serviceOrders) chargés à la demande
+const EstablishmentSwitcher = defineAsyncComponent(() => import('./components/EstablishmentSwitcher.vue'))
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 // Pages sans navigation : connexion, écran client
 const isLoginPage = computed(() => route.path === '/login' || !!route.meta.bare)
 const showEstSwitcher = computed(() =>
@@ -114,15 +116,24 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
   if (isAuth && !pushRequested.value) {
     pushRequested.value = true
     // Rôles de salle : permission demandée au premier envoi en cuisine (OrderTaking)
-    initPushSubscription({ prompt: !FLOOR_ROLES.includes(authStore.roleCode) })
+    const prompt = !FLOOR_ROLES.includes(authStore.roleCode)
+    import('./shared/push').then(m => m.initPushSubscription({ prompt })).catch(() => {})
   }
 }, { immediate: true })
 
 // Suivi des commandes de table (en cuisine → servi) pour les rôles du service en salle
 const SERVICE_ROLES = ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR']
 let stopOrderWatcher = null
-watch(() => authStore.isAuthenticated && SERVICE_ROLES.includes(authStore.roleCode), (active) => {
+let watcherActive = false
+watch(() => authStore.isAuthenticated && SERVICE_ROLES.includes(authStore.roleCode), async (active) => {
+  watcherActive = active
   if (active && !stopOrderWatcher) {
+    const [{ startOrderStatusWatcher }, { currentEstablishmentId }] = await Promise.all([
+      import('./shared/orderNotifications'),
+      import('./shared/serviceOrders'),
+    ])
+    // Déconnexion pendant le chargement du chunk : on ne démarre pas
+    if (!watcherActive || stopOrderWatcher) return
     stopOrderWatcher = startOrderStatusWatcher({ getEstId: currentEstablishmentId })
   } else if (!active && stopOrderWatcher) {
     stopOrderWatcher()

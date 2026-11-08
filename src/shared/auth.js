@@ -1,5 +1,6 @@
 import { api } from './api'
 import { reactive } from 'vue'
+import { t } from '../i18n'
 
 export const auth = reactive({
   user: null,
@@ -39,7 +40,7 @@ export async function login(email, password) {
 
     return auth
   } catch (err) {
-    auth.error = err.message || 'Erreur de connexion'
+    auth.error = err.message || t('common.errors.login')
     throw err
   } finally {
     auth.loading = false

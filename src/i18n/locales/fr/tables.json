@@ -1,0 +1,50 @@
+{
+  "tables": {
+    "title": "Service",
+    "scanQr": "Scanner le QR d'une table",
+    "loading": "Chargement des tables…",
+    "partial": "Données partielles — certaines informations n'ont pas pu être chargées.",
+    "otherSpace": "Autres",
+    "hideFree": "Masquer les tables libres",
+    "updatedAt": "Mis à jour à {time} · actualisation toutes les 30 s",
+    "tableAria": "Table {number} — {state}",
+    "itemsShort": "{count} art. | {count} art.",
+    "states": {
+      "libre": "Libre",
+      "occupee": "Occupée",
+      "reservee": "Réservée",
+      "addition": "En attente"
+    },
+    "filters": {
+      "free": "Libres",
+      "busy": "Occupées"
+    },
+    "empty": {
+      "noTables": "Aucune table dans le plan de salle.",
+      "filter": "Aucune table dans ce filtre.",
+      "allFreeHidden": "Aucune table occupée — les tables libres sont masquées."
+    },
+    "manual": {
+      "label": "Autre table",
+      "placeholder": "N°"
+    },
+    "merge": {
+      "hint": "Touchez les tables à réunir sur une seule note (2 minimum, dont au moins une occupée).",
+      "title": "Fusionner des tables",
+      "button": "Fusionner",
+      "count": "{count} table(s) | {count} table(s)",
+      "confirmTitle": "Fusionner {count} tables",
+      "confirmText": "Les notes seront réunies sur une seule note. Table principale :",
+      "queued": "Hors-ligne : fusion mise en file",
+      "done": "Tables {tables} fusionnées sur la table {target}",
+      "failed": "Fusion impossible"
+    },
+    "covers": {
+      "title": "Nombre de couverts",
+      "start": "Prendre la commande"
+    },
+    "errors": {
+      "load": "Impossible de charger les tables"
+    }
+  }
+}

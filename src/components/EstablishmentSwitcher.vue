@@ -6,12 +6,12 @@
       :disabled="switching || establishments.length < 2"
       aria-haspopup="listbox"
       :aria-expanded="open"
-      :aria-label="`Établissement actif : ${active?.name || '—'}`"
+      :aria-label="t('ui.establishment.activeAria', { name: active?.name || '—' })"
       @click="toggle"
     >
       <span class="est-dot" :class="{ busy: switching }"></span>
       <span class="est-text">
-        <span class="est-caption">Établissement actif</span>
+        <span class="est-caption">{{ t('ui.establishment.active') }}</span>
         <span class="est-name">{{ active?.name || '—' }}</span>
       </span>
       <span v-if="establishments.length > 1" class="est-chevron" aria-hidden="true">▾</span>
@@ -32,7 +32,7 @@
           @keydown.enter.prevent="select(est)"
           @keydown.space.prevent="select(est)"
         >
-          <span class="est-option-name">{{ est.name || `Établissement ${est.id}` }}</span>
+          <span class="est-option-name">{{ est.name || t('ui.establishment.fallbackName', { id: est.id }) }}</span>
           <span v-if="est.role_name || est.role_code" class="est-option-role">{{ est.role_name || est.role_code }}</span>
           <span v-if="isActive(est)" class="est-check" aria-hidden="true">✓</span>
         </li>
@@ -44,6 +44,9 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import { useI18n } from '../i18n'
+
+const { t } = useI18n()
 
 const authStore = useAuthStore()
 const root = ref(null)
@@ -67,7 +70,7 @@ async function select(est) {
   open.value = false
   if (isActive(est)) return
   const ok = await authStore.setEstablishment(est.id)
-  if (ok && window.__showToast) window.__showToast(`Établissement : ${est.name || est.id}`)
+  if (ok && window.__showToast) window.__showToast(t('ui.establishment.switched', { name: est.name || est.id }))
 }
 
 function onDocClick(e) {

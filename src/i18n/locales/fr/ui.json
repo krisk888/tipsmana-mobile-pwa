@@ -1,0 +1,27 @@
+{
+  "ui": {
+    "offline": {
+      "restored": "Connexion rétablie",
+      "syncRequests": "Sync {count} requête | Sync {count} requêtes",
+      "syncing": "Synchronisation...",
+      "synced": "{count} sync ✓ | {count} syncs ✓",
+      "offline": "Hors ligne",
+      "pending": "{count} requête en attente | {count} requêtes en attente",
+      "usingCache": "Utilisation du cache"
+    },
+    "establishment": {
+      "activeAria": "Établissement actif : {name}",
+      "active": "Établissement actif",
+      "fallbackName": "Établissement {id}",
+      "switched": "Établissement : {name}"
+    },
+    "theme": {
+      "day": "Jour",
+      "night": "Nuit",
+      "auto": "Auto",
+      "ariaDark": "Mode sombre — cliquer pour passer en mode clair",
+      "ariaLight": "Mode clair — cliquer pour passer en mode auto",
+      "ariaAuto": "Mode auto (sombre de 20h à 7h) — cliquer pour passer en mode sombre"
+    }
+  }
+}
