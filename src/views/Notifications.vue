@@ -24,6 +24,8 @@
       </p>
     </header>
 
+    <PushPermissionCard />
+
     <div class="filter-bar">
         <div class="priority-filters">
           <button
@@ -104,6 +106,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../shared/api'
+import { clearOrderBadge } from '../shared/appBadge'
+import PushPermissionCard from '../components/PushPermissionCard.vue'
 import { useI18n } from '../i18n'
 
 const { t, intlLocale } = useI18n()
@@ -295,6 +299,8 @@ async function pollNotifications() {
 }
 
 onMounted(() => {
+  // Écran ouvert : les notifications sont vues, le badge de l'icône repart de zéro
+  clearOrderBadge().catch(() => {})
   fetchNotifications(false)
   // Start 30s polling for real-time notifications
   pollTimer = setInterval(pollNotifications, 30000)

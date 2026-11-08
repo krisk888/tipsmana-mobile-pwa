@@ -25,6 +25,25 @@
       "minutes": "il y a {n} min",
       "hours": "il y a {n}h",
       "days": "il y a {n}j"
+    },
+    "push": {
+      "enable": "Activer les notifications",
+      "prompt": {
+        "title": "Recevoir les alertes en temps réel",
+        "text": "Nouvelle commande, commande prête, message de l'équipe : soyez prévenu même app fermée."
+      },
+      "denied": {
+        "title": "Notifications bloquées",
+        "text": "Réactivez-les dans les réglages du site (cadenas de la barre d'adresse). En attendant, l'app vérifie les nouveautés toutes les 30 s quand elle est ouverte."
+      },
+      "unsupported": {
+        "title": "Notifications push indisponibles",
+        "text": "Ce navigateur ne gère pas les notifications push (sur iPhone : ajoutez l'app à l'écran d'accueil). L'app vérifie les nouveautés toutes les 30 s quand elle est ouverte."
+      },
+      "failed": {
+        "title": "Abonnement push impossible",
+        "text": "Les notifications sont autorisées mais l'abonnement a échoué (réseau ou serveur non configuré). L'app vérifie les nouveautés toutes les 30 s quand elle est ouverte."
+      }
     }
   }
 }

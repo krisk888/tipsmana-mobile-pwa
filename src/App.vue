@@ -112,12 +112,22 @@ const FLOOR_ROLES = ['SERVEUR', 'VENTES']
 
 // Push : une seule tentative par session — ne re-demande pas la permission à chaque login
 const pushRequested = ref(false)
+let stopForegroundPushes = null
 watch(() => authStore.isAuthenticated, (isAuth) => {
   if (isAuth && !pushRequested.value) {
     pushRequested.value = true
     // Rôles de salle : permission demandée au premier envoi en cuisine (OrderTaking)
     const prompt = !FLOOR_ROLES.includes(authStore.roleCode)
-    import('./shared/push').then(m => m.initPushSubscription({ prompt })).catch(() => {})
+    import('./shared/push').then(m => {
+      m.initPushSubscription({ prompt })
+      // App au premier plan : le service worker relaie le push au lieu d'afficher
+      // une notification système → toast + compteur de la cloche à jour
+      stopForegroundPushes = m.listenForegroundPushes((msg) => {
+        showToast(msg.body ? `${msg.title} — ${msg.body}` : msg.title, msg.kind === 'new_order' ? 'warning' : 'success')
+        try { navigator.vibrate?.([200, 100, 200]) } catch { /* non supporté */ }
+        authStore.fetchNotificationCount()
+      })
+    }).catch(() => {})
   }
 }, { immediate: true })
 
@@ -219,6 +229,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (notifInterval) clearInterval(notifInterval)
   if (stopOrderWatcher) stopOrderWatcher()
+  if (stopForegroundPushes) stopForegroundPushes()
   onlineEvent.removeEventListener('online', onReconnect)
 })
 </script>

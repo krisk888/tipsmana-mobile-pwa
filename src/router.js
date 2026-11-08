@@ -97,6 +97,13 @@ const routes = [
     meta: { titleKey: 'common.titles.waiterCall', public: true, bare: true }
   },
   {
+    // Avis client : page ouverte par le QR code affiché après le solde de la table, sans connexion
+    path: '/feedback',
+    name: 'Feedback',
+    component: () => import('./views/service/Feedback.vue'),
+    meta: { titleKey: 'common.titles.feedback', public: true, bare: true }
+  },
+  {
     path: '/halls',
     name: 'plan-salle',
     component: () => import('./views/halls/plan-salle.vue'),

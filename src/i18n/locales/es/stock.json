@@ -178,6 +178,53 @@
       "manualEntry": "Introducir cantidad — {name}",
       "invalidQuantity": "Cantidad no válida",
       "adjustError": "Ajuste no guardado ({name}): {message}"
+    },
+    "barcode": {
+      "title": "Escanear un código de barras",
+      "scanButton": "Escanear un código de barras",
+      "aim": "Apunta al código de barras",
+      "manualLabel": "O escribe el código",
+      "manualPlaceholder": "Ej. 3017620422003",
+      "search": "Buscar",
+      "fallback": {
+        "noDetector": "El escaneo con cámara no está disponible en este navegador (se requiere Chrome o Edge en Android). Escribe el código abajo.",
+        "noCamera": "No hay cámara disponible. Escribe el código abajo.",
+        "denied": "Acceso a la cámara denegado. Permítelo en los ajustes del sitio o escribe el código abajo."
+      },
+      "inStock": "En stock: {value} {unit}",
+      "quantity": "Cantidad",
+      "less": "Menos",
+      "more": "Más",
+      "add": "＋ Añadir {qty}",
+      "remove": "− Retirar {qty}",
+      "added": "+{qty} — {name}",
+      "removed": "−{qty} — {name}",
+      "unknownTitle": "Producto desconocido",
+      "unknownText": "Ningún producto tiene este código de barras. Añádelo al stock con el código ya rellenado.",
+      "offlineTitle": "Sin conexión",
+      "offlineText": "Este código no está en la lista cargada. Vuelve a intentarlo cuando vuelva la red.",
+      "rescan": "Escanear de nuevo",
+      "addToStock": "Añadir al stock",
+      "createTitle": "Nuevo producto",
+      "create": "Crear y añadir",
+      "created": "{name} añadido al stock",
+      "lookupError": "Búsqueda imposible: {message}",
+      "fields": {
+        "barcode": "Código de barras",
+        "name": "Nombre del producto",
+        "quantity": "Cantidad inicial",
+        "unit": "Unidad",
+        "price": "Precio de compra (€)",
+        "taxRate": "IVA",
+        "section": "Sección"
+      },
+      "errors": {
+        "barcode": "El código de barras solo puede contener dígitos.",
+        "price": "Precio no válido (mayor que 0).",
+        "offline": "No se puede crear un producto sin conexión. Vuelve a intentarlo cuando vuelva la red.",
+        "options": "Unidades e IVA no disponibles: {message}",
+        "noOptions": "No hay unidades ni IVA configurados para este establecimiento."
+      }
     }
   }
 }

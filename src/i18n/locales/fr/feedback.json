@@ -1,0 +1,37 @@
+{
+  "feedback": {
+    "kicker": "Merci de votre visite",
+    "title": "Votre avis",
+    "noTableTitle": "Table inconnue",
+    "noTableText": "Scannez le QR code présenté par votre serveur.",
+    "question": "Comment s'est passé votre repas ?",
+    "ratingLabel": "Note de 1 à 5 étoiles",
+    "stars": "{count} étoile | {count} étoiles",
+    "ratings": {
+      "1": "Décevant",
+      "2": "Moyen",
+      "3": "Correct",
+      "4": "Très bien",
+      "5": "Excellent !"
+    },
+    "commentLabel": "Un commentaire ? (facultatif)",
+    "commentPlaceholder": "Ce qui vous a plu, ce que nous pouvons améliorer…",
+    "submit": "Envoyer mon avis",
+    "sending": "Envoi…",
+    "thanksTitle": "Merci pour votre avis !",
+    "thanksText": "Toute l'équipe vous remercie et espère vous revoir bientôt.",
+    "errors": {
+      "invalid": "Choisissez une note de 1 à 5 étoiles.",
+      "already": "Vous avez déjà donné votre avis pour cette table.",
+      "offline": "Pas de connexion. Réessayez dans un instant.",
+      "unavailable": "L'envoi d'avis n'est pas encore disponible ici. Merci, dites-le directement à votre serveur !",
+      "error": "L'envoi n'a pas abouti. Réessayez dans un instant."
+    },
+    "caisse": {
+      "title": "Avis client",
+      "text": "Faites scanner ce QR code au client pour qu'il note son repas.",
+      "open": "Ouvrir la page d'avis",
+      "qrAlt": "QR code de la page d'avis client"
+    }
+  }
+}

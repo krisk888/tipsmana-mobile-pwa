@@ -25,6 +25,25 @@
       "minutes": "{n} min ago",
       "hours": "{n}h ago",
       "days": "{n}d ago"
+    },
+    "push": {
+      "enable": "Enable notifications",
+      "prompt": {
+        "title": "Get real-time alerts",
+        "text": "New order, order ready, team message: be notified even when the app is closed."
+      },
+      "denied": {
+        "title": "Notifications blocked",
+        "text": "Re-enable them in the site settings (padlock in the address bar). Meanwhile, the app checks for updates every 30 s while open."
+      },
+      "unsupported": {
+        "title": "Push notifications unavailable",
+        "text": "This browser doesn't support push notifications (on iPhone: add the app to your home screen). The app checks for updates every 30 s while open."
+      },
+      "failed": {
+        "title": "Push subscription failed",
+        "text": "Notifications are allowed but subscribing failed (network or server not configured). The app checks for updates every 30 s while open."
+      }
     }
   }
 }

@@ -178,6 +178,53 @@
       "manualEntry": "Enter quantity — {name}",
       "invalidQuantity": "Invalid quantity",
       "adjustError": "Adjustment not saved ({name}): {message}"
+    },
+    "barcode": {
+      "title": "Scan a barcode",
+      "scanButton": "Scan a barcode",
+      "aim": "Point at the barcode",
+      "manualLabel": "Or type the code",
+      "manualPlaceholder": "e.g. 3017620422003",
+      "search": "Search",
+      "fallback": {
+        "noDetector": "Camera scanning isn't available in this browser (Chrome or Edge on Android required). Type the code below.",
+        "noCamera": "No camera available. Type the code below.",
+        "denied": "Camera access denied. Allow it in the site settings, or type the code below."
+      },
+      "inStock": "In stock: {value} {unit}",
+      "quantity": "Quantity",
+      "less": "Less",
+      "more": "More",
+      "add": "＋ Add {qty}",
+      "remove": "− Remove {qty}",
+      "added": "+{qty} — {name}",
+      "removed": "−{qty} — {name}",
+      "unknownTitle": "Unknown product",
+      "unknownText": "No product has this barcode. Add it to stock with this code pre-filled.",
+      "offlineTitle": "Offline",
+      "offlineText": "This code isn't in the loaded list. Try again once the network is back.",
+      "rescan": "Scan again",
+      "addToStock": "Add to stock",
+      "createTitle": "New product",
+      "create": "Create and add",
+      "created": "{name} added to stock",
+      "lookupError": "Lookup failed: {message}",
+      "fields": {
+        "barcode": "Barcode",
+        "name": "Product name",
+        "quantity": "Initial quantity",
+        "unit": "Unit",
+        "price": "Purchase price (€)",
+        "taxRate": "VAT",
+        "section": "Section"
+      },
+      "errors": {
+        "barcode": "The barcode must contain digits only.",
+        "price": "Invalid price (must be above 0).",
+        "offline": "Can't create a product offline. Try again once the network is back.",
+        "options": "Units and VAT unavailable: {message}",
+        "noOptions": "No unit or VAT rate configured for this establishment."
+      }
     }
   }
 }

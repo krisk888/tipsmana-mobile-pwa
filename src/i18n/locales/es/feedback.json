@@ -1,0 +1,37 @@
+{
+  "feedback": {
+    "kicker": "Gracias por su visita",
+    "title": "Tu opinión",
+    "noTableTitle": "Mesa desconocida",
+    "noTableText": "Escanea el código QR que te muestra tu camarero.",
+    "question": "¿Qué tal la comida?",
+    "ratingLabel": "Puntuación de 1 a 5 estrellas",
+    "stars": "{count} estrella | {count} estrellas",
+    "ratings": {
+      "1": "Decepcionante",
+      "2": "Regular",
+      "3": "Correcto",
+      "4": "Muy bien",
+      "5": "¡Excelente!"
+    },
+    "commentLabel": "¿Algún comentario? (opcional)",
+    "commentPlaceholder": "Lo que te gustó, lo que podemos mejorar…",
+    "submit": "Enviar mi opinión",
+    "sending": "Enviando…",
+    "thanksTitle": "¡Gracias por tu opinión!",
+    "thanksText": "Todo el equipo te da las gracias y espera volver a verte pronto.",
+    "errors": {
+      "invalid": "Elige una puntuación de 1 a 5 estrellas.",
+      "already": "Ya has dejado tu opinión para esta mesa.",
+      "offline": "Sin conexión. Vuelve a intentarlo en un momento.",
+      "unavailable": "El envío de opiniones aún no está disponible aquí. ¡Gracias, díselo directamente a tu camarero!",
+      "error": "El envío falló. Vuelve a intentarlo en un momento."
+    },
+    "caisse": {
+      "title": "Opinión del cliente",
+      "text": "Pide al cliente que escanee este código QR para valorar su comida.",
+      "open": "Abrir la página de opinión",
+      "qrAlt": "Código QR de la página de opinión del cliente"
+    }
+  }
+}
