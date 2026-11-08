@@ -36,6 +36,13 @@ const EXPECTED = [
   // Fusion / séparation de notes — contrat demandé au mobile, PAS ENCORE dans le backend (vérifié 2026-11-08)
   { method: 'POST',   pattern: '/table-tickets/merge', exist: false, pending: true, note: '{ table_numbers, target_table } → merged ticket' },
   { method: 'POST',   pattern: '/table-tickets/split', exist: false, pending: true, note: '{ table_number, splits: [{ table_number, item_ids }] }' },
+  // KDS cuisine (verified 2026-11-08)
+  { method: 'GET',    pattern: '/cash/kds/cuisine', exist: true, note: 'KDS station orders' },
+  { method: 'POST',   pattern: '/cash/kds/cuisine/orders/{id}/validate', exist: true, note: 'advance one step (pending → preparing → ready → served)' },
+  // Statut commande, KDS en colonnes, rapport de service — contrats demandés au mobile, PAS ENCORE dans le backend (vérifié 2026-11-08)
+  { method: 'GET',    pattern: '/mobile/orders/{id}/status', exist: false, pending: true, note: '{ status } — fallback: /cash/tickets/{ref}/kitchen-status' },
+  { method: 'PATCH',  pattern: '/kds/orders/{id}/status', exist: false, pending: true, note: '{ status } — fallback: validate N times (forward only)' },
+  { method: 'GET',    pattern: '/mobile/service-report', exist: false, pending: true, note: '?date=YYYY-MM-DD → revenue, covers, tickets, tables, payments, top_items' },
   // Sales
   { method: 'POST',   pattern: '/sales/entries', exist: true, note: 'create sales entry' },
   // Auth
@@ -76,6 +83,8 @@ const VIEWS = [
   { name: 'InventoryScan.vue', file: 'src/views/stock/InventoryScan.vue' },
   { name: 'ScanQR.vue',       file: 'src/views/stock/ScanQR.vue' },
   { name: 'serviceOrders.js', file: 'src/shared/serviceOrders.js' },
+  { name: 'kds.js',           file: 'src/shared/kds.js' },
+  { name: 'serviceReport.js', file: 'src/shared/serviceReport.js' },
 ]
 
 const REPO = new URL('..', import.meta.url).pathname

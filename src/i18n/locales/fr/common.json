@@ -58,7 +58,9 @@
       "serviceProfile": "Mon profil",
       "serviceOrder": "Prise de commande",
       "customerDisplay": "Votre note",
-      "halls": "Plan de salle"
+      "halls": "Plan de salle",
+      "kdsBoard": "Tableau cuisine",
+      "serviceReport": "Rapport de service"
     },
     "errors": {
       "network": "Réseau indisponible.",

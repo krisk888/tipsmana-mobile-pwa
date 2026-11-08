@@ -110,6 +110,7 @@ import {
   ORDER_STATUSES, formatEur, formatOptions, fetchOpenTickets, fetchKitchenItems,
   syncHistory, getKitchenRecord, orderStatus, currentEstablishmentId,
 } from '../../shared/serviceOrders'
+import { clearOrderBadge } from '../../shared/orderNotifications'
 import { useI18n } from '../../i18n'
 
 const router = useRouter()
@@ -201,6 +202,8 @@ async function load(silent = false) {
 }
 
 onMounted(() => {
+  // Alertes de statut vues : badge de l'icône remis à zéro
+  clearOrderBadge().catch(() => {})
   load()
   pollTimer = setInterval(() => load(true), POLL_INTERVAL)
 })

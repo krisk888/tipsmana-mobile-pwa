@@ -39,6 +39,13 @@ const routes = [
     meta: { titleKey: 'common.titles.cuisine', icon: 'cuisine', auth: true, roles: ['OWNER', 'MANAGER', 'CUISINE'] }
   },
   {
+    // KDS en colonnes (glisser-déposer) pour le rôle cuisine
+    path: '/cuisine/board',
+    name: 'KdsBoard',
+    component: () => import('./views/cuisine/KdsBoard.vue'),
+    meta: { titleKey: 'common.titles.kdsBoard', auth: true, roles: ['OWNER', 'MANAGER', 'CUISINE'] }
+  },
+  {
     path: '/service',
     name: 'Service',
     component: () => import('./views/service/TableSelect.vue'),
@@ -55,6 +62,12 @@ const routes = [
     name: 'ServiceProfile',
     component: () => import('./views/service/ServiceProfile.vue'),
     meta: { titleKey: 'common.titles.serviceProfile', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
+  },
+  {
+    path: '/service/report',
+    name: 'ServiceReport',
+    component: () => import('./views/service/ServiceReport.vue'),
+    meta: { titleKey: 'common.titles.serviceReport', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
   },
   {
     path: '/service/table/:number(\\d+)',

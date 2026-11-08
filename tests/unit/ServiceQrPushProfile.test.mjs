@@ -184,11 +184,20 @@ describe('checkKitchenTransitions', () => {
     expect(mockApi.get).not.toHaveBeenCalled() // note servie : plus suivie
   })
 
-  it('pas de notification tant que tout n’est pas servi', async () => {
+  it('pas de notification tant que tout n’est pas prêt', async () => {
     seedKitchen({ 't-1': { refs: ['MOB-1'], tableNumber: 4, status: 'en_cuisine', at: Date.now() } })
-    mockApi.get.mockResolvedValue(kitchenStatusResponse(['served', 'ready']))
+    mockApi.get.mockResolvedValue(kitchenStatusResponse(['served', 'preparing']))
     expect(await svc.checkKitchenTransitions('est-1')).toEqual([])
     expect(svc.getKitchenRecord('est-1', 't-1').status).toBe('en_cuisine')
+  })
+
+  it('en cuisine → prêt → servi : une notification à chaque étape', async () => {
+    seedKitchen({ 't-1': { refs: ['MOB-1'], tableNumber: 4, status: 'en_cuisine', at: Date.now() } })
+    mockApi.get.mockResolvedValue(kitchenStatusResponse(['served', 'ready']))
+    expect(await svc.checkKitchenTransitions('est-1')).toEqual([{ ticketId: 't-1', tableNumber: 4, from: 'en_cuisine', to: 'pret' }])
+    expect(await svc.checkKitchenTransitions('est-1')).toEqual([])
+    mockApi.get.mockResolvedValue(kitchenStatusResponse(['served', 'served']))
+    expect(await svc.checkKitchenTransitions('est-1')).toEqual([{ ticketId: 't-1', tableNumber: 4, from: 'pret', to: 'servi' }])
   })
 
   it('note antérieure au suivi (sans statut) : mémorise sans notifier', async () => {
@@ -272,7 +281,7 @@ describe('orderNotifications', () => {
     vi.useFakeTimers()
     try {
       seedKitchen({ 't-1': { refs: ['MOB-1'], tableNumber: 2, status: 'en_cuisine', at: Date.now() } })
-      mockApi.get.mockResolvedValue(kitchenStatusResponse(['ready']))
+      mockApi.get.mockResolvedValue(kitchenStatusResponse(['preparing']))
       const stop = notif.startOrderStatusWatcher({ getEstId: () => 'est-1', interval: 1000 })
       await vi.advanceTimersByTimeAsync(0)
       expect(window.__showToast).not.toHaveBeenCalled()

@@ -64,6 +64,20 @@
     "mock": {
       "urgent": "{count} urgent",
       "noOnion": "No onion"
+    },
+    "board": {
+      "title": "Kitchen board",
+      "hint": "Drag a ticket from one column to another",
+      "listView": "List view",
+      "columns": {
+        "pending": "Waiting",
+        "preparing": "In progress",
+        "ready": "Ready"
+      },
+      "emptyColumn": "No tickets",
+      "elapsed": "Time since order",
+      "moveTo": "Move to “{column}”",
+      "backwardUnsupported": "Moving back isn't supported by the server yet"
     }
   }
 }

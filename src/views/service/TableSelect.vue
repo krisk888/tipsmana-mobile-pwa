@@ -9,6 +9,7 @@
       <div class="svc-header-right">
         <button class="svc-icon-btn svc-scan-btn" :title="t('tables.scanQr')" @click="scannerOpen = true">📷</button>
         <router-link to="/service/history" class="svc-icon-btn" :title="t('common.titles.serviceHistory')">🧾</router-link>
+        <router-link to="/service/report" class="svc-icon-btn" :title="t('common.titles.serviceReport')">📊</router-link>
         <router-link to="/service/profile" class="svc-icon-btn" :title="t('common.titles.serviceProfile')">👤</router-link>
         <button class="svc-icon-btn" :disabled="loading" :title="t('common.refresh')" @click="load()">
           <span :class="{ spinning: loading }">⟳</span>

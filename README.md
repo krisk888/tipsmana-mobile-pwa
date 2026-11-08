@@ -29,6 +29,7 @@ Dédiée aux équipes en salle, cuisine, stock et pilotage. Interface mobile-fir
 | `/pilot` | Dashboard pilotage | OWNER, MANAGER |
 | `/caisse` | Caisse / Tickets | OWNER, MANAGER, VENTES, SERVEUR |
 | `/cuisine` | Écran cuisine (KDS) | OWNER, MANAGER, CUISINE |
+| `/cuisine/board` | **KDS en colonnes** (glisser-déposer, minuteur) | OWNER, MANAGER, CUISINE |
 | `/stock` | Scan inventaire | OWNER, MANAGER, INVENTAIRE |
 | `/stock/receptions` | Réceptions | OWNER, MANAGER, ACHATS |
 | `/stock/express` | Inventaire express | Tous (authed) |
@@ -38,6 +39,7 @@ Dédiée aux équipes en salle, cuisine, stock et pilotage. Interface mobile-fir
 | `/profile` | **Profil** | Tous (authed) |
 | `/validations` | Validations pilotage | Tous (authed) |
 | `/service` | Tables (sélection, **fusion**) | OWNER, MANAGER, VENTES, SERVEUR |
+| `/service/report` | **Rapport de fin de service** (export PDF / partage) | OWNER, MANAGER, VENTES, SERVEUR |
 | `/service/table/:n` | Prise de commande (édition panier, **séparation**, QR note client) | OWNER, MANAGER, VENTES, SERVEUR |
 | `/note/:ticketId` | **Écran client** (lecture seule, sans connexion) | Public |
 
@@ -128,6 +130,15 @@ Dédiée aux équipes en salle, cuisine, stock et pilotage. Interface mobile-fir
 | GET | `/public/table-tickets/{ticket_id}` | ⏳ À implémenter backend — lecture seule **sans jeton** (même forme que `GET /table-tickets/{n}`), pour le client qui scanne le QR |
 
 > Écran client : le QR encode `/mobile/note/{ticketId}?t={table}#s={instantané}`. L'instantané (base64url, dans le fragment, jamais envoyé au serveur) s'affiche immédiatement et sert de repli tant que l'endpoint public n'existe pas ; sur un appareil connecté, la note est relue via `GET /table-tickets/{n}`. Rafraîchissement toutes les 10 s.
+
+### Statut commande, KDS en colonnes, rapport de service
+| Méthode | Path | Usage |
+|---------|------|-------|
+| GET | `/mobile/orders/{ticket_id}/status` | ⏳ À implémenter backend — `{ status: pending\|preparing\|ready\|served }`. Repli automatique (après un 404 « Not Found ») sur `GET /cash/tickets/{ref}/kitchen-status` |
+| PATCH | `/kds/orders/{id}/status` | ⏳ À implémenter backend — `{ status }`. Repli sur `POST /cash/kds/cuisine/orders/{id}/validate` (un appel par cran, **avant uniquement** : pas de retour arrière) |
+| GET | `/mobile/service-report?date=YYYY-MM-DD` | ⏳ À implémenter backend — `{ total_revenue, covers, tickets_count, tables_count, payments: [{ method, amount }], top_items: [{ name, quantity, amount }] }` (variantes de noms acceptées, voir `src/shared/serviceReport.js`) |
+
+> Notifications de statut : relevé toutes les 15 s des notes envoyées depuis le téléphone ; dès qu'un push `order_status` arrive via le service worker, le relevé passe à 60 s. Chaque alerte (prête / servie) : toast + vibration, notification système si l'app est en arrière-plan, +1 sur le badge de l'icône (remis à zéro à l'ouverture de « Commandes en cours »).
 
 > L'API est préfixée par `/api/v1` en production (configurable via `VITE_API_URL`).
 
