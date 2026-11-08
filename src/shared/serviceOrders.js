@@ -197,6 +197,9 @@ export function normalizeTicket(t) {
     covers: toNumber(t.covers, 1),
     serveur: t.serveur_name || '',
     openedAt: t.opened_at || t.created_at || null,
+    // Note fusionnée : tables rattachées (si le backend les renvoie)
+    tables: (Array.isArray(t.merged_tables) ? t.merged_tables : Array.isArray(t.tables) ? t.tables : [])
+      .map(n => toNumber(n)).filter(n => n > 0),
     items,
   }
 }
@@ -220,6 +223,11 @@ export const TABLE_STATES = {
  */
 export function mergeTables(spaces, tickets) {
   const ticketByTable = new Map(tickets.map(t => [t.tableNumber, t]))
+  // Tables rattachées à une note fusionnée → table principale
+  const hostByTable = new Map()
+  for (const t of tickets) {
+    for (const n of t.tables || []) if (n !== t.tableNumber && !ticketByTable.has(n)) hostByTable.set(n, t.tableNumber)
+  }
   const seen = new Set()
   const out = spaces.map(s => ({
     id: String(s.id ?? s.number ?? s.name),
@@ -229,10 +237,13 @@ export function mergeTables(spaces, tickets) {
       const number = toNumber(t.number)
       seen.add(number)
       const ticket = ticketByTable.get(number) || null
+      const linkedTo = hostByTable.get(number) ?? null
       let state = normalizeTableState(t.state)
-      if (ticket && (state === 'libre' || state === 'reservee')) state = 'occupee'
+      if ((ticket || linkedTo) && (state === 'libre' || state === 'reservee')) state = 'occupee'
       return {
         number,
+        linkedTo,
+        mergedWith: ticket ? (ticket.tables || []).filter(n => n !== number) : [],
         state,
         covers: ticket?.covers || toNumber(t.covers, 1),
         serveur: ticket?.serveur || (t.serveur && t.serveur !== '—' ? t.serveur : ''),
@@ -251,6 +262,8 @@ export function mergeTables(spaces, tickets) {
       icon: '🔢',
       tables: orphans.map(t => ({
         number: t.tableNumber,
+        linkedTo: null,
+        mergedWith: (t.tables || []).filter(n => n !== t.tableNumber),
         state: 'occupee',
         covers: t.covers,
         serveur: t.serveur,
@@ -331,13 +344,14 @@ export async function fetchMenu() {
 export async function fetchOpenTickets() {
   const res = await api.get('/table-tickets/list')
   const list = unwrap(res)
-  return (Array.isArray(list) ? list : []).map(normalizeTicket).filter(Boolean)
+  return applyMergeRecords((Array.isArray(list) ? list : []).map(normalizeTicket).filter(Boolean))
 }
 
 export async function fetchTableTicket(tableNumber) {
   try {
     const res = await api.get(`/table-tickets/${tableNumber}`)
-    return normalizeTicket(unwrap(res))
+    const ticket = normalizeTicket(unwrap(res))
+    return ticket ? applyMergeRecords([ticket])[0] : null
   } catch (e) {
     if (e.status === 404) return null
     throw e
@@ -446,6 +460,8 @@ export async function sendOrder({ tableNumber, cart, covers = 1, openTable = fal
   const establishmentId = currentEstablishmentId()
   if (!establishmentId) throw new Error('Aucun établissement actif')
   if (!cart.length) throw new Error('Panier vide')
+  // Envoi dans l'ordre des services : entrées, puis plats, desserts…
+  cart = sortByCourse(cart)
 
   if (openTable) {
     // No-op côté backend si la table est déjà ouverte
@@ -644,4 +660,236 @@ export function getServiceStats({ estId, userId, now = Date.now() }) {
     itemsToday: mine.reduce((s, e) => s + toNumber(e.items), 0),
     tablesToday: [...new Set(mine.map(e => e.table))].sort((a, b) => a - b),
   }
+}
+
+/* ═══ Édition du panier avant envoi ═══ */
+
+/** Retire une ligne du panier. */
+export function removeLine(cart, index) {
+  return cart.filter((_, i) => i !== index)
+}
+
+/**
+ * Remplace la note d'une ligne (cuisson, allergène…). Si une ligne identique
+ * porte déjà cette note, les deux sont regroupées.
+ */
+export function setLineNote(cart, index, note) {
+  const line = cart[index]
+  if (!line) return cart
+  const updated = { ...line, note: String(note ?? '').trim().slice(0, 120) || null }
+  const twin = cart.findIndex((l, i) => i !== index && lineKey(l) === lineKey(updated))
+  if (twin === -1) return cart.map((l, i) => (i === index ? updated : l))
+  return cart
+    .map((l, i) => (i === twin ? { ...l, qty: l.qty + updated.qty } : l))
+    .filter((_, i) => i !== index)
+}
+
+/** Change le service (entrée / plat / dessert…) d'une ligne. */
+export function setLineCourse(cart, index, course) {
+  if (!cart[index] || !COURSES.some(c => c.key === course)) return cart
+  return cart.map((l, i) => (i === index ? { ...l, course } : l))
+}
+
+/**
+ * Déplace une ligne d'un cran (dir = -1 / +1) parmi les lignes du même
+ * service : l'ordre des lignes est celui de l'envoi en cuisine.
+ */
+export function moveLine(cart, index, dir) {
+  const line = cart[index]
+  if (!line) return cart
+  const course = courseMeta(line.course).key
+  const step = dir < 0 ? -1 : 1
+  let j = index + step
+  while (j >= 0 && j < cart.length && courseMeta(cart[j].course).key !== course) j += step
+  if (j < 0 || j >= cart.length) return cart
+  const next = [...cart]
+  next[index] = cart[j]
+  next[j] = line
+  return next
+}
+
+/** Panier trié par service (entrée → plat → dessert…), ordre conservé dans un service. */
+export function sortByCourse(lines) {
+  return lines
+    .map((l, i) => ({ l, i }))
+    .sort((a, b) => courseMeta(a.l.course).order - courseMeta(b.l.course).order || a.i - b.i)
+    .map(x => x.l)
+}
+
+/* ═══ Fusion / séparation de tables ═══
+ *  - POST /table-tickets/merge  { table_numbers, target_table } → note fusionnée
+ *  - POST /table-tickets/split  { table_number, splits: [{ table_number, item_ids }] }
+ * Les tables d'une note fusionnée sont lues dans la réponse (merged_tables)
+ * et mémorisées localement, le reste de l'API ne les renvoyant pas.
+ */
+
+const MERGE_KEY = 'tipsmana_service_merges'
+
+function readMerges(estId) {
+  return readJson(MERGE_KEY, {})?.[estId || 'default'] || {}
+}
+
+function writeMerges(estId, byTicket) {
+  const all = readJson(MERGE_KEY, {})
+  all[estId || 'default'] = byTicket
+  writeJson(MERGE_KEY, all)
+}
+
+function uniqueTables(list) {
+  return [...new Set(list.map(n => toNumber(n)).filter(n => n > 0))].sort((a, b) => a - b)
+}
+
+/** Tables couvertes par une note (table principale en premier). */
+export function ticketTables(ticket, estId = currentEstablishmentId()) {
+  if (!ticket) return []
+  const local = readMerges(estId)[ticket.id] || []
+  const others = uniqueTables([...(ticket.tables || []), ...local]).filter(n => n !== ticket.tableNumber)
+  return [ticket.tableNumber, ...others]
+}
+
+/** Complète les notes avec les tables fusionnées mémorisées sur ce téléphone. */
+export function applyMergeRecords(tickets, estId = currentEstablishmentId()) {
+  return tickets.map(t => ({ ...t, tables: ticketTables(t, estId) }))
+}
+
+function assertOnline() {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    throw new Error('Connexion requise pour fusionner ou séparer des tables')
+  }
+}
+
+export function buildMergePayload(tableNumbers, targetTable) {
+  const tables = uniqueTables(tableNumbers)
+  const target = toNumber(targetTable)
+  if (tables.length < 2) throw new Error('Sélectionnez au moins 2 tables')
+  if (!tables.includes(target)) throw new Error('La table cible doit faire partie de la sélection')
+  return { table_numbers: tables, target_table: target }
+}
+
+export async function mergeTableTickets({ tableNumbers, targetTable }) {
+  const payload = buildMergePayload(tableNumbers, targetTable)
+  assertOnline()
+  const res = await api.post('/table-tickets/merge', payload)
+  if (res?.queued) return { queued: true, ticket: null }
+  const ticket = normalizeTicket(unwrap(res))
+  if (!ticket) throw new Error('Réponse inattendue du serveur')
+  const estId = currentEstablishmentId()
+  const merges = readMerges(estId)
+  merges[ticket.id] = uniqueTables([...payload.table_numbers, ...(ticket.tables || [])])
+    .filter(n => n !== ticket.tableNumber)
+  writeMerges(estId, merges)
+  return { queued: false, ticket: { ...ticket, tables: ticketTables(ticket, estId) } }
+}
+
+/**
+ * Corps de la séparation : `assignments` = { [itemId]: tableNumber }. Les
+ * articles laissés sur la table principale ne sont pas envoyés.
+ */
+export function buildSplitPayload(ticket, assignments) {
+  const byTable = new Map()
+  for (const item of ticket.items) {
+    const table = toNumber(assignments?.[item.id], ticket.tableNumber)
+    if (table === ticket.tableNumber) continue
+    if (!byTable.has(table)) byTable.set(table, [])
+    byTable.get(table).push(item.id)
+  }
+  if (!byTable.size) throw new Error('Aucun article déplacé vers une autre table')
+  return {
+    table_number: ticket.tableNumber,
+    splits: [...byTable.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([table_number, item_ids]) => ({ table_number, item_ids })),
+  }
+}
+
+export async function splitTableTicket({ ticket, assignments }) {
+  const payload = buildSplitPayload(ticket, assignments)
+  assertOnline()
+  const res = await api.post('/table-tickets/split', payload)
+  if (res?.queued) return { queued: true, tickets: [] }
+  const estId = currentEstablishmentId()
+  const merges = readMerges(estId)
+  delete merges[ticket.id]
+  writeMerges(estId, merges)
+  const data = unwrap(res)
+  const list = Array.isArray(data) ? data : (data?.tickets || [])
+  return { queued: false, tickets: list.map(normalizeTicket).filter(Boolean) }
+}
+
+/* ═══ Écran client (note consultée par QR) ═══
+ * URL : /mobile/note/{ticketId}?t={table}#s={instantané}
+ *  - ticketId (UUID) : seul identifiant exposé, propre à la note en cours
+ *  - instantané base64url : affiché tout de suite et si l'API est injoignable
+ * Rafraîchissement : GET /table-tickets/{t} sur un appareil connecté, sinon
+ * GET /public/table-tickets/{ticketId} (lecture seule, sans jeton).
+ */
+
+const SNAPSHOT_MAX = 1200
+
+function toBase64Url(str) {
+  const bytes = new TextEncoder().encode(str)
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function fromBase64Url(s) {
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/')
+  const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))
+  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)))
+}
+
+export function encodeSnapshot(ticket, at = Date.now()) {
+  const data = {
+    n: ticket.tableNumber,
+    a: at,
+    t: ticket.totalTtc,
+    h: ticket.totalHt,
+    i: ticket.items.map(i => [i.name, i.qty, i.price, i.course]),
+  }
+  const out = toBase64Url(JSON.stringify(data))
+  return out.length > SNAPSHOT_MAX ? null : out
+}
+
+export function decodeSnapshot(str) {
+  try {
+    const d = JSON.parse(fromBase64Url(String(str || '')))
+    if (!d || !Array.isArray(d.i)) return null
+    return {
+      id: null,
+      tableNumber: toNumber(d.n),
+      status: 'open',
+      totalTtc: round2(d.t),
+      totalHt: round2(d.h),
+      items: d.i.map(([name, qty, price, course], idx) => ({
+        id: `s${idx}`, name: String(name), qty: toNumber(qty, 1), price: round2(price), course: course || 'autre',
+      })),
+      snapshotAt: toNumber(d.a) || null,
+    }
+  } catch {
+    return null
+  }
+}
+
+export function customerDisplayUrl(ticket, { origin = window.location.origin, base = '/mobile/' } = {}) {
+  const snap = encodeSnapshot(ticket)
+  const path = `${origin}${base.replace(/\/?$/, '/')}note/${encodeURIComponent(ticket.id)}?t=${ticket.tableNumber}`
+  return snap ? `${path}#s=${snap}` : path
+}
+
+/**
+ * Note à afficher au client. Renvoie { ticket, closed } ou { unavailable }
+ * quand aucune source n'est joignable (l'écran garde alors l'instantané).
+ */
+export async function fetchCustomerNote({ ticketId, tableNumber }) {
+  if (api.getToken() && tableNumber) {
+    const ticket = await fetchTableTicket(tableNumber)
+    if (!ticket || ticket.id !== String(ticketId)) return { ticket: null, closed: true }
+    return { ticket, closed: false }
+  }
+  const res = await fetch(`${api.baseUrl || '/api/v1'}/public/table-tickets/${encodeURIComponent(ticketId)}`)
+  if (!res.ok) return { unavailable: true, status: res.status }
+  const ticket = normalizeTicket(unwrap(await res.json()))
+  if (!ticket) return { unavailable: true }
+  return { ticket, closed: ticket.status !== 'open' }
 }

@@ -4,7 +4,10 @@
     <header class="ot-header">
       <button class="ot-back" title="Tables" @click="router.push('/service')">←</button>
       <div class="ot-header-main">
-        <div class="ot-title">Table {{ tableNumber }}</div>
+        <div class="ot-title">
+          Table {{ tableNumber }}
+          <span v-if="linkedTables.length" class="ot-merged">+ {{ linkedTables.join(', ') }}</span>
+        </div>
         <div class="ot-subtitle">
           <template v-if="ticket">👤{{ ticket.covers }} · {{ formatEur(ticket.totalTtc) }} sur la note</template>
           <template v-else>Nouvelle note · 👤{{ covers }}</template>
@@ -101,6 +104,10 @@
           <div class="ot-total-row"><span>TVA</span><span>{{ formatEur(ticket.totalTtc - ticket.totalHt) }}</span></div>
           <div class="ot-total-row ot-total-main"><span>Total TTC</span><span>{{ formatEur(ticket.totalTtc) }}</span></div>
         </div>
+        <div class="ot-note-actions">
+          <button class="ot-note-btn" @click="openQr">📱 Note client (QR)</button>
+          <button v-if="linkedTables.length" class="ot-note-btn" @click="openSplit">✂️ Séparer par table</button>
+        </div>
       </div>
     </template>
 
@@ -118,11 +125,11 @@
         <div v-for="g in cartGroups" :key="g.key" class="ot-group">
           <div class="ot-group-title">{{ g.icon }} {{ g.label }}</div>
           <div v-for="l in g.lines" :key="lineKey(l)" class="ot-line">
-            <span class="ot-line-info">
-              <span class="ot-line-name">{{ l.name }}</span>
+            <button class="ot-line-info ot-line-edit" title="Note, service, ordre" @click="openLineEditor(l)">
+              <span class="ot-line-name">{{ l.name }} <span class="ot-line-pen">✎</span></span>
               <span v-if="l.options" class="ot-line-sub">⚙️ {{ l.options }}</span>
               <span v-if="l.note" class="ot-line-sub">📝 {{ l.note }}</span>
-            </span>
+            </button>
             <span class="ot-qty">
               <button class="ot-qty-btn" @click="changeQty(l, -1)">−</button>
               <span class="ot-qty-val">{{ l.qty }}</span>
@@ -148,6 +155,129 @@
           <span v-if="sending" class="ot-btn-spinner"></span>
           <span v-else>📤 Envoyer en cuisine · {{ formatEur(cartTotals.ttc) }}</span>
         </button>
+      </div>
+    </div>
+
+    <!-- ═══ ÉDITION D'UNE LIGNE DU PANIER ═══ -->
+    <div v-if="lineEdit" class="modal-overlay" @click.self="lineEdit = null">
+      <div class="modal-card">
+        <div class="modal-header">
+          <span class="modal-title">{{ lineEdit.line.name }}</span>
+          <button class="modal-close" @click="lineEdit = null">✕</button>
+        </div>
+
+        <div class="sheet-qty">
+          <span class="sheet-label">Quantité</span>
+          <span class="ot-qty">
+            <button class="ot-qty-btn lg" @click="changeQty(lineEdit.line, -1)">−</button>
+            <span class="ot-qty-val lg">{{ lineEdit.line.qty }}</span>
+            <button class="ot-qty-btn lg" @click="changeQty(lineEdit.line, 1)">+</button>
+          </span>
+        </div>
+
+        <div class="sheet-group">
+          <div class="sheet-label">Service</div>
+          <div class="sheet-opts">
+            <button
+              v-for="c in courses"
+              :key="c.key"
+              class="sheet-opt"
+              :class="{ active: lineEdit.line.course === c.key }"
+              @click="changeCourse(c.key)"
+            >{{ c.icon }} {{ c.label }}</button>
+          </div>
+        </div>
+
+        <div class="sheet-group">
+          <div class="sheet-label">Ordre dans le service</div>
+          <div class="sheet-opts">
+            <button class="sheet-opt" :disabled="!canMove(-1)" @click="move(-1)">▲ Monter</button>
+            <button class="sheet-opt" :disabled="!canMove(1)" @click="move(1)">▼ Descendre</button>
+          </div>
+        </div>
+
+        <div class="sheet-group">
+          <label class="sheet-label" for="line-note">Note cuisine</label>
+          <div class="sheet-opts">
+            <button v-for="q in NOTE_PRESETS" :key="q" class="sheet-opt sm" @click="appendNote(q)">{{ q }}</button>
+          </div>
+          <textarea
+            id="line-note"
+            v-model="lineEdit.note"
+            class="sheet-note"
+            rows="2"
+            maxlength="120"
+            placeholder="Cuisson, allergène…"
+          ></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-danger" @click="askRemove(lineEdit.line)">🗑 Supprimer</button>
+          <span class="modal-spacer"></span>
+          <button class="btn-primary" @click="saveLineNote">Valider</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CONFIRMATION SUPPRESSION ═══ -->
+    <div v-if="removeFor" class="modal-overlay confirm" @click.self="removeFor = null">
+      <div class="modal-card">
+        <div class="modal-title">Supprimer l'article ?</div>
+        <p class="modal-text">{{ removeFor.qty }}× {{ removeFor.name }} sera retiré du panier.</p>
+        <div class="modal-actions">
+          <span class="modal-spacer"></span>
+          <button class="btn-ghost" @click="removeFor = null">Annuler</button>
+          <button class="btn-danger" @click="confirmRemove">Supprimer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ QR NOTE CLIENT ═══ -->
+    <div v-if="qr" class="modal-overlay" @click.self="qr = null">
+      <div class="modal-card qr-card">
+        <div class="modal-header">
+          <span class="modal-title">📱 Note de la table {{ tableNumber }}</span>
+          <button class="modal-close" @click="qr = null">✕</button>
+        </div>
+        <p class="modal-text">Le client scanne ce code pour suivre sa note sur son téléphone.</p>
+        <img v-if="qr.dataUrl" :src="qr.dataUrl" class="qr-img" alt="QR code de la note" />
+        <p v-else-if="qr.error" class="ot-error">{{ qr.error }}</p>
+        <span v-else class="ot-spinner"></span>
+        <div class="modal-actions">
+          <a class="btn-ghost" :href="qr.url" target="_blank" rel="noopener">Ouvrir l'écran client</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SÉPARATION PAR TABLE ═══ -->
+    <div v-if="split" class="modal-overlay" @click.self="split = null">
+      <div class="modal-card">
+        <div class="modal-header">
+          <span class="modal-title">✂️ Séparer la note</span>
+          <button class="modal-close" @click="split = null">✕</button>
+        </div>
+        <p class="modal-text">Choisissez la table de chaque article. Les articles laissés sur la table {{ tableNumber }} y restent.</p>
+        <div class="split-list">
+          <div v-for="i in ticket.items" :key="i.id" class="split-row">
+            <span class="split-name">{{ i.qty }}× {{ i.name }}</span>
+            <span class="split-tables">
+              <button
+                v-for="n in allTables"
+                :key="n"
+                class="split-table"
+                :class="{ active: split.assignments[i.id] === n }"
+                @click="split.assignments[i.id] = n"
+              >{{ n }}</button>
+            </span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <span class="modal-spacer"></span>
+          <button class="btn-ghost" @click="split = null">Annuler</button>
+          <button class="btn-primary" :disabled="split.busy || !splitMoves" @click="confirmSplit">
+            Séparer ({{ splitMoves }})
+          </button>
+        </div>
       </div>
     </div>
 
@@ -205,9 +335,11 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import QRCode from 'qrcode'
 import {
-  OPTION_GROUPS, COURSE_OPTIONS,
+  OPTION_GROUPS, COURSE_OPTIONS, COURSES,
   addLine, setLineQty, lineKey, computeTotals, groupByCourse, formatEur,
+  removeLine, setLineNote, setLineCourse, moveLine, ticketTables, splitTableTicket, customerDisplayUrl,
   fetchMenu, fetchTableTicket, sendOrder, retryFailedDispatch,
   getKitchenRecord, loadDraft, saveDraft, currentEstablishmentId, toNumber, recordServiceOrder,
 } from '../../shared/serviceOrders'
@@ -237,6 +369,13 @@ const cart = ref(loadDraft(estId, tableNumber.value))
 const cartOpen = ref(false)
 const sending = ref(false)
 const sheet = ref(null)
+const lineEdit = ref(null)
+const removeFor = ref(null)
+const qr = ref(null)
+const split = ref(null)
+
+const courses = COURSES
+const NOTE_PRESETS = ['Saignant', 'À point', 'Bien cuit', 'Sans gluten', 'Sans lactose', 'Allergie fruits à coque', 'Sans oignons']
 
 /* ═══ Computed ═══ */
 const activeCategory = computed(() =>
@@ -251,6 +390,11 @@ const failedIds = computed(() => kitchenRec.value.failedItemIds)
 const failedItems = computed(() =>
   (ticket.value?.items || []).filter(i => failedIds.value.includes(i.id))
 )
+const allTables = computed(() => (ticket.value ? ticketTables(ticket.value, estId) : [tableNumber.value]))
+const linkedTables = computed(() => allTables.value.filter(n => n !== tableNumber.value))
+const splitMoves = computed(() =>
+  split.value ? Object.values(split.value.assignments).filter(n => n !== tableNumber.value).length : 0
+)
 const sheetGroups = computed(() => (sheet.value ? optionGroupsFor(sheet.value.product) : []))
 
 watch(cart, val => saveDraft(estId, tableNumber.value, val), { deep: true })
@@ -259,6 +403,10 @@ watch(cart, val => saveDraft(estId, tableNumber.value, val), { deep: true })
 watch(tableNumber, number => {
   if (!number) return
   sheet.value = null
+  lineEdit.value = null
+  removeFor.value = null
+  qr.value = null
+  split.value = null
   cartOpen.value = false
   tab.value = 'menu'
   ticket.value = null
@@ -338,9 +486,64 @@ function addFromSheet() {
 }
 
 /* ═══ Panier ═══ */
+function lineIndex(line) {
+  return cart.value.findIndex(l => lineKey(l) === lineKey(line))
+}
+
 function changeQty(line, delta) {
-  const idx = cart.value.findIndex(l => lineKey(l) === lineKey(line))
-  if (idx !== -1) cart.value = setLineQty(cart.value, idx, cart.value[idx].qty + delta)
+  const idx = lineIndex(line)
+  if (idx === -1) return
+  const qty = cart.value[idx].qty + delta
+  // Passer à 0 = supprimer : on demande confirmation
+  if (qty <= 0) return askRemove(cart.value[idx])
+  cart.value = setLineQty(cart.value, idx, qty)
+  if (lineEdit.value) lineEdit.value.line = cart.value[idx]
+}
+
+function askRemove(line) {
+  removeFor.value = line
+}
+
+function confirmRemove() {
+  const idx = lineIndex(removeFor.value)
+  if (idx !== -1) cart.value = removeLine(cart.value, idx)
+  removeFor.value = null
+  lineEdit.value = null
+  if (!cart.value.length) cartOpen.value = false
+}
+
+/* Édition d'une ligne : note, service, ordre */
+function openLineEditor(line) {
+  lineEdit.value = { line, note: line.note || '' }
+}
+
+function changeCourse(course) {
+  const idx = lineIndex(lineEdit.value.line)
+  if (idx === -1) return
+  cart.value = setLineCourse(cart.value, idx, course)
+  lineEdit.value.line = cart.value[idx]
+}
+
+function canMove(dir) {
+  const idx = lineIndex(lineEdit.value.line)
+  return idx !== -1 && moveLine(cart.value, idx, dir) !== cart.value
+}
+
+function move(dir) {
+  const idx = lineIndex(lineEdit.value.line)
+  if (idx !== -1) cart.value = moveLine(cart.value, idx, dir)
+}
+
+function appendNote(text) {
+  const cur = lineEdit.value.note.trim()
+  if (cur.split(/,\s*/).includes(text)) return
+  lineEdit.value.note = cur ? `${cur}, ${text}` : text
+}
+
+function saveLineNote() {
+  const idx = lineIndex(lineEdit.value.line)
+  if (idx !== -1) cart.value = setLineNote(cart.value, idx, lineEdit.value.note)
+  lineEdit.value = null
 }
 
 function clearCart() {
@@ -381,6 +584,43 @@ async function send() {
     toast(e.data?.detail || e.message || 'Envoi impossible', 'error')
   } finally {
     sending.value = false
+  }
+}
+
+/* ═══ Note client (QR) ═══ */
+async function openQr() {
+  if (!ticket.value) return
+  const url = customerDisplayUrl(ticket.value)
+  qr.value = { url, dataUrl: null, error: null }
+  try {
+    const dataUrl = await QRCode.toDataURL(url, { margin: 1, width: 320, errorCorrectionLevel: 'L' })
+    if (qr.value?.url === url) qr.value.dataUrl = dataUrl
+  } catch {
+    if (qr.value) qr.value.error = 'QR code impossible (note trop longue) — utilisez le lien.'
+  }
+}
+
+/* ═══ Séparation d'une note fusionnée ═══ */
+function openSplit() {
+  if (!ticket.value) return
+  split.value = {
+    busy: false,
+    assignments: Object.fromEntries(ticket.value.items.map(i => [i.id, tableNumber.value])),
+  }
+}
+
+async function confirmSplit() {
+  if (!split.value || split.value.busy) return
+  split.value.busy = true
+  try {
+    const res = await splitTableTicket({ ticket: ticket.value, assignments: split.value.assignments })
+    split.value = null
+    if (res.queued) toast('Hors-ligne : séparation mise en file', 'warning')
+    else toast('Note séparée par table')
+    await loadTicket()
+  } catch (e) {
+    if (split.value) split.value.busy = false
+    toast(e.data?.detail || e.message || 'Séparation impossible', 'error')
   }
 }
 
@@ -583,6 +823,50 @@ onMounted(() => {
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Édition panier / note ─── */
+.ot-merged {
+  font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 8px; vertical-align: middle;
+  color: #a78bfa; background: rgba(139, 92, 246, 0.15);
+}
+.ot-line-edit {
+  border: none; background: none; padding: 0; cursor: pointer; text-align: left; color: inherit; font: inherit;
+}
+.ot-line-pen { font-size: 11px; color: var(--muted, #8a8aa0); }
+.ot-note-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 6px; }
+.ot-note-btn {
+  flex: 1; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 800;
+  border: 1px solid var(--card-border, #2a2a40); background: var(--card-bg, #1a1a2e); color: var(--text, #fff);
+}
+.modal-overlay.confirm { z-index: 310; }
+.modal-text { font-size: 13px; color: var(--muted, #8a8aa0); margin: 0; }
+.modal-spacer { flex: 1; }
+.sheet-opt.sm { padding: 6px 10px; font-size: 12px; }
+.sheet-opt:disabled { opacity: 0.35; cursor: not-allowed; }
+.qr-card { align-items: center; text-align: center; }
+.qr-img { width: 240px; height: 240px; border-radius: 12px; background: #fff; padding: 8px; }
+.split-list { display: flex; flex-direction: column; gap: 6px; }
+.split-row {
+  display: flex; align-items: center; gap: 8px; padding: 6px 0;
+  border-bottom: 1px solid var(--card-border, #2a2a40);
+}
+.split-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; }
+.split-tables { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.split-table {
+  min-width: 34px; padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 800;
+  border: 1px solid var(--card-border, #2a2a40); background: var(--bg, #0d0d14); color: var(--text, #fff);
+}
+.split-table.active { background: #8b5cf6; border-color: #8b5cf6; color: #fff; }
+.btn-ghost {
+  padding: 12px 18px; border-radius: 10px; cursor: pointer; text-decoration: none;
+  border: 1px solid var(--card-border, #2a2a40); background: var(--bg, #0d0d14);
+  color: var(--text, #fff); font-size: 14px; font-weight: 700;
+}
+.btn-danger {
+  padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer;
+  background: var(--danger, #ef4444); color: #fff; font-size: 14px; font-weight: 800;
+}
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ─── Fiche article ─── */
 .modal-overlay {
