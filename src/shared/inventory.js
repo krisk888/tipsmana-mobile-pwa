@@ -48,6 +48,7 @@ export function normalizeInventoryItem(raw) {
     productId: String(raw.product_id ?? id),
     name: raw.name || raw.product_name || t('stock.productFallback'),
     sku: raw.sku || raw.product_sku || null,
+    barcode: raw.barcode || raw.product_barcode || null,
     quantity: roundQty(num(raw.quantity ?? raw.current_stock ?? raw.theoretical_quantity) ?? 0),
     threshold: num(raw.threshold ?? raw.minimum_stock_level ?? raw.min_quantity),
     unit: raw.unit || raw.unit_symbol || raw.unit_name || null,

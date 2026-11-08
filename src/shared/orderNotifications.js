@@ -18,13 +18,16 @@
  */
 import { checkKitchenTransitions, applyPushedStatus, normalizeRemoteStatus } from './serviceOrders'
 import { initPushSubscription } from './push'
-import { offlineStore } from './offlineStore'
+import { incrementOrderBadge, clearOrderBadge, setAppBadge } from './appBadge'
 import { t } from '../i18n'
 
 const ASKED_KEY = 'tipsmana_notif_asked'
 export const POLL_INTERVAL = 15000
 export const PUSH_POLL_INTERVAL = 60000
 const VIBRATION = [200, 100, 200]
+
+// Badge de l'icône : partagé avec les push (service worker) et les notifications
+export { incrementOrderBadge, clearOrderBadge, setAppBadge }
 
 export const SW_MESSAGE_TYPE = 'ORDER_STATUS'
 
@@ -83,37 +86,6 @@ function vibrate() {
   try { navigator.vibrate?.(VIBRATION) } catch { /* non supporté */ }
 }
 
-function setAppBadge(count) {
-  try {
-    if (count > 0) (navigator.setAppBadge || navigator.setClientBadge)?.call(navigator, count)?.catch?.(() => {})
-    else (navigator.clearAppBadge || navigator.clearClientBadge)?.call(navigator)?.catch?.(() => {})
-  } catch { /* badge non supporté */ }
-}
-
-// Les incréments sont chaînés : deux alertes simultanées ne lisent pas le même compteur
-let badgeChain = Promise.resolve()
-
-/** +1 sur le badge de l'icône de l'app. Renvoie le nouveau compteur. */
-export function incrementOrderBadge() {
-  const run = badgeChain.then(async () => {
-    const count = (await offlineStore.getBadgeCount()) + 1
-    await offlineStore.setBadgeCount(count)
-    setAppBadge(count)
-    return count
-  })
-  badgeChain = run.catch(() => {})
-  return run
-}
-
-export function clearOrderBadge() {
-  const run = badgeChain.then(async () => {
-    await offlineStore.clearBadge()
-    setAppBadge(0)
-  })
-  badgeChain = run.catch(() => {})
-  return run
-}
-
 function isVisible() {
   return typeof document !== 'undefined' && document.visibilityState === 'visible'
 }
@@ -169,7 +141,8 @@ export function startOrderStatusWatcher({ getEstId, interval = POLL_INTERVAL, pu
     applyPushedStatus(getEstId(), msg.tableNumber, msg.status)
     toast(statusMessage({ tableNumber: msg.tableNumber, to: normalizeRemoteStatus(msg.status) || msg.status }))
     vibrate()
-    incrementOrderBadge().catch(() => {})
+    // Le service worker compte déjà les push dans le badge (badgeHandled)
+    if (!msg.badgeHandled) incrementOrderBadge().catch(() => {})
     if (!pushAvailable && !stopped) {
       pushAvailable = true
       clearInterval(timer)

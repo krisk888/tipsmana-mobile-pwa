@@ -62,7 +62,8 @@
       "kdsBoard": "Tableau cuisine",
       "serviceReport": "Rapport de service",
       "inventoryItems": "Stock produits",
-      "waiterCall": "Appeler le serveur"
+      "waiterCall": "Appeler le serveur",
+      "feedback": "Votre avis"
     },
     "errors": {
       "network": "Réseau indisponible.",

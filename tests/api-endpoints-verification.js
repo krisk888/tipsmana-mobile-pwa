@@ -50,6 +50,12 @@ const EXPECTED = [
   // POST /mobile/tables/{n}/call-waiter?message= (public, fetch direct dans waiterCall.js) : pas encore dans le backend, pas de repli
   { method: 'GET',    pattern: '/inventory/stock/theoretical', exist: true, note: 'theoretical stock + minimum_stock_level (section-grouped)' },
   { method: 'POST',   pattern: '/inventory/movements', exist: true, note: 'manual stock movement (adjustment, signed quantity)' },
+  // Push, code-barres stock, avis client (verified 2026-11-08)
+  { method: 'POST',   pattern: '/notifications/push/subscribe', exist: true, note: '{ endpoint, keys: { p256dh, auth } } — upsert Web Push subscription' },
+  { method: 'GET',    pattern: '/settings/units', exist: true, note: 'units for the product creation form' },
+  { method: 'GET',    pattern: '/settings/tax-rates', exist: true, note: 'tax rates for the product creation form' },
+  { method: 'POST',   pattern: '/products', exist: true, note: 'create product (unknown barcode → barcode pre-filled)' },
+  // POST /feedback { table, rating, comment?, establishment_id } (public, fetch direct dans feedback.js) : pas encore dans le backend
   // Sales
   { method: 'POST',   pattern: '/sales/entries', exist: true, note: 'create sales entry' },
   // Auth
@@ -94,6 +100,8 @@ const VIEWS = [
   { name: 'serviceReport.js', file: 'src/shared/serviceReport.js' },
   { name: 'menuImages.js',    file: 'src/shared/menuImages.js' },
   { name: 'inventory.js',     file: 'src/shared/inventory.js' },
+  { name: 'barcode.js',       file: 'src/shared/barcode.js' },
+  { name: 'push.js',          file: 'src/shared/push.js' },
 ]
 
 const REPO = new URL('..', import.meta.url).pathname

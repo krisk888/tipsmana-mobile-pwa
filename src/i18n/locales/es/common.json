@@ -62,7 +62,8 @@
       "kdsBoard": "Tablero de cocina",
       "serviceReport": "Informe de servicio",
       "inventoryItems": "Stock de productos",
-      "waiterCall": "Llamar al camarero"
+      "waiterCall": "Llamar al camarero",
+      "feedback": "Tu opinión"
     },
     "errors": {
       "network": "Red no disponible.",

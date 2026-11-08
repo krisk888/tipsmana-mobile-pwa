@@ -62,7 +62,8 @@
       "kdsBoard": "Kitchen board",
       "serviceReport": "Service report",
       "inventoryItems": "Product stock",
-      "waiterCall": "Call the waiter"
+      "waiterCall": "Call the waiter",
+      "feedback": "Your feedback"
     },
     "errors": {
       "network": "Network unavailable.",

@@ -25,6 +25,25 @@
       "minutes": "hace {n} min",
       "hours": "hace {n} h",
       "days": "hace {n} d"
+    },
+    "push": {
+      "enable": "Activar notificaciones",
+      "prompt": {
+        "title": "Recibir alertas en tiempo real",
+        "text": "Nuevo pedido, pedido listo, mensaje del equipo: entérate incluso con la app cerrada."
+      },
+      "denied": {
+        "title": "Notificaciones bloqueadas",
+        "text": "Reactívalas en los ajustes del sitio (candado de la barra de direcciones). Mientras tanto, la app busca novedades cada 30 s cuando está abierta."
+      },
+      "unsupported": {
+        "title": "Notificaciones push no disponibles",
+        "text": "Este navegador no admite notificaciones push (en iPhone: añade la app a la pantalla de inicio). La app busca novedades cada 30 s cuando está abierta."
+      },
+      "failed": {
+        "title": "Suscripción push fallida",
+        "text": "Las notificaciones están permitidas pero la suscripción falló (red o servidor no configurado). La app busca novedades cada 30 s cuando está abierta."
+      }
     }
   }
 }

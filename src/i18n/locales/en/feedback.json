@@ -1,0 +1,37 @@
+{
+  "feedback": {
+    "kicker": "Thank you for your visit",
+    "title": "Your feedback",
+    "noTableTitle": "Unknown table",
+    "noTableText": "Scan the QR code shown by your waiter.",
+    "question": "How was your meal?",
+    "ratingLabel": "Rating from 1 to 5 stars",
+    "stars": "{count} star | {count} stars",
+    "ratings": {
+      "1": "Disappointing",
+      "2": "Average",
+      "3": "Fine",
+      "4": "Very good",
+      "5": "Excellent!"
+    },
+    "commentLabel": "Any comment? (optional)",
+    "commentPlaceholder": "What you liked, what we can improve…",
+    "submit": "Send my feedback",
+    "sending": "Sending…",
+    "thanksTitle": "Thanks for your feedback!",
+    "thanksText": "The whole team thanks you and hopes to see you again soon.",
+    "errors": {
+      "invalid": "Pick a rating from 1 to 5 stars.",
+      "already": "You've already left feedback for this table.",
+      "offline": "No connection. Try again in a moment.",
+      "unavailable": "Feedback isn't available here yet. Thank you, please tell your waiter directly!",
+      "error": "Sending failed. Try again in a moment."
+    },
+    "caisse": {
+      "title": "Customer feedback",
+      "text": "Have the customer scan this QR code to rate their meal.",
+      "open": "Open the feedback page",
+      "qrAlt": "QR code for the customer feedback page"
+    }
+  }
+}

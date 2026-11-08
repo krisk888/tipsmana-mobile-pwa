@@ -308,6 +308,13 @@
         <div class="confirm-title">{{ paymentResult.title }}</div>
         <p class="modal-text">{{ paymentResult.message }}</p>
         <div class="confirm-total">{{ formatEur(cartTotal) }}</div>
+        <!-- Table soldée : QR code de la page d'avis client -->
+        <div v-if="paymentResult.feedback" class="feedback-qr">
+          <div class="feedback-qr-title">⭐ {{ t('feedback.caisse.title') }}</div>
+          <p class="modal-text">{{ t('feedback.caisse.text') }}</p>
+          <img v-if="paymentResult.feedback.dataUrl" :src="paymentResult.feedback.dataUrl" class="feedback-qr-img" :alt="t('feedback.caisse.qrAlt')" />
+          <a class="feedback-qr-link" :href="paymentResult.feedback.url" target="_blank" rel="noopener">{{ t('feedback.caisse.open') }}</a>
+        </div>
         <button class="btn-primary" @click="finishPayment">{{ t('caisse.payment.newSale') }}</button>
       </div>
     </div>
@@ -319,6 +326,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../shared/api'
 import { auth, getEstablishmentId } from '../../shared/auth'
+import { feedbackUrl } from '../../shared/feedback'
 import CaisseCart from './CaisseCart.vue'
 import TipsIcon from '../../components/TipsIcon.vue'
 import { useI18n } from '../../i18n'
@@ -939,6 +947,7 @@ async function pay(method) {
       message: method === 'cash'
         ? t('caisse.payment.change', { amount: formatEur(cartTotal.value) })
         : t('caisse.payment.accepted'),
+      feedback: selectedTable.value !== null ? showFeedbackQr(selectedTable.value) : null,
     }
     paymentModal.value = false
     if (selectedTable.value !== null) {
@@ -957,6 +966,18 @@ async function pay(method) {
   } finally {
     paying.value = false
   }
+}
+
+// Lien d'avis client de la table soldée ; QR code généré en arrière-plan
+function showFeedbackQr(table) {
+  const feedback = { url: feedbackUrl({ table, establishmentId: getEstablishmentId() }), dataUrl: null }
+  import('qrcode')
+    .then(({ default: QRCode }) => QRCode.toDataURL(feedback.url, { margin: 1, width: 240, errorCorrectionLevel: 'L' }))
+    .then((dataUrl) => {
+      if (paymentResult.value?.feedback?.url === feedback.url) paymentResult.value.feedback.dataUrl = dataUrl
+    })
+    .catch(() => { /* le lien reste disponible */ })
+  return feedback
 }
 
 function finishPayment() {
@@ -1326,6 +1347,12 @@ gap: 10px;
 .modal-header { display: flex; align-items: center; justify-content: space-between; }
 .modal-title { font-size: 17px; font-weight: 800; }
 .modal-close { background: none; border: none; color: var(--muted, #8a8aa0); font-size: 18px; cursor: pointer; padding: 4px; }
+
+/* ═══ QR avis client (après solde) ═══ */
+.feedback-qr { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 4px 0 12px; }
+.feedback-qr-title { font-size: 15px; font-weight: 800; }
+.feedback-qr-img { width: 180px; height: 180px; border-radius: 10px; background: #fff; padding: 6px; }
+.feedback-qr-link { font-size: 13px; font-weight: 700; color: var(--primary, #10b981); }
 .modal-text { font-size: 13px; color: var(--muted, #8a8aa0); margin: 0; }
 .modal-total { font-size: 28px; font-weight: 800; color: var(--success, #10b981); text-align: center; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }

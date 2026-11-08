@@ -178,6 +178,53 @@
       "manualEntry": "Saisir la quantité — {name}",
       "invalidQuantity": "Quantité invalide",
       "adjustError": "Ajustement non enregistré ({name}) : {message}"
+    },
+    "barcode": {
+      "title": "Scanner un code-barres",
+      "scanButton": "Scanner un code-barres",
+      "aim": "Visez le code-barres",
+      "manualLabel": "Ou saisissez le code",
+      "manualPlaceholder": "Ex. 3017620422003",
+      "search": "Chercher",
+      "fallback": {
+        "noDetector": "Le scan caméra n'est pas disponible sur ce navigateur (Chrome ou Edge sur Android requis). Saisissez le code ci-dessous.",
+        "noCamera": "Aucune caméra disponible. Saisissez le code ci-dessous.",
+        "denied": "Accès à la caméra refusé. Autorisez-le dans les réglages du site, ou saisissez le code ci-dessous."
+      },
+      "inStock": "En stock : {value} {unit}",
+      "quantity": "Quantité",
+      "less": "Moins",
+      "more": "Plus",
+      "add": "＋ Ajouter {qty}",
+      "remove": "− Retirer {qty}",
+      "added": "+{qty} — {name}",
+      "removed": "−{qty} — {name}",
+      "unknownTitle": "Produit inconnu",
+      "unknownText": "Aucun produit ne porte ce code-barres. Ajoutez-le au stock avec ce code pré-rempli.",
+      "offlineTitle": "Hors-ligne",
+      "offlineText": "Ce code n'est pas dans la liste chargée. Réessayez une fois le réseau revenu.",
+      "rescan": "Scanner à nouveau",
+      "addToStock": "Ajouter au stock",
+      "createTitle": "Nouveau produit",
+      "create": "Créer et ajouter",
+      "created": "{name} ajouté au stock",
+      "lookupError": "Recherche impossible : {message}",
+      "fields": {
+        "barcode": "Code-barres",
+        "name": "Nom du produit",
+        "quantity": "Quantité initiale",
+        "unit": "Unité",
+        "price": "Prix d'achat (€)",
+        "taxRate": "TVA",
+        "section": "Section"
+      },
+      "errors": {
+        "barcode": "Le code-barres doit contenir uniquement des chiffres.",
+        "price": "Prix invalide (supérieur à 0).",
+        "offline": "Création impossible hors-ligne. Réessayez une fois le réseau revenu.",
+        "options": "Unités et TVA indisponibles : {message}",
+        "noOptions": "Aucune unité ou TVA configurée pour cet établissement."
+      }
     }
   }
 }
