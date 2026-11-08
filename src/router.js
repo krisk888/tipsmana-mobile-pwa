@@ -62,6 +62,13 @@ const routes = [
     meta: { title: 'Prise de commande', auth: true, roles: ['OWNER', 'MANAGER', 'VENTES', 'SERVEUR'] }
   },
   {
+    // Écran client : note en lecture seule ouverte par QR code, sans connexion
+    path: '/note/:ticketId',
+    name: 'CustomerDisplay',
+    component: () => import('./views/service/CustomerDisplay.vue'),
+    meta: { title: 'Votre note', public: true, bare: true }
+  },
+  {
     path: '/halls',
     name: 'plan-salle',
     component: () => import('./views/halls/plan-salle.vue'),
@@ -76,6 +83,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  if (to.meta.public) return next()
   if (to.meta.auth && !isAuthenticated()) {
     return next('/login')
   }

@@ -33,6 +33,9 @@ const EXPECTED = [
   { method: 'POST',   pattern: '/table-tickets/{id}/items', exist: true, note: 'add items (creates ticket)' },
   { method: 'GET',    pattern: '/floorplan/spaces', exist: true, note: 'spaces + live table states' },
   { method: 'POST',   pattern: '/floorplan/tables/{id}/open', exist: true, note: 'open table (covers)' },
+  // Fusion / séparation de notes — contrat demandé au mobile, PAS ENCORE dans le backend (vérifié 2026-11-08)
+  { method: 'POST',   pattern: '/table-tickets/merge', exist: false, pending: true, note: '{ table_numbers, target_table } → merged ticket' },
+  { method: 'POST',   pattern: '/table-tickets/split', exist: false, pending: true, note: '{ table_number, splits: [{ table_number, item_ids }] }' },
   // Sales
   { method: 'POST',   pattern: '/sales/entries', exist: true, note: 'create sales entry' },
   // Auth
@@ -78,6 +81,7 @@ const VIEWS = [
 const REPO = new URL('..', import.meta.url).pathname
 let total = 0, ok = 0, bad = 0
 const issues = []
+const pendingCalls = []
 
 console.log('═══ API Endpoint Verification ═══\n')
 
@@ -107,7 +111,12 @@ for (const v of VIEWS) {
       }
     }
 
-    if (!matchedKnown) {
+    const pendingEntry = !matchedKnown && EXPECTED.find(e => e.pending && c.method === e.method && collapsed === e.pattern)
+    if (pendingEntry) {
+      console.log(`  ⏳ ${c.method} ${c.url}`)
+      console.log(`    → pending backend: ${pendingEntry.note}`)
+      pendingCalls.push(`${v.name}: ${c.method} ${c.url}`)
+    } else if (!matchedKnown) {
       // Check if it's in the known-issues list
       let knownIssue = false
       for (const e of EXPECTED) {
@@ -136,8 +145,12 @@ console.log(`═══ RESULT ═══`)
 console.log(`  Total  : ${total}`)
 console.log(`  OK     : ${ok}`)
 console.log(`  Issues : ${bad}`)
+console.log(`  Pending backend : ${pendingCalls.length}`)
+for (const p of pendingCalls) console.log(`       ⏳ ${p}`)
 if (bad === 0) {
-  console.log('  ✅ All endpoint calls match expected backend routes.')
+  console.log(pendingCalls.length
+    ? `  ✅ No mismatch — ${pendingCalls.length} call(s) await backend routes (see ⏳).`
+    : '  ✅ All endpoint calls match expected backend routes.')
 } else {
   console.log(`  ❌ ${bad} issue(s) detected:`)
   for (const i of issues) console.log(`       ${i}`)

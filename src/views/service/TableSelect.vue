@@ -1,5 +1,5 @@
 <template>
-  <div class="svc-shell">
+  <div class="svc-shell" :class="{ 'merge-mode': mergeMode }">
     <!-- ═══ HEADER ═══ -->
     <header class="svc-header">
       <div class="svc-header-left">
@@ -21,6 +21,10 @@
       <EstablishmentSwitcher />
     </div>
 
+    <p v-if="mergeMode" class="svc-merge-hint">
+      Touchez les tables à réunir sur une seule note (2 minimum, dont au moins une occupée).
+    </p>
+
     <!-- ═══ FILTRES ═══ -->
     <div class="svc-chips">
       <button
@@ -32,6 +36,12 @@
       >
         {{ f.label }} <span class="svc-chip-count">{{ f.count }}</span>
       </button>
+      <button
+        class="svc-merge-btn"
+        :class="{ active: mergeMode }"
+        title="Fusionner des tables"
+        @click="toggleMergeMode"
+      >{{ mergeMode ? '✕ Annuler' : '🔗 Fusionner' }}</button>
     </div>
 
     <div v-if="spaces.length > 1" class="svc-chips svc-spaces">
@@ -63,11 +73,14 @@
           v-for="t in visibleTables"
           :key="t.number"
           class="svc-table"
-          :class="'state-' + t.state"
+          :class="['state-' + t.state, { selected: mergeMode && selected.includes(t.number) }]"
           @click="pickTable(t)"
         >
+          <span v-if="mergeMode && selected.includes(t.number)" class="svc-table-check">✓</span>
           <span class="svc-table-num">{{ t.number }}</span>
           <span class="svc-table-state">{{ stateLabel(t.state) }}</span>
+          <span v-if="t.linkedTo" class="svc-table-link">↔ T{{ t.linkedTo }}</span>
+          <span v-else-if="t.mergedWith?.length" class="svc-table-link">+ {{ t.mergedWith.join(', ') }}</span>
           <span v-if="t.state !== 'libre'" class="svc-table-meta">
             👤{{ t.covers || 1 }}<template v-if="t.itemCount"> · {{ t.itemCount }} art.</template>
           </span>
@@ -96,6 +109,35 @@
         <button class="btn-primary" :disabled="!manualValid" @click="openManual">Ouvrir</button>
       </div>
     </template>
+
+    <!-- ═══ BARRE DE FUSION ═══ -->
+    <div v-if="mergeMode" class="svc-merge-bar">
+      <span class="svc-merge-count">
+        {{ selected.length }} table(s)<template v-if="selected.length"> · {{ selected.join(', ') }}</template>
+      </span>
+      <button class="btn-primary" :disabled="!canMerge" @click="openMergeConfirm">Fusionner</button>
+    </div>
+
+    <!-- ═══ CONFIRMATION FUSION ═══ -->
+    <div v-if="mergeConfirm" class="modal-overlay" @click.self="mergeConfirm = null">
+      <div class="modal-card">
+        <div class="modal-title">🔗 Fusionner {{ selected.length }} tables</div>
+        <p class="modal-text">Les notes seront réunies sur une seule note. Table principale :</p>
+        <div class="covers-grid">
+          <button
+            v-for="n in selected"
+            :key="n"
+            class="covers-btn"
+            :class="{ active: mergeConfirm.target === n }"
+            @click="mergeConfirm.target = n"
+          >{{ n }}</button>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-ghost" @click="mergeConfirm = null">Annuler</button>
+          <button class="btn-primary" :disabled="mergeConfirm.busy" @click="confirmMerge">Fusionner</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ═══ SCAN QR TABLE ═══ -->
     <QrTableScanner v-if="scannerOpen" @detected="onScanned" @close="scannerOpen = false" />
@@ -129,7 +171,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore'
 import EstablishmentSwitcher from '../../components/EstablishmentSwitcher.vue'
 import QrTableScanner from '../../components/QrTableScanner.vue'
-import { fetchTables, formatEur, TABLE_STATES } from '../../shared/serviceOrders'
+import { fetchTables, formatEur, TABLE_STATES, mergeTableTickets } from '../../shared/serviceOrders'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -145,6 +187,9 @@ const manualNumber = ref('')
 const coversFor = ref(null)
 const covers = ref(2)
 const scannerOpen = ref(false)
+const mergeMode = ref(false)
+const selected = ref([])
+const mergeConfirm = ref(null)
 
 const POLL_INTERVAL = 15000
 let pollTimer = null
@@ -177,6 +222,10 @@ const manualValid = computed(() => {
   return Number.isInteger(n) && n > 0 && n < 1000
 })
 
+const canMerge = computed(() =>
+  selected.value.length >= 2 && selected.value.some(n => findTable(n)?.ticketId)
+)
+
 function stateLabel(state) {
   return TABLE_STATES[state]?.label || 'Libre'
 }
@@ -208,12 +257,65 @@ function findTable(number) {
 }
 
 function pickTable(t) {
+  if (mergeMode.value) return toggleSelected(t)
+  // Table rattachée à une note fusionnée : on ouvre la table principale
+  if (t.linkedTo) {
+    router.push({ name: 'ServiceOrder', params: { number: t.linkedTo } })
+    return
+  }
   if (t.state === 'libre') {
     covers.value = 2
     coversFor.value = t
     return
   }
   router.push({ name: 'ServiceOrder', params: { number: t.number } })
+}
+
+/* ═══ Fusion ═══ */
+function toast(message, type = 'success') {
+  if (window.__showToast) window.__showToast(message, type)
+}
+
+function toggleMergeMode() {
+  mergeMode.value = !mergeMode.value
+  selected.value = []
+  mergeConfirm.value = null
+}
+
+function toggleSelected(t) {
+  const n = t.linkedTo || t.number
+  selected.value = selected.value.includes(n)
+    ? selected.value.filter(x => x !== n)
+    : [...selected.value, n].sort((a, b) => a - b)
+}
+
+function openMergeConfirm() {
+  if (!canMerge.value) return
+  // Par défaut : la plus petite table qui a déjà une note
+  const target = selected.value.find(n => findTable(n)?.ticketId) ?? selected.value[0]
+  mergeConfirm.value = { target, busy: false }
+}
+
+async function confirmMerge() {
+  const conf = mergeConfirm.value
+  if (!conf || conf.busy) return
+  conf.busy = true
+  try {
+    const res = await mergeTableTickets({ tableNumbers: selected.value, targetTable: conf.target })
+    const tables = selected.value.join(', ')
+    mergeConfirm.value = null
+    mergeMode.value = false
+    selected.value = []
+    if (res.queued) {
+      toast('Hors-ligne : fusion mise en file', 'warning')
+      return
+    }
+    toast(`Tables ${tables} fusionnées sur la table ${conf.target}`)
+    router.push({ name: 'ServiceOrder', params: { number: conf.target } })
+  } catch (e) {
+    conf.busy = false
+    toast(e.data?.detail || e.message || 'Fusion impossible', 'error')
+  }
 }
 
 function confirmCovers() {
@@ -259,6 +361,8 @@ onUnmounted(() => {
   color: var(--text, #fff);
 }
 
+.svc-shell.merge-mode { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
+
 /* ─── Header ─── */
 .svc-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .svc-header-left { display: flex; flex-direction: column; min-width: 0; }
@@ -274,6 +378,29 @@ onUnmounted(() => {
 .svc-icon-btn:disabled { opacity: 0.5; }
 .spinning { display: inline-block; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Fusion ─── */
+.svc-merge-btn {
+  flex-shrink: 0; margin-left: auto; height: 36px; padding: 0 12px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+  border: 1px solid #8b5cf6; background: rgba(139, 92, 246, 0.12); color: #a78bfa;
+  font-size: 13px; font-weight: 800;
+}
+.svc-merge-btn.active { background: #8b5cf6; color: #fff; }
+.svc-merge-hint { font-size: 12px; color: #a78bfa; margin: 0; }
+.svc-table { position: relative; }
+.svc-table.selected { border-color: #8b5cf6; box-shadow: 0 0 0 2px #8b5cf6 inset; }
+.svc-table-check {
+  position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #8b5cf6; color: #fff; font-size: 12px; font-weight: 800;
+}
+.svc-table-link { font-size: 10px; font-weight: 800; color: #a78bfa; }
+.svc-merge-bar {
+  position: fixed; left: 8px; right: 8px; bottom: calc(64px + env(safe-area-inset-bottom)); z-index: 90;
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 16px;
+  border: 1px solid #8b5cf6; background: var(--card-bg, #1a1a2e); box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.45);
+}
+.svc-merge-count { flex: 1; font-size: 13px; font-weight: 700; }
 
 /* ─── Chips ─── */
 .svc-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }

@@ -37,6 +37,9 @@ Dédiée aux équipes en salle, cuisine, stock et pilotage. Interface mobile-fir
 | `/notifications` | **Notifications** | Tous (authed) |
 | `/profile` | **Profil** | Tous (authed) |
 | `/validations` | Validations pilotage | Tous (authed) |
+| `/service` | Tables (sélection, **fusion**) | OWNER, MANAGER, VENTES, SERVEUR |
+| `/service/table/:n` | Prise de commande (édition panier, **séparation**, QR note client) | OWNER, MANAGER, VENTES, SERVEUR |
+| `/note/:ticketId` | **Écran client** (lecture seule, sans connexion) | Public |
 
 ---
 
@@ -117,6 +120,15 @@ Dédiée aux équipes en salle, cuisine, stock et pilotage. Interface mobile-fir
 | POST | `/cash/dispatch` | Dispatch sans ticket |
 | POST | `/sales/entries` | Créer entrée vente |
 
+### Service en salle — fusion / séparation / écran client
+| Méthode | Path | Usage |
+|---------|------|-------|
+| POST | `/table-tickets/merge` | ⏳ À implémenter backend — `{ table_numbers: [4,5], target_table: 4 }` → note fusionnée (`merged_tables` optionnel dans la réponse) |
+| POST | `/table-tickets/split` | ⏳ À implémenter backend — `{ table_number: 4, splits: [{ table_number: 5, item_ids: [...] }] }` → `{ tickets: [...] }` |
+| GET | `/public/table-tickets/{ticket_id}` | ⏳ À implémenter backend — lecture seule **sans jeton** (même forme que `GET /table-tickets/{n}`), pour le client qui scanne le QR |
+
+> Écran client : le QR encode `/mobile/note/{ticketId}?t={table}#s={instantané}`. L'instantané (base64url, dans le fragment, jamais envoyé au serveur) s'affiche immédiatement et sert de repli tant que l'endpoint public n'existe pas ; sur un appareil connecté, la note est relue via `GET /table-tickets/{n}`. Rafraîchissement toutes les 10 s.
+
 > L'API est préfixée par `/api/v1` en production (configurable via `VITE_API_URL`).
 
 ---
@@ -178,6 +190,7 @@ Browser / PWA
 | `vue-router@^4.6` | Routing |
 | `pinia@^4.1` | State management |
 | `vite-plugin-pwa@^2` | Manifest + Service Worker |
+| `qrcode@^1.5` | QR code de la note client |
 | `vitest@^3 + @vue/test-utils` | Tests unitaires |
 
 ---

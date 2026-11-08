@@ -89,7 +89,8 @@ import { currentEstablishmentId } from './shared/serviceOrders'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const isLoginPage = computed(() => route.path === '/login')
+// Pages sans navigation : connexion, écran client
+const isLoginPage = computed(() => route.path === '/login' || !!route.meta.bare)
 const showEstSwitcher = computed(() =>
   authStore.establishments.length > 1 && route.path === authStore.homeRoute
 )
@@ -184,7 +185,7 @@ onMounted(() => {
   notifInterval = setInterval(() => {
     if (authStore.isAuthenticated) {
       authStore.fetchNotificationCount()
-    } else if (authStore.user) {
+    } else if (authStore.user && !route.meta.public) {
       authStore.logout()
       router.push('/login')
     }
