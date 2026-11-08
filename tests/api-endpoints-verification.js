@@ -43,6 +43,13 @@ const EXPECTED = [
   { method: 'GET',    pattern: '/mobile/orders/{id}/status', exist: false, pending: true, note: '{ status } — fallback: /cash/tickets/{ref}/kitchen-status' },
   { method: 'PATCH',  pattern: '/kds/orders/{id}/status', exist: false, pending: true, note: '{ status } — fallback: validate N times (forward only)' },
   { method: 'GET',    pattern: '/mobile/service-report', exist: false, pending: true, note: '?date=YYYY-MM-DD → revenue, covers, tickets, tables, payments, top_items' },
+  // Images de la carte, stock mobile, appel serveur — contrats demandés au mobile, PAS ENCORE dans le backend (vérifié 2026-11-08)
+  { method: 'GET',    pattern: '/mobile/menu/items', exist: false, pending: true, note: '?with_images=true → [{ id, image_url }] — fallback: menu without images' },
+  { method: 'GET',    pattern: '/inventory/items', exist: false, pending: true, note: '[{ id, name, quantity, threshold, unit }] — fallback: /inventory/stock/theoretical' },
+  { method: 'PATCH',  pattern: '/inventory/items/{id}/adjust', exist: false, pending: true, note: '{ delta } — fallback: POST /inventory/movements (adjustment)' },
+  // POST /mobile/tables/{n}/call-waiter?message= (public, fetch direct dans waiterCall.js) : pas encore dans le backend, pas de repli
+  { method: 'GET',    pattern: '/inventory/stock/theoretical', exist: true, note: 'theoretical stock + minimum_stock_level (section-grouped)' },
+  { method: 'POST',   pattern: '/inventory/movements', exist: true, note: 'manual stock movement (adjustment, signed quantity)' },
   // Sales
   { method: 'POST',   pattern: '/sales/entries', exist: true, note: 'create sales entry' },
   // Auth
@@ -85,6 +92,8 @@ const VIEWS = [
   { name: 'serviceOrders.js', file: 'src/shared/serviceOrders.js' },
   { name: 'kds.js',           file: 'src/shared/kds.js' },
   { name: 'serviceReport.js', file: 'src/shared/serviceReport.js' },
+  { name: 'menuImages.js',    file: 'src/shared/menuImages.js' },
+  { name: 'inventory.js',     file: 'src/shared/inventory.js' },
 ]
 
 const REPO = new URL('..', import.meta.url).pathname

@@ -28,6 +28,13 @@
     </div>
 
     <div class="quick-links">
+      <router-link v-if="canSeeItems" to="/stock/inventory" class="link-card">
+        <span class="link-icon">📋</span>
+        <div>
+          <strong>{{ t('stock.home.links.itemsTitle') }}</strong>
+          <p>{{ t('stock.home.links.itemsDesc') }}</p>
+        </div>
+      </router-link>
       <router-link to="/stock/express" class="link-card express">
         <span class="link-icon">⚡</span>
         <div>
@@ -54,11 +61,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '../../shared/api'
+import { useAuthStore } from '../../stores/authStore'
 import { useI18n } from '../../i18n'
 
 const { t, intlLocale } = useI18n()
+const authStore = useAuthStore()
+// Mêmes rôles que la route /stock/inventory (ACHATS voit /stock sans l'inventaire produits)
+const canSeeItems = computed(() => !authStore.roleCode || ['OWNER', 'MANAGER', 'INVENTAIRE'].includes(authStore.roleCode))
 
 const sessions = ref([])
 const loading = ref(true)

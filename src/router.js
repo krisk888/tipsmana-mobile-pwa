@@ -25,6 +25,13 @@ const routes = [
   { path: '/profile', name: 'Profile', component: () => import('./views/Profile.vue'), meta: { titleKey: 'common.titles.profile', auth: true } },
   { path: '/stock/receptions', name: 'Receptions', component: () => import('./views/stock/Receptions.vue'), meta: { titleKey: 'common.titles.receptions', auth: true, roles: ['OWNER', 'MANAGER', 'ACHATS'] } },
   { path: '/stock/express', name: 'ExpressScan', component: () => import('./views/stock/ExpressScan.vue'), meta: { titleKey: 'common.titles.express', auth: true } },
+  {
+    // Stock produit par produit : seuils, filtre stock bas, ajustements rapides
+    path: '/stock/inventory',
+    name: 'InventoryItems',
+    component: () => import('./views/stock/InventoryItems.vue'),
+    meta: { titleKey: 'common.titles.inventoryItems', auth: true, roles: ['OWNER', 'MANAGER', 'INVENTAIRE'] }
+  },
   { path: '/stock/:id', name: 'StockDetail', component: () => import('./views/stock/StockDetail.vue'), meta: { titleKey: 'common.titles.stockDetail', auth: true } },
   {
     path: '/caisse',
@@ -81,6 +88,13 @@ const routes = [
     name: 'CustomerDisplay',
     component: () => import('./views/service/CustomerDisplay.vue'),
     meta: { titleKey: 'common.titles.customerDisplay', public: true, bare: true }
+  },
+  {
+    // Appel serveur : page client ouverte par le QR code de la table, sans connexion
+    path: '/mon-add/:table(\\d+)?',
+    name: 'WaiterCall',
+    component: () => import('./views/service/WaiterCall.vue'),
+    meta: { titleKey: 'common.titles.waiterCall', public: true, bare: true }
   },
   {
     path: '/halls',

@@ -1,0 +1,22 @@
+{
+  "waiterCall": {
+    "kicker": "Besoin de quelque chose ?",
+    "title": "Appeler le serveur",
+    "noTableTitle": "Table inconnue",
+    "noTableText": "Scannez le QR code posé sur votre table.",
+    "orPreset": "ou précisez votre demande",
+    "sent": "Votre serveur est prévenu, il arrive !",
+    "messages": {
+      "call": "Appeler le serveur",
+      "bill": "L'addition, s'il vous plaît",
+      "bread": "Plus de pain",
+      "order": "Commande supplémentaire"
+    },
+    "errors": {
+      "cooldown": "Demande déjà envoyée, votre serveur arrive.",
+      "offline": "Pas de connexion. Faites signe à votre serveur.",
+      "unavailable": "L'appel n'est pas disponible ici. Faites signe à votre serveur.",
+      "error": "L'appel n'a pas abouti. Réessayez ou faites signe à votre serveur."
+    }
+  }
+}

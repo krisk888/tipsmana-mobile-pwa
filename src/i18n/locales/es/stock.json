@@ -30,7 +30,9 @@
         "scanTitle": "Escanear un producto",
         "scanDesc": "Código QR o código de barras",
         "receptionsTitle": "Recepciones",
-        "receptionsDesc": "Entregas pendientes"
+        "receptionsDesc": "Entregas pendientes",
+        "itemsTitle": "Stock de productos",
+        "itemsDesc": "Cantidades, umbrales, ajuste rápido"
       }
     },
     "express": {
@@ -155,6 +157,27 @@
         "physical_count": "Recuento físico",
         "theoretical": "Teórico"
       }
+    },
+    "items": {
+      "title": "📋 Stock de productos",
+      "subtitle": "{count} producto | {count} productos",
+      "theoretical": "stock teórico",
+      "searchPlaceholder": "Buscar un producto…",
+      "filterAll": "Todos",
+      "filterLow": "Stock bajo",
+      "fromCache": "Sin conexión: últimas cantidades conocidas. Los ajustes se enviarán al volver la red.",
+      "empty": "Ningún producto en stock.",
+      "noLow": "Ningún producto por debajo de su umbral.",
+      "lowBadge": "Stock bajo",
+      "threshold": "Umbral {value} {unit}",
+      "noThreshold": "Sin umbral",
+      "pending": "enviando…",
+      "queued": "esperando red",
+      "decrease": "Quitar 1 — {name}",
+      "increase": "Añadir 1 — {name}",
+      "manualEntry": "Introducir cantidad — {name}",
+      "invalidQuantity": "Cantidad no válida",
+      "adjustError": "Ajuste no guardado ({name}): {message}"
     }
   }
 }

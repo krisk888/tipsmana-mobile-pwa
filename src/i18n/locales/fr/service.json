@@ -115,6 +115,11 @@
         "splitFailed": "Séparation impossible",
         "retrySent": "Envoyé en cuisine",
         "retryFailed": "Envoi cuisine échoué : {error}"
+      },
+      "viewMode": "Affichage de la carte",
+      "views": {
+        "list": "Liste",
+        "gallery": "Galerie"
       }
     },
     "orderHistory": {

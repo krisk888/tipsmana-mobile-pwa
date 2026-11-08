@@ -5,6 +5,7 @@
  *  - GET  /floorplan/spaces                 → tables + état live (libre / occupée / addition)
  *  - POST /floorplan/tables/{n}/open        → ouverture de table (couverts)
  *  - GET  /products/pos-menu                → catégories + articles
+ *  - GET  /mobile/menu/items?with_images=true → image_url des articles (menuImages.js)
  *  - GET  /table-tickets/list               → notes ouvertes (articles, totaux HT/TTC)
  *  - GET  /table-tickets/{n}                → note ouverte d'une table (404 si aucune)
  *  - POST /table-tickets/{n}/items          → ajout d'articles (crée la note si besoin)
@@ -19,6 +20,7 @@
 
 import api from './api'
 import { t, intlLocale } from '../i18n'
+import { imageUrlOf, fetchMenuImages, applyMenuImages } from './menuImages'
 
 export const DEFAULT_VAT_RATE = 10
 
@@ -211,6 +213,7 @@ export function normalizeCategory(cat) {
       vatRate: toNumber(p.vat_rate, DEFAULT_VAT_RATE),
       isKitchen: p.is_kitchen !== false,
       course,
+      imageUrl: imageUrlOf(p),
     })),
   }
 }
@@ -375,11 +378,11 @@ export function groupByCourse(lines) {
 /* ═══ Chargements ═══ */
 
 export async function fetchMenu() {
-  const res = await api.get('/products/pos-menu')
+  // Les images sont un bonus : leur échec ne bloque jamais la carte
+  const [res, images] = await Promise.all([api.get('/products/pos-menu'), fetchMenuImages()])
   const cats = unwrap(res)?.categories
   if (!Array.isArray(cats)) return []
-  return cats
-    .map(normalizeCategory)
+  return applyMenuImages(cats.map(normalizeCategory), images)
     .filter(c => c.items.length)
     .sort((a, b) => courseMeta(a.course).order - courseMeta(b.course).order || a.name.localeCompare(b.name, intlLocale()))
 }

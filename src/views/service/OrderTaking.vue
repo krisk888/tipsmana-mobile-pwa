@@ -57,7 +57,21 @@
           >{{ c.icon }} {{ c.name }}</button>
         </div>
 
-        <div class="ot-prod-grid">
+        <div class="ot-view-toggle" role="radiogroup" :aria-label="t('service.orderTaking.viewMode')">
+          <button
+            v-for="v in MENU_VIEWS"
+            :key="v"
+            type="button"
+            role="radio"
+            class="ot-view-btn"
+            :class="{ active: menuView === v }"
+            :aria-checked="menuView === v"
+            @click="setMenuView(v)"
+          >{{ v === 'list' ? '☰' : '▦' }} {{ t(`service.orderTaking.views.${v}`) }}</button>
+        </div>
+
+        <!-- Liste : vignette 80×80 à côté du nom -->
+        <div v-if="menuView === 'list'" class="ot-prod-list">
           <div
             v-for="p in activeCategory?.items || []"
             :key="p.id"
@@ -65,13 +79,34 @@
             :class="{ 'in-cart': qtyInCart(p.id) }"
           >
             <button class="ot-prod-main" @click="tapProduct(p)">
-              <span class="ot-prod-name">{{ p.name }}</span>
-              <span class="ot-prod-price">{{ formatEur(p.price) }}</span>
-              <span v-if="hasOptions(p)" class="ot-prod-hint">⚙️ {{ t('service.orderTaking.optionsHint') }}</span>
+              <MenuThumb :src="p.imageUrl" :icon="activeCategory.icon" :size="80" />
+              <span class="ot-prod-text">
+                <span class="ot-prod-name">{{ p.name }}</span>
+                <span v-if="hasOptions(p)" class="ot-prod-hint">⚙️ {{ t('service.orderTaking.optionsHint') }}</span>
+                <span class="ot-prod-price">{{ formatEur(p.price) }}</span>
+              </span>
             </button>
             <button class="ot-prod-edit" :title="t('service.orderTaking.editProduct')" @click="openSheet(p)">✎</button>
             <span v-if="qtyInCart(p.id)" class="ot-prod-badge">{{ qtyInCart(p.id) }}</span>
           </div>
+        </div>
+
+        <!-- Galerie : grille d'images (découverte) -->
+        <div v-else class="ot-gallery">
+          <button
+            v-for="p in activeCategory?.items || []"
+            :key="p.id"
+            class="ot-gal-item"
+            :class="{ 'in-cart': qtyInCart(p.id) }"
+            @click="tapProduct(p)"
+          >
+            <MenuThumb class="ot-gal-img" :src="p.imageUrl" :alt="p.name" :icon="activeCategory.icon" :size="0" />
+            <span class="ot-gal-caption">
+              <span class="ot-gal-name">{{ p.name }}</span>
+              <span class="ot-gal-price">{{ formatEur(p.price) }}</span>
+            </span>
+            <span v-if="qtyInCart(p.id)" class="ot-gal-badge">{{ qtyInCart(p.id) }}</span>
+          </button>
         </div>
       </template>
     </template>
@@ -344,6 +379,8 @@ import {
   getKitchenRecord, loadDraft, saveDraft, currentEstablishmentId, toNumber, recordServiceOrder,
 } from '../../shared/serviceOrders'
 import { ensureNotificationPermission } from '../../shared/orderNotifications'
+import { MENU_VIEWS, getMenuView, saveMenuView, warmMenuImages } from '../../shared/menuImages'
+import MenuThumb from '../../components/MenuThumb.vue'
 import { useAuthStore } from '../../stores/authStore'
 import { useI18n } from '../../i18n'
 
@@ -362,6 +399,7 @@ const categories = ref([])
 const activeCatId = ref(null)
 const loadingMenu = ref(true)
 const menuError = ref(null)
+const menuView = ref(getMenuView())
 
 const ticket = ref(null)
 const loadingTicket = ref(true)
@@ -427,6 +465,8 @@ async function loadMenu() {
     if (!categories.value.some(c => c.id === activeCatId.value)) {
       activeCatId.value = categories.value[0]?.id || null
     }
+    // Images mises en cache par le service worker pour le hors-ligne
+    warmMenuImages(categories.value)
   } catch (e) {
     menuError.value = e.message || t('service.orderTaking.toasts.menuUnavailable')
   } finally {
@@ -453,6 +493,11 @@ function refreshKitchenRec() {
 }
 
 /* ═══ Articles ═══ */
+function setMenuView(view) {
+  menuView.value = view
+  saveMenuView(view)
+}
+
 function optionGroupsFor(product) {
   return (COURSE_OPTIONS[product.course] || []).map(k => OPTION_GROUPS[k]).filter(Boolean)
 }
@@ -715,20 +760,48 @@ onMounted(() => {
 .ot-cat.active { color: #0d0d14; font-weight: 800; }
 
 /* ─── Produits ─── */
-.ot-prod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ot-view-toggle { display: flex; justify-content: flex-end; gap: 6px; }
+.ot-view-btn {
+  padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--card-border, #2a2a40); background: var(--card-bg, #1a1a2e); color: var(--muted, #8a8aa0);
+}
+.ot-view-btn.active { border-color: var(--primary, #10b981); color: var(--primary, #10b981); }
+
+.ot-prod-list { display: flex; flex-direction: column; gap: 8px; }
 .ot-prod {
   position: relative; display: flex; border-radius: 14px; overflow: hidden;
   border: 1px solid var(--card-border, #2a2a40); background: var(--card-bg, #1a1a2e);
 }
 .ot-prod.in-cart { border-color: var(--primary, #10b981); }
 .ot-prod-main {
-  flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-  min-height: 86px; padding: 12px 10px; border: none; background: none; cursor: pointer;
+  flex: 1; min-width: 0; display: flex; align-items: stretch; gap: 12px;
+  padding: 8px; border: none; background: none; cursor: pointer;
   color: var(--text, #fff); text-align: left;
 }
 .ot-prod-main:active { background: rgba(16, 185, 129, 0.1); }
-.ot-prod-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
+.ot-prod-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 2px 30px 2px 0; }
+.ot-prod-name { font-size: 14px; font-weight: 700; line-height: 1.2; }
 .ot-prod-price { margin-top: auto; font-size: 15px; font-weight: 800; color: var(--success, #10b981); }
+
+.ot-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ot-gal-item {
+  position: relative; display: flex; flex-direction: column; padding: 0; overflow: hidden; cursor: pointer;
+  border-radius: 14px; border: 1px solid var(--card-border, #2a2a40); background: var(--card-bg, #1a1a2e);
+  color: var(--text, #fff); text-align: left;
+}
+.ot-gal-item.in-cart { border-color: var(--primary, #10b981); }
+.ot-gal-item:active { transform: scale(0.98); }
+.ot-gal-img { width: 100%; aspect-ratio: 1; border-radius: 0; }
+.ot-gal-img :deep(.menu-thumb-icon) { font-size: 44px; }
+.ot-gal-caption { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px 10px; }
+.ot-gal-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
+.ot-gal-price { font-size: 14px; font-weight: 800; color: var(--success, #10b981); }
+.ot-gal-badge {
+  position: absolute; top: 8px; right: 8px; min-width: 26px; height: 26px; padding: 0 7px;
+  display: flex; align-items: center; justify-content: center; border-radius: 13px;
+  background: var(--primary, #10b981); color: #0d0d14; font-size: 13px; font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
 .ot-prod-hint { font-size: 10px; color: var(--muted, #8a8aa0); }
 .ot-prod-edit {
   width: 34px; border: none; border-left: 1px solid var(--card-border, #2a2a40); cursor: pointer;

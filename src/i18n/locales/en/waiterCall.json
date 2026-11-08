@@ -1,0 +1,22 @@
+{
+  "waiterCall": {
+    "kicker": "Need anything?",
+    "title": "Call the waiter",
+    "noTableTitle": "Unknown table",
+    "noTableText": "Scan the QR code on your table.",
+    "orPreset": "or tell us what you need",
+    "sent": "Your waiter has been notified and is on the way!",
+    "messages": {
+      "call": "Call the waiter",
+      "bill": "The bill, please",
+      "bread": "More bread",
+      "order": "Order something else"
+    },
+    "errors": {
+      "cooldown": "Request already sent, your waiter is coming.",
+      "offline": "No connection. Please wave to your waiter.",
+      "unavailable": "Calling is not available here. Please wave to your waiter.",
+      "error": "The call failed. Try again or wave to your waiter."
+    }
+  }
+}
