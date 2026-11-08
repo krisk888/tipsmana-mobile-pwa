@@ -30,7 +30,9 @@
         "scanTitle": "Scanner un produit",
         "scanDesc": "QR code ou code-barres",
         "receptionsTitle": "Réceptions",
-        "receptionsDesc": "Livraisons en attente"
+        "receptionsDesc": "Livraisons en attente",
+        "itemsTitle": "Stock produits",
+        "itemsDesc": "Quantités, seuils, ajustement rapide"
       }
     },
     "express": {
@@ -155,6 +157,27 @@
         "physical_count": "Comptage physique",
         "theoretical": "Théorique"
       }
+    },
+    "items": {
+      "title": "📋 Stock produits",
+      "subtitle": "{count} produit | {count} produits",
+      "theoretical": "stock théorique",
+      "searchPlaceholder": "Rechercher un produit…",
+      "filterAll": "Tous",
+      "filterLow": "Stock bas",
+      "fromCache": "Hors-ligne : dernières quantités connues. Les ajustements seront envoyés au retour du réseau.",
+      "empty": "Aucun produit en stock.",
+      "noLow": "Aucun produit sous son seuil.",
+      "lowBadge": "Stock bas",
+      "threshold": "Seuil {value} {unit}",
+      "noThreshold": "Pas de seuil",
+      "pending": "envoi…",
+      "queued": "en attente de réseau",
+      "decrease": "Retirer 1 — {name}",
+      "increase": "Ajouter 1 — {name}",
+      "manualEntry": "Saisir la quantité — {name}",
+      "invalidQuantity": "Quantité invalide",
+      "adjustError": "Ajustement non enregistré ({name}) : {message}"
     }
   }
 }

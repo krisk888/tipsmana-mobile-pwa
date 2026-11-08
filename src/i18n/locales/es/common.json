@@ -60,7 +60,9 @@
       "customerDisplay": "Su cuenta",
       "halls": "Plano de sala",
       "kdsBoard": "Tablero de cocina",
-      "serviceReport": "Informe de servicio"
+      "serviceReport": "Informe de servicio",
+      "inventoryItems": "Stock de productos",
+      "waiterCall": "Llamar al camarero"
     },
     "errors": {
       "network": "Red no disponible.",

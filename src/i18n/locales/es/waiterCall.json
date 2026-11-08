@@ -1,0 +1,22 @@
+{
+  "waiterCall": {
+    "kicker": "¿Necesita algo?",
+    "title": "Llamar al camarero",
+    "noTableTitle": "Mesa desconocida",
+    "noTableText": "Escanee el código QR de su mesa.",
+    "orPreset": "o indique su petición",
+    "sent": "Su camarero ha sido avisado, ¡ya viene!",
+    "messages": {
+      "call": "Llamar al camarero",
+      "bill": "La cuenta, por favor",
+      "bread": "Más pan",
+      "order": "Pedir algo más"
+    },
+    "errors": {
+      "cooldown": "Petición ya enviada, su camarero viene.",
+      "offline": "Sin conexión. Haga una seña a su camarero.",
+      "unavailable": "La llamada no está disponible aquí. Haga una seña a su camarero.",
+      "error": "La llamada ha fallado. Inténtelo de nuevo o haga una seña a su camarero."
+    }
+  }
+}

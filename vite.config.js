@@ -51,6 +51,22 @@ export default defineConfig({
             handler: 'NetworkOnly',
           },
           {
+            // Images (photos de la carte comprises, même servies par l'API ou
+            // un CDN, avec ou sans extension) : cache-first, disponibles hors-ligne
+            urlPattern: ({ request, url }) =>
+              request.destination === 'image' || /\.(?:png|jpe?g|svg|gif|webp|avif)$/i.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'menu-images',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 jours
+              },
+              // 0 = réponse opaque d'un CDN sans CORS (<img> l'affiche quand même)
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             // Données dynamiques : network-first avec repli cache
             urlPattern: /\/api\/v1\//,
             handler: 'NetworkFirst',
@@ -76,17 +92,6 @@ export default defineConfig({
                   },
                 },
               ],
-            },
-          },
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'image-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-              },
             },
           },
           {

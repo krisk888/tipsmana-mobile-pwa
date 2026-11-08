@@ -115,6 +115,11 @@
         "splitFailed": "No se pudo separar",
         "retrySent": "Enviado a cocina",
         "retryFailed": "Fallo al enviar a cocina: {error}"
+      },
+      "viewMode": "Vista de la carta",
+      "views": {
+        "list": "Lista",
+        "gallery": "Galería"
       }
     },
     "orderHistory": {

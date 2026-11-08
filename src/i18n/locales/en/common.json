@@ -60,7 +60,9 @@
       "customerDisplay": "Your bill",
       "halls": "Floor plan",
       "kdsBoard": "Kitchen board",
-      "serviceReport": "Service report"
+      "serviceReport": "Service report",
+      "inventoryItems": "Product stock",
+      "waiterCall": "Call the waiter"
     },
     "errors": {
       "network": "Network unavailable.",

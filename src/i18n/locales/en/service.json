@@ -115,6 +115,11 @@
         "splitFailed": "Could not split",
         "retrySent": "Sent to the kitchen",
         "retryFailed": "Sending to kitchen failed: {error}"
+      },
+      "viewMode": "Menu display",
+      "views": {
+        "list": "List",
+        "gallery": "Gallery"
       }
     },
     "orderHistory": {

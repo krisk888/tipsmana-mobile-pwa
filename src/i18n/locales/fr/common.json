@@ -60,7 +60,9 @@
       "customerDisplay": "Votre note",
       "halls": "Plan de salle",
       "kdsBoard": "Tableau cuisine",
-      "serviceReport": "Rapport de service"
+      "serviceReport": "Rapport de service",
+      "inventoryItems": "Stock produits",
+      "waiterCall": "Appeler le serveur"
     },
     "errors": {
       "network": "Réseau indisponible.",

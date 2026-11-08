@@ -30,7 +30,9 @@
         "scanTitle": "Scan a product",
         "scanDesc": "QR code or barcode",
         "receptionsTitle": "Deliveries",
-        "receptionsDesc": "Pending deliveries"
+        "receptionsDesc": "Pending deliveries",
+        "itemsTitle": "Product stock",
+        "itemsDesc": "Quantities, thresholds, quick adjust"
       }
     },
     "express": {
@@ -155,6 +157,27 @@
         "physical_count": "Physical count",
         "theoretical": "Theoretical"
       }
+    },
+    "items": {
+      "title": "📋 Product stock",
+      "subtitle": "{count} product | {count} products",
+      "theoretical": "theoretical stock",
+      "searchPlaceholder": "Search a product…",
+      "filterAll": "All",
+      "filterLow": "Low stock",
+      "fromCache": "Offline: last known quantities. Adjustments will be sent when the network is back.",
+      "empty": "No product in stock.",
+      "noLow": "No product below its threshold.",
+      "lowBadge": "Low stock",
+      "threshold": "Threshold {value} {unit}",
+      "noThreshold": "No threshold",
+      "pending": "sending…",
+      "queued": "waiting for network",
+      "decrease": "Remove 1 — {name}",
+      "increase": "Add 1 — {name}",
+      "manualEntry": "Enter quantity — {name}",
+      "invalidQuantity": "Invalid quantity",
+      "adjustError": "Adjustment not saved ({name}): {message}"
     }
   }
 }

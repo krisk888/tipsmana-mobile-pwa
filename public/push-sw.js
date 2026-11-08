@@ -1,5 +1,6 @@
 // push-sw.js — importé par le service worker généré (workbox importScripts).
 // Payload attendu (JSON) : { title, body, tag?, url?, data?: { type: 'order_status', table, status } }
+//                      ou { title?, body?, data: { type: 'waiter_call', table, message } }
 // - Un onglet de l'app au premier plan : on lui relaie le message (toast), sans notification système
 // - Sinon : notification système ; le clic ouvre / focalise l'app sur l'URL fournie
 /* eslint-env serviceworker */
@@ -28,6 +29,22 @@ self.addEventListener('push', (event) => {
         c.postMessage({ type: 'ORDER_STATUS', tableNumber: data.table, status: data.status })
       }
       if (focused) return // le toast suffit
+    }
+
+    // Appel client depuis /mon-add : toujours une notification système (même app
+    // ouverte), un appel par table remplace le précédent, le clic ouvre la table
+    if (data.type === 'waiter_call') {
+      await self.registration.showNotification(payload.title || `Table ${data.table}`, {
+        body: payload.body || data.message || '',
+        tag: payload.tag || `waiter-call-${data.table}`,
+        renotify: true,
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
+        icon: payload.icon || '/mobile/icons/icon-192.png',
+        badge: '/mobile/icons/icon-96.png',
+        data: { url: payload.url || data.url || `/mobile/service/table/${data.table}` },
+      })
+      return
     }
 
     await self.registration.showNotification(payload.title || 'Tipsmana', {
