@@ -35,6 +35,13 @@
           <p>{{ t('stock.home.links.itemsDesc') }}</p>
         </div>
       </router-link>
+      <router-link v-if="canSeeItems" to="/stock/count" class="link-card">
+        <span class="link-icon">🧮</span>
+        <div>
+          <strong>{{ t('stock.home.links.countTitle') }}</strong>
+          <p>{{ t('stock.home.links.countDesc') }}</p>
+        </div>
+      </router-link>
       <router-link to="/stock/express" class="link-card express">
         <span class="link-icon">⚡</span>
         <div>

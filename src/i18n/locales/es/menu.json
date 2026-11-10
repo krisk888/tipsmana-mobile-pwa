@@ -1,0 +1,23 @@
+{
+  "menu": {
+    "kicker": "La carta",
+    "title": "Nuestra carta",
+    "loading": "Cargando la carta…",
+    "categories": "Categorías",
+    "search": "Buscar un plato…",
+    "noResult": "Ningún plato coincide.",
+    "empty": "La carta está vacía por ahora.",
+    "allergens": "Alérgenos: {list}",
+    "callWaiter": "Llamar al camarero",
+    "pricesNote": "Precios con IVA y servicio incluidos.",
+    "cached": "Sin conexión — carta del {time}.",
+    "errors": {
+      "offlineTitle": "Sin conexión",
+      "offlineText": "Comprueba tu conexión e inténtalo de nuevo.",
+      "unavailableTitle": "Carta disponible pronto",
+      "unavailableText": "La carta en línea aún no está disponible. Pide la carta a tu camarero.",
+      "errorTitle": "Carta no disponible",
+      "errorText": "Se ha producido un problema. Inténtalo de nuevo en un momento."
+    }
+  }
+}

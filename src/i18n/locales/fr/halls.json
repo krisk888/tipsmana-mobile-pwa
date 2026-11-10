@@ -14,6 +14,39 @@
     "loading": "Chargement du plan de salle…",
     "loadError": "Erreur de chargement du plan de salle",
     "noSpaces": "Aucun espace configuré.",
-    "noSpacesHint": "Configurez le plan de salle depuis la caisse."
+    "noSpacesHint": "Configurez le plan de salle depuis la caisse.",
+    "history": {
+      "action": "Historique",
+      "title": "Table {number} — historique",
+      "longPressHint": "Appui long sur une table : historique du jour",
+      "stats": {
+        "tickets": "notes",
+        "avgDuration": "durée moy.",
+        "avgWait": "attente moy.",
+        "revenue": "chiffre"
+      },
+      "tickets": "Notes du jour",
+      "empty": "Aucune note aujourd'hui pour cette table.",
+      "inProgress": "En cours",
+      "wait": "attente {value}",
+      "duration": "durée {value}",
+      "dayTitle": "Toutes les tables aujourd'hui",
+      "dayAvgDuration": "Temps moyen par table : {value}",
+      "dayRevenuePerTable": "Chiffre moyen par table : {value}",
+      "cols": {
+        "table": "Table",
+        "tickets": "Notes",
+        "avgDuration": "Durée moy.",
+        "revenue": "Chiffre"
+      },
+      "minutes": "{n} min",
+      "hours": "{h} h {m}",
+      "localNote": "Historique relevé par ce téléphone (notes fermées datées à quelques secondes près)."
+    },
+    "menuQr": {
+      "button": "QR code de la carte",
+      "alt": "QR code de la carte — table {number}",
+      "hint": "À imprimer et poser sur la table : le client ouvre la carte sans connexion."
+    }
   }
 }

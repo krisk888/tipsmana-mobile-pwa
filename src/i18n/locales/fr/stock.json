@@ -32,7 +32,9 @@
         "receptionsTitle": "Réceptions",
         "receptionsDesc": "Livraisons en attente",
         "itemsTitle": "Stock produits",
-        "itemsDesc": "Quantités, seuils, ajustement rapide"
+        "itemsDesc": "Quantités, seuils, ajustement rapide",
+        "countTitle": "Comptage inventaire",
+        "countDesc": "Tous les produits, mouvements gelés"
       }
     },
     "express": {
@@ -224,6 +226,58 @@
         "offline": "Création impossible hors-ligne. Réessayez une fois le réseau revenu.",
         "options": "Unités et TVA indisponibles : {message}",
         "noOptions": "Aucune unité ou TVA configurée pour cet établissement."
+      }
+    },
+    "count": {
+      "title": "🧮 Comptage inventaire",
+      "subtitle": "Inventaire complet de tous les produits",
+      "progress": "{counted} / {total} comptés",
+      "intro": "{count} produit sera listé avec sa quantité théorique. | {count} produits seront listés avec leur quantité théorique.",
+      "introFreeze": "Les mouvements de stock sont gelés sur ce téléphone jusqu'à la fin du comptage.",
+      "introScan": "Scannez un code-barres ou recherchez un produit pour saisir la quantité réelle.",
+      "introResume": "Le comptage est enregistré sur le téléphone : vous pouvez fermer l'app et reprendre.",
+      "start": "▶ Démarrer le comptage",
+      "frozenSince": "Comptage en cours depuis {time} — mouvements de stock gelés",
+      "frozenBanner": "Comptage d'inventaire en cours : ajustements gelés. Ouvrir le comptage →",
+      "frozenError": "Comptage d'inventaire en cours : mouvements de stock gelés.",
+      "openMode": "Mode comptage inventaire (tous les produits)",
+      "searchPlaceholder": "Rechercher (nom, réf., code-barres)…",
+      "filters": {
+        "all": "Tous",
+        "todo": "À compter",
+        "gaps": "Écarts"
+      },
+      "empty": {
+        "all": "Aucun produit.",
+        "todo": "Tous les produits sont comptés.",
+        "gaps": "Aucun écart pour l'instant."
+      },
+      "theoretical": "Théorique {value} {unit}",
+      "variance": "écart {value}",
+      "sameAsTheoretical": "Quantité réelle = théorique",
+      "realShort": "Réel",
+      "real": "Quantité réelle — {name}",
+      "unknownCode": "Code inconnu : {code}",
+      "abandon": "Abandonner",
+      "finish": "Terminer ({counted})",
+      "summaryTitle": "Terminer le comptage ?",
+      "statCounted": "produits comptés",
+      "statVariances": "écarts",
+      "statValue": "valeur des écarts",
+      "lossGain": "Manquants {loss} · surplus {gain}",
+      "notCounted": "{count} produit non compté ne sera pas envoyé. | {count} produits non comptés ne seront pas envoyés.",
+      "unvalued": "{count} écart sans coût connu (non valorisé). | {count} écarts sans coût connu (non valorisés).",
+      "send": "Envoyer les écarts",
+      "doneTitle": "Comptage envoyé",
+      "sentAsSession": "Enregistré comme session d'inventaire terminée : validez-la au back-office pour ajuster le stock.",
+      "backToStock": "Retour au stock",
+      "abandonTitle": "Abandonner le comptage ?",
+      "abandonText": "{count} saisie sera perdue et les mouvements de stock dégelés. | {count} saisies seront perdues et les mouvements de stock dégelés.",
+      "abandonConfirm": "Abandonner",
+      "abandoned": "Comptage abandonné — mouvements dégelés",
+      "errors": {
+        "offline": "Pas de réseau : le comptage reste enregistré sur le téléphone. Réessayez une fois connecté.",
+        "send": "Envoi impossible : {message}"
       }
     }
   }

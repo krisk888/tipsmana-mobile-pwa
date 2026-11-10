@@ -21,6 +21,7 @@
 import api from './api'
 import { t, intlLocale } from '../i18n'
 import { imageUrlOf, fetchMenuImages, applyMenuImages } from './menuImages'
+import { recordOpenTickets } from './tableHistory'
 
 export const DEFAULT_VAT_RATE = 10
 
@@ -218,9 +219,9 @@ export function normalizeCategory(cat) {
   }
 }
 
-export function normalizeTicket(t) {
-  if (!t || !t.id) return null
-  const items = (Array.isArray(t.items) ? t.items : []).map(i => ({
+export function normalizeTicket(raw) {
+  if (!raw || !raw.id) return null
+  const items = (Array.isArray(raw.items) ? raw.items : []).map(i => ({
     id: String(i.id),
     name: i.item_name || i.name || t('service.fallback.article'),
     qty: toNumber(i.quantity, 1),
@@ -235,16 +236,18 @@ export function normalizeTicket(t) {
   }))
   items.sort((a, b) => a.sortOrder - b.sortOrder)
   return {
-    id: String(t.id),
-    tableNumber: toNumber(t.table_number),
-    status: t.status || 'open',
-    totalTtc: round2(t.total_ttc),
-    totalHt: round2(t.total_ht),
-    covers: toNumber(t.covers, 1),
-    serveur: t.serveur_name || '',
-    openedAt: t.opened_at || t.created_at || null,
+    id: String(raw.id),
+    tableNumber: toNumber(raw.table_number),
+    status: raw.status || 'open',
+    totalTtc: round2(raw.total_ttc),
+    totalHt: round2(raw.total_ht),
+    covers: toNumber(raw.covers, 1),
+    serveur: raw.serveur_name || '',
+    openedAt: raw.opened_at || raw.created_at || null,
+    // Premier article saisi : fin de l'attente avant commande (historique des tables)
+    firstOrderAt: (Array.isArray(raw.items) ? raw.items : []).map(i => i.created_at).filter(Boolean).sort()[0] || null,
     // Note fusionnée : tables rattachées (si le backend les renvoie)
-    tables: (Array.isArray(t.merged_tables) ? t.merged_tables : Array.isArray(t.tables) ? t.tables : [])
+    tables: (Array.isArray(raw.merged_tables) ? raw.merged_tables : Array.isArray(raw.tables) ? raw.tables : [])
       .map(n => toNumber(n)).filter(n => n > 0),
     items,
   }
@@ -390,7 +393,10 @@ export async function fetchMenu() {
 export async function fetchOpenTickets() {
   const res = await api.get('/table-tickets/list')
   const list = unwrap(res)
-  return applyMergeRecords((Array.isArray(list) ? list : []).map(normalizeTicket).filter(Boolean))
+  const tickets = applyMergeRecords((Array.isArray(list) ? list : []).map(normalizeTicket).filter(Boolean))
+  // Journal d'occupation des tables (une réponse en cache ne dit rien des notes fermées)
+  if (!res?.fromCache) recordOpenTickets(currentEstablishmentId(), tickets)
+  return tickets
 }
 
 export async function fetchTableTicket(tableNumber) {

@@ -14,6 +14,39 @@
     "loading": "Loading floor plan…",
     "loadError": "Failed to load floor plan",
     "noSpaces": "No areas configured.",
-    "noSpacesHint": "Set up the floor plan from the till."
+    "noSpacesHint": "Set up the floor plan from the till.",
+    "history": {
+      "action": "History",
+      "title": "Table {number} — history",
+      "longPressHint": "Long-press a table: today's history",
+      "stats": {
+        "tickets": "tickets",
+        "avgDuration": "avg. time",
+        "avgWait": "avg. wait",
+        "revenue": "revenue"
+      },
+      "tickets": "Today's tickets",
+      "empty": "No ticket today for this table.",
+      "inProgress": "In progress",
+      "wait": "wait {value}",
+      "duration": "time {value}",
+      "dayTitle": "All tables today",
+      "dayAvgDuration": "Average time per table: {value}",
+      "dayRevenuePerTable": "Average revenue per table: {value}",
+      "cols": {
+        "table": "Table",
+        "tickets": "Tickets",
+        "avgDuration": "Avg. time",
+        "revenue": "Revenue"
+      },
+      "minutes": "{n} min",
+      "hours": "{h} h {m}",
+      "localNote": "History recorded by this phone (closed tickets timed to within a few seconds)."
+    },
+    "menuQr": {
+      "button": "Menu QR code",
+      "alt": "Menu QR code — table {number}",
+      "hint": "Print it and place it on the table: guests open the menu without logging in."
+    }
   }
 }

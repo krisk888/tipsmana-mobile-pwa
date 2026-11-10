@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { isAuthenticated } from './shared/auth'
-import { t, i18nReady } from './i18n'
+import { t, i18nReady, setLocale, hasSavedLocale, detectBrowserLocale } from './i18n'
 
 const routes = [
   { path: '/login', name: 'Login', component: () => import('./views/Login.vue'), meta: { guest: true } },
@@ -31,6 +31,13 @@ const routes = [
     name: 'InventoryItems',
     component: () => import('./views/stock/InventoryItems.vue'),
     meta: { titleKey: 'common.titles.inventoryItems', auth: true, roles: ['OWNER', 'MANAGER', 'INVENTAIRE'] }
+  },
+  {
+    // Inventaire complet : comptage de tous les produits, mouvements gelés pendant le comptage
+    path: '/stock/count',
+    name: 'InventoryCount',
+    component: () => import('./views/stock/InventoryCount.vue'),
+    meta: { titleKey: 'common.titles.inventoryCount', auth: true, roles: ['OWNER', 'MANAGER', 'INVENTAIRE'] }
   },
   { path: '/stock/:id', name: 'StockDetail', component: () => import('./views/stock/StockDetail.vue'), meta: { titleKey: 'common.titles.stockDetail', auth: true } },
   {
@@ -104,6 +111,13 @@ const routes = [
     meta: { titleKey: 'common.titles.feedback', public: true, bare: true }
   },
   {
+    // Carte numérique : page client ouverte par le QR code de la table, sans connexion
+    path: '/menu',
+    name: 'MenuPublic',
+    component: () => import('./views/service/MenuPublic.vue'),
+    meta: { titleKey: 'common.titles.menu', public: true, bare: true, browserLocale: true }
+  },
+  {
     path: '/halls',
     name: 'plan-salle',
     component: () => import('./views/halls/plan-salle.vue'),
@@ -120,6 +134,10 @@ const router = createRouter({
 // Textes des écrans : chargés en parallèle du chunk de la route (la page de
 // connexion n'utilise que le catalogue de base, déjà là au mount)
 router.beforeEach((to) => {
+  // Page client sans langue choisie sur ce téléphone : celle du navigateur (repli fr)
+  if (to.meta.browserLocale && !hasSavedLocale()) {
+    return setLocale(detectBrowserLocale(), { persist: false }).then(() => {}, () => {})
+  }
   if (!to.meta.guest) return i18nReady().then(() => {}, () => {})
 })
 

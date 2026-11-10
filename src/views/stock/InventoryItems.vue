@@ -35,6 +35,9 @@
     </div>
 
     <div v-if="fromCache" class="inv-banner">📴 {{ t('stock.items.fromCache') }}</div>
+    <!-- Comptage d'inventaire en cours : ajustements gelés -->
+    <router-link v-if="frozen" to="/stock/count" class="inv-banner inv-frozen">🔒 {{ t('stock.count.frozenBanner') }}</router-link>
+    <router-link v-else to="/stock/count" class="inv-count-link">🧮 {{ t('stock.count.openMode') }}</router-link>
 
     <div v-if="loading && !items.length" class="inv-state">
       <span class="inv-spinner"></span>
@@ -65,7 +68,7 @@
           <button
             class="inv-step"
             :aria-label="t('stock.items.decrease', { name: i.name })"
-            :disabled="i.quantity <= 0"
+            :disabled="frozen || i.quantity <= 0"
             @click="step(i, -1)"
           >−</button>
 
@@ -86,6 +89,7 @@
           <button
             v-else
             class="inv-qty"
+            :disabled="frozen"
             :title="t('stock.items.manualEntry', { name: i.name })"
             @click="startEdit(i)"
           >
@@ -96,6 +100,7 @@
           <button
             class="inv-step"
             :aria-label="t('stock.items.increase', { name: i.name })"
+            :disabled="frozen"
             @click="step(i, 1)"
           >+</button>
         </div>
@@ -129,10 +134,10 @@
             <button class="inv-step" :aria-label="t('stock.barcode.more')" @click="bumpScanQty(1)">+</button>
           </div>
           <div class="inv-sheet-actions">
-            <button class="inv-btn ghost" :disabled="!scanQtyValid || scanQty > scan.item.quantity" @click="applyScan(-1)">
+            <button class="inv-btn ghost" :disabled="frozen || !scanQtyValid || scanQty > scan.item.quantity" @click="applyScan(-1)">
               {{ t('stock.barcode.remove', { qty: fmt(scanQty) }) }}
             </button>
-            <button class="inv-btn primary" :disabled="!scanQtyValid" @click="applyScan(1)">
+            <button class="inv-btn primary" :disabled="frozen || !scanQtyValid" @click="applyScan(1)">
               {{ t('stock.barcode.add', { qty: fmt(scanQty) }) }}
             </button>
           </div>
@@ -143,7 +148,7 @@
           <p class="inv-sheet-meta">{{ t(`stock.barcode.${scan.state}Text`) }}</p>
           <div class="inv-sheet-actions">
             <button class="inv-btn ghost" @click="openScanner">{{ t('stock.barcode.rescan') }}</button>
-            <button v-if="scan.state === 'unknown'" class="inv-btn primary" @click="startCreate">{{ t('stock.barcode.addToStock') }}</button>
+            <button v-if="scan.state === 'unknown'" class="inv-btn primary" :disabled="frozen" @click="startCreate">{{ t('stock.barcode.addToStock') }}</button>
           </div>
         </template>
 
@@ -201,6 +206,7 @@ import {
   fetchInventoryItems, createAdjuster, filterItems, isLowStock, roundQty,
 } from '../../shared/inventory'
 import { lookupBarcode, fetchProductFormOptions, createStockProduct, isNumericBarcode } from '../../shared/barcode'
+import { isStockFrozen } from '../../shared/inventoryCount'
 import BarcodeScanner from '../../components/BarcodeScanner.vue'
 import { useI18n } from '../../i18n'
 
@@ -222,6 +228,8 @@ let editInput = null
 const syncing = reactive({})
 const toast = ref(null)
 let toastTimer = null
+// Comptage d'inventaire en cours (/stock/count) : aucun ajustement possible
+const frozen = ref(isStockFrozen())
 
 const visible = computed(() => filterItems(items.value, { lowOnly: lowOnly.value, search: search.value }))
 const lowCount = computed(() => items.value.filter(isLowStock).length)
@@ -269,7 +277,7 @@ async function load() {
 }
 
 function applyDelta(item, delta) {
-  if (!delta) return
+  if (!delta || frozen.value) return
   item.quantity = roundQty(item.quantity + delta)
   syncing[item.id] = 'pending'
   adjuster.push(item, delta)
@@ -281,6 +289,7 @@ function step(item, delta) {
 }
 
 async function startEdit(item) {
+  if (frozen.value) return
   editing.value = item.id
   editValue.value = String(item.quantity)
   await nextTick()
@@ -470,6 +479,12 @@ onBeforeUnmount(() => {
   color: var(--danger, #ef4444); background: rgba(239, 68, 68, 0.15);
 }
 .inv-sync { color: var(--amber, #f59e0b); }
+.inv-frozen { display: block; text-decoration: none; }
+.inv-count-link {
+  display: block; padding: 10px 12px; border-radius: 12px; font-size: 13px; font-weight: 800; text-decoration: none;
+  border: 1px dashed var(--card-border, #2a2a40); color: var(--text, #fff);
+}
+.inv-qty:disabled { cursor: default; opacity: 0.7; }
 
 .inv-adjust { display: flex; align-items: center; gap: 4px; }
 .inv-step {

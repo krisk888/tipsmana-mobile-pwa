@@ -63,7 +63,9 @@
       "serviceReport": "Informe de servicio",
       "inventoryItems": "Stock de productos",
       "waiterCall": "Llamar al camarero",
-      "feedback": "Tu opinión"
+      "feedback": "Tu opinión",
+      "menu": "La carta",
+      "inventoryCount": "Recuento de inventario"
     },
     "errors": {
       "network": "Red no disponible.",

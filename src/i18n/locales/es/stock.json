@@ -32,7 +32,9 @@
         "receptionsTitle": "Recepciones",
         "receptionsDesc": "Entregas pendientes",
         "itemsTitle": "Stock de productos",
-        "itemsDesc": "Cantidades, umbrales, ajuste rápido"
+        "itemsDesc": "Cantidades, umbrales, ajuste rápido",
+        "countTitle": "Recuento de inventario",
+        "countDesc": "Todos los productos, movimientos congelados"
       }
     },
     "express": {
@@ -224,6 +226,58 @@
         "offline": "No se puede crear un producto sin conexión. Vuelve a intentarlo cuando vuelva la red.",
         "options": "Unidades e IVA no disponibles: {message}",
         "noOptions": "No hay unidades ni IVA configurados para este establecimiento."
+      }
+    },
+    "count": {
+      "title": "🧮 Recuento de inventario",
+      "subtitle": "Inventario completo de todos los productos",
+      "progress": "{counted} / {total} contados",
+      "intro": "Se listará {count} producto con su cantidad teórica. | Se listarán {count} productos con su cantidad teórica.",
+      "introFreeze": "Los movimientos de stock quedan congelados en este teléfono hasta terminar el recuento.",
+      "introScan": "Escanea un código de barras o busca un producto para introducir la cantidad real.",
+      "introResume": "El recuento se guarda en el teléfono: puedes cerrar la app y continuar.",
+      "start": "▶ Iniciar el recuento",
+      "frozenSince": "Recuento en curso desde {time} — movimientos de stock congelados",
+      "frozenBanner": "Recuento de inventario en curso: ajustes congelados. Abrir el recuento →",
+      "frozenError": "Recuento de inventario en curso: movimientos de stock congelados.",
+      "openMode": "Modo recuento de inventario (todos los productos)",
+      "searchPlaceholder": "Buscar (nombre, ref., código de barras)…",
+      "filters": {
+        "all": "Todos",
+        "todo": "Por contar",
+        "gaps": "Diferencias"
+      },
+      "empty": {
+        "all": "Ningún producto.",
+        "todo": "Todos los productos están contados.",
+        "gaps": "Sin diferencias por ahora."
+      },
+      "theoretical": "Teórico {value} {unit}",
+      "variance": "diferencia {value}",
+      "sameAsTheoretical": "Real = teórico",
+      "realShort": "Real",
+      "real": "Cantidad real — {name}",
+      "unknownCode": "Código desconocido: {code}",
+      "abandon": "Abandonar",
+      "finish": "Terminar ({counted})",
+      "summaryTitle": "¿Terminar el recuento?",
+      "statCounted": "productos contados",
+      "statVariances": "diferencias",
+      "statValue": "valor de las diferencias",
+      "lossGain": "Faltantes {loss} · sobrantes {gain}",
+      "notCounted": "{count} producto sin contar no se enviará. | {count} productos sin contar no se enviarán.",
+      "unvalued": "{count} diferencia sin coste conocido (no valorada). | {count} diferencias sin coste conocido (no valoradas).",
+      "send": "Enviar las diferencias",
+      "doneTitle": "Recuento enviado",
+      "sentAsSession": "Guardado como sesión de inventario terminada: valídala en el back-office para ajustar el stock.",
+      "backToStock": "Volver al stock",
+      "abandonTitle": "¿Abandonar el recuento?",
+      "abandonText": "Se perderá {count} entrada y los movimientos de stock se descongelarán. | Se perderán {count} entradas y los movimientos de stock se descongelarán.",
+      "abandonConfirm": "Abandonar",
+      "abandoned": "Recuento abandonado — movimientos descongelados",
+      "errors": {
+        "offline": "Sin red: el recuento sigue guardado en el teléfono. Inténtalo de nuevo con conexión.",
+        "send": "No se pudo enviar: {message}"
       }
     }
   }
