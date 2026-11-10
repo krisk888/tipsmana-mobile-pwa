@@ -410,7 +410,8 @@ describe('app client — page /guest', () => {
     expect(lines[2].find('.gu-status').exists()).toBe(false)
     expect(w.find('.gu-total-amount').text()).toMatch(/41,00\s€/)
     expect(w.findAll('.gu-progress-chip').map(c => c.text())).toEqual(['🔥 1 en préparation', '🛎️ 0 prêt', '✅ 2 servis'])
-    expect(w.find('.gu-call').attributes('href')).toBe('/mon-add/7')
+    // Appel serveur dans l'app (feuille), plus de saut vers /mon-add
+    expect(w.find('.gu-call').exists()).toBe(true)
     expect(JSON.parse(localStorage.getItem('tipsmana_guest_last'))).toEqual({ table: 7, establishmentId: 'est-1' })
     w.unmount()
   })

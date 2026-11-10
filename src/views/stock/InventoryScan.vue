@@ -56,6 +56,13 @@
           <p>{{ t('stock.home.links.scanDesc') }}</p>
         </div>
       </router-link>
+      <router-link to="/stock/receive" class="link-card">
+        <span class="link-icon">🚚</span>
+        <div>
+          <strong>{{ t('stock.home.links.receiveTitle') }}</strong>
+          <p>{{ t('stock.home.links.receiveDesc') }}</p>
+        </div>
+      </router-link>
       <router-link to="/stock/receptions" class="link-card">
         <span class="link-icon">📬</span>
         <div>

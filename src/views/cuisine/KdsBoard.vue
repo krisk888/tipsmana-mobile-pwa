@@ -5,6 +5,11 @@
         <h1 class="kdsb-title">🍳 {{ t('kitchen.board.title') }}</h1>
         <span class="kdsb-subtitle">{{ t('kitchen.board.hint') }}</span>
       </div>
+      <!-- Attente en direct : plus longue attente, bons en retard (> 15 min) -->
+      <div v-if="wait.waiting" class="kdsb-wait" :class="{ late: wait.late }" role="status">
+        <span>⏱ {{ formatElapsed(wait.longest) }}</span>
+        <span v-if="wait.late" class="kdsb-wait-late">🔴 {{ t('kitchen.late.count', { count: wait.late }) }}</span>
+      </div>
       <div class="kdsb-header-right">
         <router-link to="/cuisine" class="kdsb-icon-btn" :title="t('kitchen.board.listView')">☰</router-link>
         <button class="kdsb-icon-btn" :disabled="loading" :title="t('common.refresh')" @click="load()">
@@ -36,7 +41,7 @@
           v-for="o in columns[col]"
           :key="o.id"
           class="kdsb-card"
-          :class="['age-' + ageLevel(elapsedMs(o.created_at, now)), { dragging: drag?.id === o.id, fresh: freshIds.has(o.id) }]"
+          :class="['age-' + ageLevel(elapsedMs(o.created_at, now)), { dragging: drag?.id === o.id, fresh: freshIds.has(o.id), late: isOrderLate(o, now) }]"
           :style="drag?.id === o.id ? dragStyle : null"
           :data-order-id="o.id"
         >
@@ -46,6 +51,7 @@
           >
             <span class="kdsb-grip" aria-hidden="true">⠿</span>
             <span class="kdsb-ref">{{ orderLabel(o) }}</span>
+            <span v-if="isOrderLate(o, now)" class="kdsb-late-tag">{{ t('kitchen.late.tag') }}</span>
             <span class="kdsb-timer" :title="t('kitchen.board.elapsed')">
               ⏱ {{ formatElapsed(elapsedMs(o.created_at, now)) }}
             </span>
@@ -84,6 +90,7 @@ import {
   KDS_COLUMNS, groupByColumn, elapsedMs, formatElapsed, ageLevel, findNewOrders,
   fetchKdsOrders, changeOrderStatus, withStatus, playNewOrderSound, unlockAudio,
 } from '../../shared/kds'
+import { isOrderLate, lateOrderIds, waitSummary, kitchenLateAlert } from '../../shared/lateAlerts'
 
 const POLL_INTERVAL = 10000
 const DRAG_THRESHOLD = 8
@@ -99,6 +106,10 @@ const freshIds = ref(new Set())
 const knownIds = new Set()
 
 const columns = computed(() => groupByColumn(orders.value))
+const wait = computed(() => waitSummary(orders.value, now.value))
+
+// Bon qui passe les 15 min : vibration (une fois par bon)
+watch(now, (ts) => kitchenLateAlert.check(lateOrderIds(orders.value, ts)))
 
 // Bons à jour (chargement ou déplacement) : badge « en attente » de l'app
 watch(orders, list => reportKitchenOrders(list))
@@ -324,6 +335,18 @@ defineExpose({ move, load })
 }
 .kdsb-card.age-warn { border-left-color: #f59e0b; }
 .kdsb-card.age-late { border-left-color: #ef4444; }
+.kdsb-card.late { border-color: #ef4444; background: rgba(239, 68, 68, 0.12); animation: kdsb-late-pulse 1.6s ease-in-out infinite; }
+@keyframes kdsb-late-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+.kdsb-late-tag { padding: 1px 6px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; background: #ef4444; color: #fff; }
+.kdsb-wait {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; color: #10b981;
+}
+.kdsb-wait.late { color: #f87171; }
+.kdsb-wait-late { font-size: 11px; }
 .kdsb-card.dragging { opacity: 0.9; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45); }
 .kdsb-card.fresh { animation: fresh 1s ease-in-out 3; }
 @keyframes fresh { 50% { box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.7); } }

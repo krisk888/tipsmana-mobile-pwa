@@ -184,6 +184,8 @@ export function getKitchenRecord(estId, ticketId) {
     failedItemIds: rec?.failedItemIds || [],
     tableNumber: rec?.tableNumber ?? null,
     status: rec?.status || null,
+    // Dernier passage « en cuisine » : base du mode « table en retard »
+    sentAt: rec?.sentAt || null,
   }
 }
 
@@ -509,6 +511,8 @@ export async function dispatchTicketItems({ establishmentId, ticket, items }) {
       tableNumber: ticket.tableNumber,
       // Nouveaux plats en cuisine : la note repart « en cuisine » (base du suivi de statut)
       status: refs.length ? 'en_cuisine' : rec.status,
+      // L'attente court depuis le premier envoi tant que la cuisine n'a pas fini
+      sentAt: refs.length && (rec.status !== 'en_cuisine' || !rec.sentAt) ? Date.now() : rec.sentAt,
     }))
     return { dispatched: true, queued: !!res?.queued, refs }
   } catch (e) {
@@ -731,6 +735,7 @@ export function applyPushedStatus(estId, tableNumber, remoteStatus) {
  * Numéro de table lu dans un QR code. Formats acceptés :
  *  - « 12 », « T12 », « Table 12 », « TABLE:12 »
  *  - URL avec ?table=12 ou un chemin …/table/12 (ou …/tables/12)
+ *  - QR posé sur la table pour les clients : …/guest/12, …/mon-add/12
  * Renvoie null si aucun numéro valide (1–999).
  */
 export function parseTableQr(text) {
@@ -742,7 +747,7 @@ export function parseTableQr(text) {
     try {
       const url = new URL(raw)
       candidate = url.searchParams.get('table') ?? url.searchParams.get('t')
-      if (candidate == null) candidate = url.pathname.match(/\/tables?\/(\d+)\/?$/i)?.[1] ?? null
+      if (candidate == null) candidate = url.pathname.match(/\/(?:tables?|guest|mon-add)\/(\d+)\/?$/i)?.[1] ?? null
     } catch { /* URL invalide */ }
   } else {
     candidate = raw.match(/^(?:t|table)?\s*[:#=-]?\s*(\d+)$/i)?.[1] ?? null

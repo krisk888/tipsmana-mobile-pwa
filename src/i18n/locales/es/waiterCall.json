@@ -10,7 +10,8 @@
       "call": "Llamar al camarero",
       "bill": "La cuenta, por favor",
       "bread": "Más pan",
-      "order": "Pedir algo más"
+      "order": "Pedir algo más",
+      "pay": "Pagar con tarjeta"
     },
     "errors": {
       "cooldown": "Petición ya enviada, su camarero viene.",

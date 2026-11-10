@@ -7,8 +7,8 @@
   "scope": "/mobile/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#059669",
-  "background_color": "#fafaf7",
+  "theme_color": "#07070f",
+  "background_color": "#07070f",
   "lang": "fr",
   "categories": ["food", "lifestyle"],
   "icons": [

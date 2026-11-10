@@ -45,6 +45,10 @@
     },
     "errors": {
       "load": "Impossible de charger les tables"
+    },
+    "late": {
+      "banner": "{count} table attend la cuisine depuis plus de 15 min | {count} tables attendent la cuisine depuis plus de 15 min",
+      "minutes": "{min} min"
     }
   }
 }

@@ -78,6 +78,10 @@
       "elapsed": "Tiempo desde el pedido",
       "moveTo": "Mover a «{column}»",
       "backwardUnsupported": "El servidor aún no permite retroceder"
+    },
+    "late": {
+      "count": "{count} con retraso",
+      "tag": "Retraso"
     }
   }
 }

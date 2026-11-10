@@ -86,6 +86,7 @@
 
     <template v-else>
       <p v-if="partial" class="svc-warning">⚠️ {{ t('tables.partial') }}</p>
+      <p v-if="late.size" class="svc-late-banner" role="status">🔴 {{ t('tables.late.banner', { count: late.size }) }}</p>
 
       <!-- ═══ GRILLE TABLES ═══ -->
       <div v-if="visibleTables.length" class="svc-table-grid">
@@ -93,7 +94,7 @@
           v-for="table in visibleTables"
           :key="table.number"
           class="svc-table"
-          :class="['state-' + table.state, { selected: mergeMode && selected.includes(table.number) }]"
+          :class="['state-' + table.state, { selected: mergeMode && selected.includes(table.number), late: late.has(table.number) }]"
           :aria-label="t('tables.tableAria', { number: table.number, state: stateLabel(table.state) })"
           @click="pickTable(table)"
         >
@@ -107,6 +108,7 @@
             👤{{ table.covers || 1 }}<template v-if="table.itemCount"> · {{ t('tables.itemsShort', { count: table.itemCount }) }}</template>
           </span>
           <span v-if="table.total" class="svc-table-total">{{ formatEur(table.total) }}</span>
+          <span v-if="late.has(table.number)" class="svc-table-late">⏱ {{ t('tables.late.minutes', { min: lateMinutes(late.get(table.number), now) }) }}</span>
         </button>
       </div>
       <div v-else class="svc-state">
@@ -195,7 +197,8 @@ import EstablishmentSwitcher from '../../components/EstablishmentSwitcher.vue'
 import QrTableScanner from '../../components/QrTableScanner.vue'
 import PullIndicator from '../../components/PullIndicator.vue'
 import { usePullToRefresh, PULL_THRESHOLD } from '../../shared/pullToRefresh'
-import { fetchTables, formatEur, mergeTableTickets } from '../../shared/serviceOrders'
+import { fetchTables, formatEur, mergeTableTickets, currentEstablishmentId } from '../../shared/serviceOrders'
+import { lateTables, lateMinutes, tableLateAlert } from '../../shared/lateAlerts'
 import { useI18n } from '../../i18n'
 
 const router = useRouter()
@@ -232,6 +235,14 @@ watch(hideFree, (v) => {
 function readHideFree() {
   try { return localStorage.getItem(HIDE_FREE_KEY) === '1' } catch { return false }
 }
+
+// Table en retard : envoi en cuisine il y a plus de 15 min, ni prêt ni servi
+// (suivi local, relu toutes les 15 s) → rouge + vibration une fois par table
+const LATE_TICK = 15000
+const now = ref(Date.now())
+let lateTimer = null
+const late = computed(() => lateTables(currentEstablishmentId(), now.value))
+watch(late, (m) => tableLateAlert.check([...m.keys()]), { immediate: true })
 
 // Statut des tables rafraîchi toutes les 30 s (et au retour sur l'onglet)
 const POLL_INTERVAL = 30000
@@ -413,11 +424,13 @@ function onVisibility() {
 onMounted(() => {
   load()
   pollTimer = setInterval(poll, POLL_INTERVAL)
+  lateTimer = setInterval(() => { now.value = Date.now() }, LATE_TICK)
   document.addEventListener('visibilitychange', onVisibility)
 })
 
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
+  if (lateTimer) clearInterval(lateTimer)
   document.removeEventListener('visibilitychange', onVisibility)
 })
 </script>
@@ -460,6 +473,19 @@ onUnmounted(() => {
 .svc-merge-btn.active { background: #8b5cf6; color: #fff; }
 .svc-merge-hint { font-size: 12px; color: #a78bfa; margin: 0; }
 .svc-table { position: relative; }
+.svc-table.late {
+  border-color: #ef4444; background: rgba(239, 68, 68, 0.14);
+  animation: svc-late-pulse 1.6s ease-in-out infinite;
+}
+@keyframes svc-late-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+.svc-table-late { font-size: 11px; font-weight: 800; color: #f87171; }
+.svc-late-banner {
+  margin: 0; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 800;
+  color: #fca5a5; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4);
+}
 .svc-table.selected { border-color: #8b5cf6; box-shadow: 0 0 0 2px #8b5cf6 inset; }
 .svc-table-check {
   position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%;

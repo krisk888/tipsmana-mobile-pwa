@@ -34,7 +34,9 @@
         "itemsTitle": "Product stock",
         "itemsDesc": "Quantities, thresholds, quick adjust",
         "countTitle": "Inventory count",
-        "countDesc": "All products, movements frozen"
+        "countDesc": "All products, movements frozen",
+        "receiveTitle": "Supplier delivery",
+        "receiveDesc": "Check in a delivery by scanning, with discrepancies"
       }
     },
     "express": {
@@ -278,6 +280,49 @@
       "errors": {
         "offline": "No network: the count stays saved on the phone. Try again once connected.",
         "send": "Could not send: {message}"
+      }
+    },
+    "receive": {
+      "title": "Supplier delivery",
+      "subtitle": "Sent orders awaiting delivery",
+      "progress": "{pointed} / {total} lines checked",
+      "noOrdersEndpoint": "Supplier orders are not available on the server yet: use free receiving.",
+      "empty": "No order awaiting delivery.",
+      "supplierFallback": "Supplier",
+      "lines": "{count} line | {count} lines",
+      "expected": "due {date}",
+      "started": "in progress",
+      "freeReception": "Receive without a purchase order",
+      "freeHint": "Scan each delivered product, then adjust the received quantity.",
+      "shortCount": "{count} short",
+      "overCount": "{count} over",
+      "scanFirst": "Scan the first delivered product.",
+      "extra": "not ordered",
+      "ordered": "Ordered: {qty} {unit}",
+      "conform": "matches",
+      "minus": "One less",
+      "plus": "One more",
+      "receivedAria": "Received quantity of {name}",
+      "pointAll": "All as ordered",
+      "validate": "Confirm delivery",
+      "confirmTitle": "Confirm this delivery?",
+      "confirmText": "{pointed} of {total} line(s) checked. Stock will be updated.",
+      "pendingWarn": "{count} unchecked line will be counted as not delivered. | {count} unchecked lines will be counted as not delivered.",
+      "confirm": "Confirm",
+      "partialFail": "{count} line not saved: {names}. Try again. | {count} lines not saved: {names}. Try again.",
+      "queued": "Offline: delivery saved, it will be sent when back online.",
+      "done": "Delivery confirmed, stock updated.",
+      "freeNote": "Mobile receiving (no purchase order)",
+      "note": "Receiving order {ref}",
+      "noteGap": "ordered {ordered}, received {received} (difference {gap})",
+      "errors": {
+        "nothingPointed": "Check at least one line."
+      },
+      "scan": {
+        "unknown": "Unknown code {code}: no product.",
+        "offline": "Offline: code {code} not found in loaded stock.",
+        "extra": "Product not on the order added.",
+        "error": "Could not read the code."
       }
     }
   }

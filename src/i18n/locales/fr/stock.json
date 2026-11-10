@@ -34,7 +34,9 @@
         "itemsTitle": "Stock produits",
         "itemsDesc": "Quantités, seuils, ajustement rapide",
         "countTitle": "Comptage inventaire",
-        "countDesc": "Tous les produits, mouvements gelés"
+        "countDesc": "Tous les produits, mouvements gelés",
+        "receiveTitle": "Réception fournisseur",
+        "receiveDesc": "Pointer une livraison au scan, écarts inclus"
       }
     },
     "express": {
@@ -278,6 +280,49 @@
       "errors": {
         "offline": "Pas de réseau : le comptage reste enregistré sur le téléphone. Réessayez une fois connecté.",
         "send": "Envoi impossible : {message}"
+      }
+    },
+    "receive": {
+      "title": "Réception fournisseur",
+      "subtitle": "Commandes envoyées, en attente de livraison",
+      "progress": "{pointed} / {total} lignes pointées",
+      "noOrdersEndpoint": "Les commandes fournisseurs ne sont pas encore disponibles sur le serveur : utilisez la réception libre.",
+      "empty": "Aucune commande en attente de livraison.",
+      "supplierFallback": "Fournisseur",
+      "lines": "{count} ligne | {count} lignes",
+      "expected": "prévue le {date}",
+      "started": "en cours",
+      "freeReception": "Réception sans bon de commande",
+      "freeHint": "Scannez chaque produit livré puis ajustez la quantité reçue.",
+      "shortCount": "{count} manquant | {count} manquants",
+      "overCount": "{count} en trop",
+      "scanFirst": "Scannez le premier produit livré.",
+      "extra": "hors commande",
+      "ordered": "Commandé : {qty} {unit}",
+      "conform": "conforme",
+      "minus": "Une unité de moins",
+      "plus": "Une unité de plus",
+      "receivedAria": "Quantité reçue de {name}",
+      "pointAll": "Tout conforme",
+      "validate": "Valider la réception",
+      "confirmTitle": "Valider la réception ?",
+      "confirmText": "{pointed} ligne(s) pointée(s) sur {total}. Le stock sera mis à jour.",
+      "pendingWarn": "{count} ligne non pointée sera comptée comme non livrée. | {count} lignes non pointées seront comptées comme non livrées.",
+      "confirm": "Valider",
+      "partialFail": "{count} ligne non enregistrée : {names}. Réessayez. | {count} lignes non enregistrées : {names}. Réessayez.",
+      "queued": "Hors ligne : réception enregistrée, envoyée au retour du réseau.",
+      "done": "Réception validée, stock mis à jour.",
+      "freeNote": "Réception mobile (sans bon de commande)",
+      "note": "Réception commande {ref}",
+      "noteGap": "commandé {ordered}, reçu {received} (écart {gap})",
+      "errors": {
+        "nothingPointed": "Pointez au moins une ligne."
+      },
+      "scan": {
+        "unknown": "Code {code} inconnu : aucun produit.",
+        "offline": "Hors ligne : code {code} introuvable dans le stock chargé.",
+        "extra": "Produit hors commande ajouté.",
+        "error": "Lecture du code impossible."
       }
     }
   }

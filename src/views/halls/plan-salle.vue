@@ -9,6 +9,7 @@
         <h1 class="ps-title">{{ t('halls.title') }}</h1>
       </div>
       <div class="ps-header-right">
+        <button class="ps-refresh-btn" :title="t('tables.scanQr')" :aria-label="t('tables.scanQr')" @click="scannerOpen = true">📷</button>
         <span class="ps-ws-status" :class="{ connected }" :title="connected ? t('halls.wsConnected') : t('halls.wsDisconnected')">
           <span class="ps-ws-dot"></span>
         </span>
@@ -124,6 +125,9 @@
       <p>{{ t('halls.noSpaces') }}</p>
       <p class="ps-empty-hint">{{ t('halls.noSpacesHint') }}</p>
     </div>
+
+    <!-- Scan du QR posé sur la table : ouvre directement sa note -->
+    <QrTableScanner v-if="scannerOpen" @detected="onScanned" @close="scannerOpen = false" />
   </div>
 </template>
 
@@ -134,6 +138,7 @@ import api from '../../shared/api'
 import TipsIcon from '../../components/TipsIcon.vue'
 import TableHistorySheet from '../../components/TableHistorySheet.vue'
 import PullIndicator from '../../components/PullIndicator.vue'
+import QrTableScanner from '../../components/QrTableScanner.vue'
 import { usePullToRefresh, PULL_THRESHOLD } from '../../shared/pullToRefresh'
 import { fetchOpenTickets } from '../../shared/serviceOrders'
 import { createLongPress } from '../../shared/longPress'
@@ -147,6 +152,12 @@ const router = useRouter()
 const spaces = ref([])
 const activeSpaceId = ref(null)
 const loading = ref(false)
+const scannerOpen = ref(false)
+
+function onScanned(number) {
+  scannerOpen.value = false
+  router.push({ name: 'ServiceOrder', params: { number } })
+}
 const error = ref(null)
 const connected = ref(false) // état du temps réel (WebSocket KDS)
 

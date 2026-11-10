@@ -4,7 +4,8 @@
     "title": "Bienvenue",
     "tabs": {
       "bill": "Mon addition",
-      "menu": "La carte"
+      "menu": "La carte",
+      "history": "Historique"
     },
     "loading": "Chargement de votre addition…",
     "noTableTitle": "Scannez le QR code de votre table",
@@ -35,6 +36,41 @@
     },
     "total": "Total",
     "vatIncluded": "TVA incluse",
-    "updated": "mise à jour à {time}"
+    "updated": "mise à jour à {time}",
+    "history": {
+      "emptyTitle": "Pas encore d'historique",
+      "emptyText": "Vos additions apparaîtront ici, avec ce qui a été réglé.",
+      "paid": "Déjà réglé",
+      "due": "À régler",
+      "items": "{count} article | {count} articles",
+      "paidVia": {
+        "online": "Payé en ligne",
+        "table": "Réglé"
+      },
+      "unpaid": "À régler",
+      "deviceOnly": "Historique gardé sur ce téléphone uniquement."
+    },
+    "call": {
+      "hint": "Votre serveur reçoit une notification sur son téléphone."
+    },
+    "pay": {
+      "button": "Payer {amount}",
+      "title": "Régler l'addition",
+      "online": "Payer maintenant depuis votre téléphone",
+      "with": "Payer avec {provider}",
+      "or": "ou",
+      "atTableTitle": "Paiement à table",
+      "atTable": "Payer par carte à table",
+      "qrAlt": "QR code de votre table",
+      "qrHint": "Votre serveur arrive avec le terminal : montrez-lui ce code, il ouvre directement votre addition.",
+      "returnPaid": "Paiement reçu, merci !",
+      "returnCancelled": "Paiement annulé : vous pouvez réessayer ou payer à table.",
+      "errors": {
+        "noTicket": "Addition pas encore payable en ligne : payez à table.",
+        "offline": "Pas de connexion : payez à table.",
+        "unavailable": "Le paiement en ligne n'est pas disponible ici : payez à table.",
+        "error": "Le paiement n'a pas pu démarrer. Réessayez ou payez à table."
+      }
+    }
   }
 }

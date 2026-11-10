@@ -45,6 +45,10 @@
     },
     "errors": {
       "load": "Unable to load tables"
+    },
+    "late": {
+      "banner": "{count} table has been waiting on the kitchen for over 15 min | {count} tables have been waiting on the kitchen for over 15 min",
+      "minutes": "{min} min"
     }
   }
 }

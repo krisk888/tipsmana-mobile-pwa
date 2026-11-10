@@ -67,7 +67,8 @@
       "feedback": "Votre avis",
       "menu": "La carte",
       "inventoryCount": "Comptage inventaire",
-      "guest": "Ma table"
+      "guest": "Ma table",
+      "receive": "Réception fournisseur"
     },
     "errors": {
       "network": "Réseau indisponible.",
