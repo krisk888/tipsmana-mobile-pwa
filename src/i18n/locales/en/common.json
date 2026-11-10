@@ -67,7 +67,8 @@
       "feedback": "Your feedback",
       "menu": "Menu",
       "inventoryCount": "Inventory count",
-      "guest": "My table"
+      "guest": "My table",
+      "receive": "Supplier delivery"
     },
     "errors": {
       "network": "Network unavailable.",

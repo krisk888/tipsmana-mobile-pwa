@@ -10,7 +10,8 @@
       "call": "Appeler le serveur",
       "bill": "L'addition, s'il vous plaît",
       "bread": "Plus de pain",
-      "order": "Commande supplémentaire"
+      "order": "Commande supplémentaire",
+      "pay": "Payer par carte"
     },
     "errors": {
       "cooldown": "Demande déjà envoyée, votre serveur arrive.",

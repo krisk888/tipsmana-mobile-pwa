@@ -78,6 +78,10 @@
       "elapsed": "Temps depuis la commande",
       "moveTo": "Déplacer vers « {column} »",
       "backwardUnsupported": "Retour en arrière impossible tant que le serveur ne le gère pas"
+    },
+    "late": {
+      "count": "{count} en retard",
+      "tag": "Retard"
     }
   }
 }

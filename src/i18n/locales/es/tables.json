@@ -45,6 +45,10 @@
     },
     "errors": {
       "load": "No se pueden cargar las mesas"
+    },
+    "late": {
+      "banner": "{count} mesa espera a cocina desde hace más de 15 min | {count} mesas esperan a cocina desde hace más de 15 min",
+      "minutes": "{min} min"
     }
   }
 }

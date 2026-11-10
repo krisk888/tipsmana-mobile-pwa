@@ -5,6 +5,8 @@
 //  - type 'order_status'  : changement de statut (salle)       { table, status }
 //  - type 'message'       : message du serveur / de l'équipe   { from?, message? }
 //  - type 'waiter_call'   : appel client depuis /mon-add       { table, message }
+//  - type 'purchase_order': commande fournisseur arrivée       { order_id?, supplier? }
+//                           (aussi 'purchase_order_received', 'supplier_delivery')
 // - Badge de l'icône : +1 par push (ou `unread_count` s'il est fourni), compteur
 //   partagé avec l'app (IndexedDB tipsmana_offline_cache / tipsmana_pwa_badge)
 // - Un onglet de l'app au premier plan : on lui relaie le message (toast), sans
@@ -27,7 +29,10 @@ const DEFAULTS = {
   new_order: { title: 'Nouvelle commande', url: '/mobile/cuisine/board' },
   order_status: { title: 'Commande', url: '/mobile/service/history' },
   message: { title: 'Message', url: DEFAULT_URL },
+  purchase_order: { title: 'Livraison fournisseur', url: '/mobile/stock/receive' },
 }
+
+const PURCHASE_ORDER_TYPES = ['purchase_order', 'purchase_order_received', 'supplier_delivery']
 
 function parsePayload(event) {
   if (!event.data) return {}
@@ -42,6 +47,7 @@ function kindOf(data) {
   const type = data.type
   if (type === 'order_ready') return 'order_status'
   if (type === 'new_order' || type === 'order_status' || type === 'waiter_call') return type
+  if (PURCHASE_ORDER_TYPES.includes(type)) return 'purchase_order'
   return 'message' // 'message', 'server_message', notification générique…
 }
 
@@ -121,7 +127,7 @@ self.addEventListener('push', (event) => {
 
     const defaults = DEFAULTS[kind] || DEFAULTS.message
     const title = payload.title || defaults.title
-    const body = payload.body || data.message || ''
+    const body = payload.body || data.message || (kind === 'purchase_order' && data.supplier ? `${data.supplier} — à réceptionner` : '')
     const url = payload.url || data.url || defaults.url
 
     if (focused && kind !== 'order_status') {
@@ -133,7 +139,9 @@ self.addEventListener('push', (event) => {
 
     await self.registration.showNotification(title, {
       body,
-      tag: payload.tag || (kind === 'new_order' && data.ticket_ref ? `new-order-${data.ticket_ref}` : undefined),
+      tag: payload.tag
+        || (kind === 'new_order' && data.ticket_ref ? `new-order-${data.ticket_ref}` : undefined)
+        || (kind === 'purchase_order' && data.order_id != null ? `purchase-order-${data.order_id}` : undefined),
       renotify: kind === 'new_order',
       vibrate: kind === 'new_order' ? [300, 100, 300] : [200, 100, 200],
       icon: payload.icon || ICON,

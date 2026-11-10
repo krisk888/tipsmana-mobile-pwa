@@ -223,6 +223,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
 import { reportKitchenOrders, vibrateNewOrder } from '../../shared/kitchenWatch'
+import { lateOrderIds, kitchenLateAlert } from '../../shared/lateAlerts'
 import { useI18n } from '../../i18n'
 
 const { t } = useI18n()
@@ -988,6 +989,9 @@ function cleanupWebSocket() {
 
 // Bons à jour (chargement ou temps réel) : badge « en attente » de l'app
 watch(orders, list => reportKitchenOrders(list), { deep: true })
+
+// Table en retard (> 15 min en cuisine) : vibration, une fois par bon
+watch(now, (ts) => kitchenLateAlert.check(lateOrderIds(orders.value, ts)))
 
 onMounted(() => {
   loadOrders()

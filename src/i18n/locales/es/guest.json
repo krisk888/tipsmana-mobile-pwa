@@ -4,7 +4,8 @@
     "title": "Bienvenido",
     "tabs": {
       "bill": "Mi cuenta",
-      "menu": "La carta"
+      "menu": "La carta",
+      "history": "Historial"
     },
     "loading": "Cargando su cuenta…",
     "noTableTitle": "Escanee el código QR de su mesa",
@@ -35,6 +36,41 @@
     },
     "total": "Total",
     "vatIncluded": "IVA incluido",
-    "updated": "actualizado a las {time}"
+    "updated": "actualizado a las {time}",
+    "history": {
+      "emptyTitle": "Aún no hay historial",
+      "emptyText": "Sus cuentas aparecerán aquí, con lo que ya se ha pagado.",
+      "paid": "Ya pagado",
+      "due": "Por pagar",
+      "items": "{count} artículo | {count} artículos",
+      "paidVia": {
+        "online": "Pagado en línea",
+        "table": "Pagado"
+      },
+      "unpaid": "Por pagar",
+      "deviceOnly": "Historial guardado solo en este teléfono."
+    },
+    "call": {
+      "hint": "Su camarero recibe una notificación en su teléfono."
+    },
+    "pay": {
+      "button": "Pagar {amount}",
+      "title": "Pagar la cuenta",
+      "online": "Pague ahora desde su teléfono",
+      "with": "Pagar con {provider}",
+      "or": "o",
+      "atTableTitle": "Pago en la mesa",
+      "atTable": "Pagar con tarjeta en la mesa",
+      "qrAlt": "Código QR de su mesa",
+      "qrHint": "Su camarero viene con el terminal: muéstrele este código, abre directamente su cuenta.",
+      "returnPaid": "¡Pago recibido, gracias!",
+      "returnCancelled": "Pago cancelado: inténtelo de nuevo o pague en la mesa.",
+      "errors": {
+        "noTicket": "Esta cuenta aún no se puede pagar en línea: pague en la mesa.",
+        "offline": "Sin conexión: pague en la mesa.",
+        "unavailable": "El pago en línea no está disponible aquí: pague en la mesa.",
+        "error": "No se pudo iniciar el pago. Inténtelo de nuevo o pague en la mesa."
+      }
+    }
   }
 }

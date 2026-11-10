@@ -67,7 +67,8 @@
       "feedback": "Tu opinión",
       "menu": "La carta",
       "inventoryCount": "Recuento de inventario",
-      "guest": "Mi mesa"
+      "guest": "Mi mesa",
+      "receive": "Recepción proveedor"
     },
     "errors": {
       "network": "Red no disponible.",

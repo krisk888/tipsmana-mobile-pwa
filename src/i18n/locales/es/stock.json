@@ -34,7 +34,9 @@
         "itemsTitle": "Stock de productos",
         "itemsDesc": "Cantidades, umbrales, ajuste rápido",
         "countTitle": "Recuento de inventario",
-        "countDesc": "Todos los productos, movimientos congelados"
+        "countDesc": "Todos los productos, movimientos congelados",
+        "receiveTitle": "Recepción proveedor",
+        "receiveDesc": "Comprobar una entrega escaneando, con diferencias"
       }
     },
     "express": {
@@ -278,6 +280,49 @@
       "errors": {
         "offline": "Sin red: el recuento sigue guardado en el teléfono. Inténtalo de nuevo con conexión.",
         "send": "No se pudo enviar: {message}"
+      }
+    },
+    "receive": {
+      "title": "Recepción proveedor",
+      "subtitle": "Pedidos enviados pendientes de entrega",
+      "progress": "{pointed} / {total} líneas comprobadas",
+      "noOrdersEndpoint": "Los pedidos a proveedores aún no están disponibles en el servidor: use la recepción libre.",
+      "empty": "Ningún pedido pendiente de entrega.",
+      "supplierFallback": "Proveedor",
+      "lines": "{count} línea | {count} líneas",
+      "expected": "prevista el {date}",
+      "started": "en curso",
+      "freeReception": "Recepción sin pedido",
+      "freeHint": "Escanee cada producto entregado y ajuste la cantidad recibida.",
+      "shortCount": "{count} falta | {count} faltan",
+      "overCount": "{count} de más",
+      "scanFirst": "Escanee el primer producto entregado.",
+      "extra": "fuera de pedido",
+      "ordered": "Pedido: {qty} {unit}",
+      "conform": "conforme",
+      "minus": "Una unidad menos",
+      "plus": "Una unidad más",
+      "receivedAria": "Cantidad recibida de {name}",
+      "pointAll": "Todo conforme",
+      "validate": "Validar la recepción",
+      "confirmTitle": "¿Validar la recepción?",
+      "confirmText": "{pointed} de {total} línea(s) comprobada(s). El stock se actualizará.",
+      "pendingWarn": "{count} línea sin comprobar se contará como no entregada. | {count} líneas sin comprobar se contarán como no entregadas.",
+      "confirm": "Validar",
+      "partialFail": "{count} línea no guardada: {names}. Inténtelo de nuevo. | {count} líneas no guardadas: {names}. Inténtelo de nuevo.",
+      "queued": "Sin conexión: recepción guardada, se enviará al volver la red.",
+      "done": "Recepción validada, stock actualizado.",
+      "freeNote": "Recepción móvil (sin pedido)",
+      "note": "Recepción pedido {ref}",
+      "noteGap": "pedido {ordered}, recibido {received} (diferencia {gap})",
+      "errors": {
+        "nothingPointed": "Compruebe al menos una línea."
+      },
+      "scan": {
+        "unknown": "Código {code} desconocido: ningún producto.",
+        "offline": "Sin conexión: código {code} no encontrado en el stock cargado.",
+        "extra": "Producto fuera de pedido añadido.",
+        "error": "No se pudo leer el código."
       }
     }
   }

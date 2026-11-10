@@ -10,7 +10,8 @@
       "call": "Call the waiter",
       "bill": "The bill, please",
       "bread": "More bread",
-      "order": "Order something else"
+      "order": "Order something else",
+      "pay": "Pay by card"
     },
     "errors": {
       "cooldown": "Request already sent, your waiter is coming.",

@@ -4,7 +4,8 @@
     "title": "Welcome",
     "tabs": {
       "bill": "My bill",
-      "menu": "Menu"
+      "menu": "Menu",
+      "history": "History"
     },
     "loading": "Loading your bill…",
     "noTableTitle": "Scan your table's QR code",
@@ -35,6 +36,41 @@
     },
     "total": "Total",
     "vatIncluded": "VAT included",
-    "updated": "updated at {time}"
+    "updated": "updated at {time}",
+    "history": {
+      "emptyTitle": "No history yet",
+      "emptyText": "Your bills will show up here, with what has been paid.",
+      "paid": "Already paid",
+      "due": "To pay",
+      "items": "{count} item | {count} items",
+      "paidVia": {
+        "online": "Paid online",
+        "table": "Paid"
+      },
+      "unpaid": "To pay",
+      "deviceOnly": "History is kept on this phone only."
+    },
+    "call": {
+      "hint": "Your waiter gets a notification on their phone."
+    },
+    "pay": {
+      "button": "Pay {amount}",
+      "title": "Pay the bill",
+      "online": "Pay now from your phone",
+      "with": "Pay with {provider}",
+      "or": "or",
+      "atTableTitle": "Pay at the table",
+      "atTable": "Pay by card at the table",
+      "qrAlt": "Your table QR code",
+      "qrHint": "Your waiter is coming with the card terminal: show them this code, it opens your bill directly.",
+      "returnPaid": "Payment received, thank you!",
+      "returnCancelled": "Payment cancelled: try again or pay at the table.",
+      "errors": {
+        "noTicket": "This bill cannot be paid online yet: pay at the table.",
+        "offline": "No connection: pay at the table.",
+        "unavailable": "Online payment is not available here: pay at the table.",
+        "error": "Payment could not start. Try again or pay at the table."
+      }
+    }
   }
 }

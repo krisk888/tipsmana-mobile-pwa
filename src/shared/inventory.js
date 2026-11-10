@@ -109,8 +109,71 @@ async function fetchTheoretical() {
   return [...byId.values()]
 }
 
+/* ═══ Stock ajusté localement (mouvements en file hors-ligne) ═══ */
+
+const LOCAL_STOCK_KEY = 'tipsmana_local_stock'
+
+function readLocalStock() {
+  try {
+    const all = JSON.parse(localStorage.getItem(LOCAL_STOCK_KEY) || '{}')
+    return all && typeof all === 'object' ? all : {}
+  } catch {
+    return {}
+  }
+}
+
+function localStockKey() {
+  return String(api.getEstablishmentId?.() || 'default')
+}
+
+/**
+ * Mouvement mis en file hors-ligne (réception, …) : le stock affiché en tient
+ * compte tant que le serveur ne l'a pas reçu.
+ */
+export function recordLocalStock(productId, delta) {
+  delta = roundQty(delta)
+  if (productId == null || !delta) return
+  const all = readLocalStock()
+  const est = localStockKey()
+  const byEst = all[est] || {}
+  byEst[productId] = roundQty((byEst[productId] || 0) + delta)
+  all[est] = byEst
+  try { localStorage.setItem(LOCAL_STOCK_KEY, JSON.stringify(all)) } catch { /* mode privé */ }
+}
+
+export function localStockDeltas() {
+  return readLocalStock()[localStockKey()] || {}
+}
+
+export function clearLocalStock() {
+  const all = readLocalStock()
+  delete all[localStockKey()]
+  try { localStorage.setItem(LOCAL_STOCK_KEY, JSON.stringify(all)) } catch { /* mode privé */ }
+}
+
+/**
+ * Stock venu du cache : on y ajoute les mouvements encore en file. Stock frais
+ * du serveur : la file a été rejouée avant (retour en ligne), on oublie les écarts.
+ */
+export function applyLocalStock(result) {
+  if (!result.fromCache) {
+    clearLocalStock()
+    return result
+  }
+  const deltas = localStockDeltas()
+  if (!Object.keys(deltas).length) return result
+  return {
+    ...result,
+    items: result.items.map(i => (deltas[i.productId] ? { ...i, quantity: roundQty(i.quantity + deltas[i.productId]) } : i)),
+  }
+}
+
 /** Produits en stock. Renvoie { items, fromCache, fallback }. */
 export async function fetchInventoryItems() {
+  return applyLocalStock(await fetchInventoryItemsRaw())
+}
+
+async function fetchInventoryItemsRaw() {
   if (!itemsEndpointMissing) {
     try {
       const res = await api.get('/inventory/items')
@@ -133,7 +196,7 @@ export async function fetchInventoryItems() {
   return { items: await fetchTheoretical(), fromCache: !navigator.onLine, fallback: true }
 }
 
-function today() {
+export function today() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }

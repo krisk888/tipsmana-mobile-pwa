@@ -23,8 +23,13 @@ export const WAITER_CALL_MESSAGES = [
   { code: 'order', icon: '➕', labelKey: 'waiterCall.messages.order', text: 'Commande supplémentaire' },
 ]
 
+// Appels envoyés par l'app client (/guest) seulement, absents des boutons de /mon-add
+export const GUEST_ONLY_MESSAGES = [
+  { code: 'pay', icon: '💳', labelKey: 'waiterCall.messages.pay', text: 'Paiement par carte à table' },
+]
+
 export function callMessage(code) {
-  return WAITER_CALL_MESSAGES.find(m => m.code === code) || WAITER_CALL_MESSAGES[0]
+  return [...WAITER_CALL_MESSAGES, ...GUEST_ONLY_MESSAGES].find(m => m.code === code) || WAITER_CALL_MESSAGES[0]
 }
 
 /** Numéro de table (1–999) lu dans la route : /mon-add/12, ?table=12 ou ?t=12. */

@@ -24,6 +24,13 @@ const routes = [
   { path: '/orders', name: 'Orders', component: () => import('./views/orders/OrdersList.vue'), meta: { titleKey: 'common.titles.orders', icon: 'orders', auth: true, roles: ['OWNER', 'MANAGER', 'CUISINE', 'VENTES', 'SERVEUR'] } },
   { path: '/profile', name: 'Profile', component: () => import('./views/Profile.vue'), meta: { titleKey: 'common.titles.profile', auth: true } },
   { path: '/stock/receptions', name: 'Receptions', component: () => import('./views/stock/Receptions.vue'), meta: { titleKey: 'common.titles.receptions', auth: true, roles: ['OWNER', 'MANAGER', 'ACHATS'] } },
+  {
+    // Réception des commandes fournisseurs : pointage au scan, écarts, mise à jour du stock
+    path: '/stock/receive',
+    name: 'ReceiveOrders',
+    component: () => import('./views/stock/ReceiveOrders.vue'),
+    meta: { titleKey: 'common.titles.receive', auth: true, roles: ['OWNER', 'MANAGER', 'ACHATS', 'INVENTAIRE'] }
+  },
   { path: '/stock/express', name: 'ExpressScan', component: () => import('./views/stock/ExpressScan.vue'), meta: { titleKey: 'common.titles.express', auth: true } },
   {
     // Stock produit par produit : seuils, filtre stock bas, ajustements rapides
