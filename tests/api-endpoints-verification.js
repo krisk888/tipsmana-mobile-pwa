@@ -64,6 +64,10 @@ const EXPECTED = [
   { method: 'PUT',    pattern: '/inventory/sessions/{id}/complete', exist: true, note: 'IN_PROGRESS → COMPLETED' },
   { method: 'DEL',    pattern: '/inventory/sessions/{id}', exist: true, note: 'abandoned count' },
   { method: 'GET',    pattern: '/table-tickets/history', exist: false, pending: true, note: '?date=YYYY-MM-DD → day tickets (open + closed) — fallback: local occupancy log' },
+  // App client, modificateurs, badge cuisine (verified 2026-11-10)
+  // GET /tickets/{table}/guest?est= (public, fetch direct dans guestTicket.js) : pas encore dans le backend —
+  // replis GET /public/tickets/{id}/bill?token= (existe), note de la table (équipe), cache
+  { method: 'GET',    pattern: '/admin/menu/modifiers', exist: false, pending: true, note: '[{ id, name, required, max_select, product_ids, category_ids, options: [{ id, name, price_delta }] }] — fallback: cache / built-in cuisson, garniture, sauce' },
   // Sales
   { method: 'POST',   pattern: '/sales/entries', exist: true, note: 'create sales entry' },
   // Auth
@@ -112,6 +116,9 @@ const VIEWS = [
   { name: 'push.js',          file: 'src/shared/push.js' },
   { name: 'inventoryCount.js', file: 'src/shared/inventoryCount.js' },
   { name: 'tableHistory.js',  file: 'src/shared/tableHistory.js' },
+  { name: 'menuModifiers.js', file: 'src/shared/menuModifiers.js' },
+  { name: 'guestTicket.js',   file: 'src/shared/guestTicket.js' },
+  { name: 'kitchenWatch.js',  file: 'src/shared/kitchenWatch.js' },
 ]
 
 const REPO = new URL('..', import.meta.url).pathname

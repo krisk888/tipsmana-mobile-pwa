@@ -44,9 +44,9 @@
       "localNote": "Historial registrado por este teléfono (cuentas cerradas con unos segundos de margen)."
     },
     "menuQr": {
-      "button": "Código QR de la carta",
-      "alt": "Código QR de la carta — mesa {number}",
-      "hint": "Imprímelo y colócalo en la mesa: el cliente abre la carta sin iniciar sesión."
+      "button": "Código QR de la mesa",
+      "alt": "Código QR de la mesa {number}",
+      "hint": "Imprímelo y colócalo en la mesa: el cliente ve la carta, su cuenta y el estado de sus platos, sin iniciar sesión."
     }
   }
 }

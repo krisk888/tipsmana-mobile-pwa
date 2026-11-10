@@ -44,9 +44,9 @@
       "localNote": "Historique relevé par ce téléphone (notes fermées datées à quelques secondes près)."
     },
     "menuQr": {
-      "button": "QR code de la carte",
-      "alt": "QR code de la carte — table {number}",
-      "hint": "À imprimer et poser sur la table : le client ouvre la carte sans connexion."
+      "button": "QR code de la table",
+      "alt": "QR code de la table {number}",
+      "hint": "À imprimer et poser sur la table : le client consulte la carte, son addition et le suivi de ses plats, sans connexion."
     }
   }
 }

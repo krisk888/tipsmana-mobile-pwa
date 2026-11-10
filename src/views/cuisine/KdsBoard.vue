@@ -77,8 +77,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../../i18n'
+import { reportKitchenOrders, vibrateNewOrder } from '../../shared/kitchenWatch'
 import {
   KDS_COLUMNS, groupByColumn, elapsedMs, formatElapsed, ageLevel, findNewOrders,
   fetchKdsOrders, changeOrderStatus, withStatus, playNewOrderSound, unlockAudio,
@@ -98,6 +99,9 @@ const freshIds = ref(new Set())
 const knownIds = new Set()
 
 const columns = computed(() => groupByColumn(orders.value))
+
+// Bons à jour (chargement ou déplacement) : badge « en attente » de l'app
+watch(orders, list => reportKitchenOrders(list))
 
 function toast(message, type = 'success') {
   window.__showToast?.(message, type)
@@ -135,7 +139,7 @@ async function load({ silent = false } = {}) {
     const fresh = findNewOrders(knownIds, list)
     if (fresh.length) {
       playNewOrderSound()
-      try { navigator.vibrate?.(200) } catch { /* non supporté */ }
+      vibrateNewOrder()
       toast(t('kitchen.toast.newOrders', { count: fresh.length }))
       freshIds.value = new Set([...freshIds.value, ...fresh.map(o => o.id)])
       setTimeout(() => {

@@ -10,7 +10,7 @@
         <button class="th-icon" :aria-label="t('common.close')" @click="emit('close')">✕</button>
       </header>
 
-      <!-- QR code de la carte numérique à poser sur la table -->
+      <!-- QR code à poser sur la table : app client (carte, addition, suivi des plats) -->
       <div v-if="qr" class="th-qr">
         <img v-if="qr.dataUrl" :src="qr.dataUrl" :alt="t('halls.menuQr.alt', { number: table })" width="200" height="200" />
         <span v-else class="th-spinner"></span>
@@ -79,7 +79,7 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '../shared/api'
 import { fetchDayHistory, tableDayStats, ticketsOfTable, waitMs, durationMs, dayOf } from '../shared/tableHistory'
-import { menuUrl } from '../shared/publicMenu'
+import { guestUrl } from '../shared/guestTicket'
 import { useI18n } from '../i18n'
 
 const props = defineProps({
@@ -117,7 +117,7 @@ function money(v) {
 
 function toggleQr() {
   if (qr.value) { qr.value = null; return }
-  const entry = { url: menuUrl({ table: props.table, establishmentId: api.getEstablishmentId() }), dataUrl: null }
+  const entry = { url: guestUrl({ table: props.table, establishmentId: api.getEstablishmentId() }), dataUrl: null }
   qr.value = entry
   import('qrcode')
     .then(({ default: QRCode }) => QRCode.toDataURL(entry.url, { margin: 1, width: 400, errorCorrectionLevel: 'M' }))

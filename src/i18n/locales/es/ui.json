@@ -22,6 +22,11 @@
       "ariaDark": "Modo oscuro — pulsa para pasar al modo claro",
       "ariaLight": "Modo claro — pulsa para pasar al modo automático",
       "ariaAuto": "Modo automático (oscuro de 20 h a 7 h) — pulsa para pasar al modo oscuro"
+    },
+    "pull": {
+      "pull": "Desliza para actualizar",
+      "release": "Suelta para actualizar",
+      "refreshing": "Actualizando…"
     }
   }
 }

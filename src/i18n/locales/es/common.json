@@ -31,7 +31,8 @@
       "cuisine": "Cocina",
       "alerts": "Alertas",
       "profile": "Perfil",
-      "quit": "Salir"
+      "quit": "Salir",
+      "kitchenPending": "{count} comanda en espera | {count} comandas en espera"
     },
     "roles": {
       "OWNER": "Jefe",
@@ -65,7 +66,8 @@
       "waiterCall": "Llamar al camarero",
       "feedback": "Tu opinión",
       "menu": "La carta",
-      "inventoryCount": "Recuento de inventario"
+      "inventoryCount": "Recuento de inventario",
+      "guest": "Mi mesa"
     },
     "errors": {
       "network": "Red no disponible.",

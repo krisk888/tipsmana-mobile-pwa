@@ -1,0 +1,40 @@
+{
+  "guest": {
+    "kicker": "Su mesa",
+    "title": "Bienvenido",
+    "tabs": {
+      "bill": "Mi cuenta",
+      "menu": "La carta"
+    },
+    "loading": "Cargando su cuenta…",
+    "noTableTitle": "Escanee el código QR de su mesa",
+    "noTableText": "Está en su mesa: abre la carta y su cuenta.",
+    "errors": {
+      "offlineTitle": "Sin conexión",
+      "offlineText": "Compruebe su conexión a internet y vuelva a intentarlo.",
+      "unavailableTitle": "Cuenta no disponible",
+      "unavailableText": "Su cuenta aún no se puede consultar aquí: pídala a su camarero.",
+      "errorTitle": "Problema técnico",
+      "errorText": "No se puede cargar su cuenta en este momento.",
+      "noTableTitle": "Escanee el código QR de su mesa",
+      "noTableText": "Está en su mesa."
+    },
+    "emptyTitle": "Aún no ha pedido nada",
+    "emptyText": "Su pedido aparecerá aquí en cuanto se tome. Mientras tanto, descubra la carta.",
+    "closed": "Cuenta pagada — ¡gracias por su visita!",
+    "stale": "Sin conexión — cuenta de las {time}",
+    "status": {
+      "en_cours": "En preparación",
+      "pret": "Listo",
+      "servi": "Servido"
+    },
+    "statusCount": {
+      "en_cours": "{count} en preparación",
+      "pret": "{count} listo | {count} listos",
+      "servi": "{count} servido | {count} servidos"
+    },
+    "total": "Total",
+    "vatIncluded": "IVA incluido",
+    "updated": "actualizado a las {time}"
+  }
+}

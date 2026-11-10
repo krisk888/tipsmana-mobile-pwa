@@ -11,7 +11,8 @@
     },
     "optionGroups": {
       "cuisson": "Cooking",
-      "garniture": "Side"
+      "garniture": "Side",
+      "sauce": "Sauce"
     },
     "options": {
       "bleu": "Blue",
@@ -21,7 +22,11 @@
       "frites": "Fries",
       "riz": "Rice",
       "legumes": "Vegetables",
-      "salade": "Salad"
+      "salade": "Salad",
+      "poivre": "Pepper",
+      "bearnaise": "Béarnaise",
+      "roquefort": "Roquefort",
+      "sansSauce": "No sauce"
     },
     "notePresets": {
       "glutenFree": "Gluten-free",
@@ -120,6 +125,11 @@
       "views": {
         "list": "List",
         "gallery": "Gallery"
+      },
+      "modifiers": {
+        "required": "Required",
+        "upTo": "Up to {n}",
+        "choose": "Please choose: {groups}"
       }
     },
     "orderHistory": {

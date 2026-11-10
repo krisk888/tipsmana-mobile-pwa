@@ -615,7 +615,7 @@ describe('TableHistorySheet.vue', () => {
     expect(w.find('.th-note').exists()).toBe(false)
 
     await w.findAll('.th-icon')[0].trigger('click')
-    expect(w.find('.th-qr-link').text()).toMatch(/\/mobile\/menu\?table=4&est=est-1$/)
+    expect(w.find('.th-qr-link').text()).toMatch(/\/mobile\/guest\/4\?est=est-1$/)
     await w.findAll('.th-icon')[1].trigger('click')
     expect(w.emitted('close')).toBeTruthy()
   })

@@ -220,35 +220,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
-import { offlineStore } from '../../shared/offlineStore'
+import { reportKitchenOrders, vibrateNewOrder } from '../../shared/kitchenWatch'
 import { useI18n } from '../../i18n'
 
 const { t } = useI18n()
-
-// ── PWA Badge helper ────────────────────────────────────
-async function updateBadge(count) {
-  await offlineStore.setBadgeCount(count)
-  try {
-    if (navigator.setAppBadge) {
-      await navigator.setAppBadge(count)
-    } else if (navigator.setClientBadge) {
-      await navigator.setClientBadge(count)
-    }
-  } catch { /* silencieux — badges non supportés */ }
-}
-
-async function clearBadge() {
-  await offlineStore.clearBadge()
-  try {
-    if (navigator.clearAppBadge) {
-      await navigator.clearAppBadge()
-    } else if (navigator.clearClientBadge) {
-      await navigator.clearClientBadge()
-    }
-  } catch { /* silencieux */ }
-}
 
 // ── State ──────────────────────────────────────────────
 const orders = ref([])
@@ -472,9 +449,10 @@ function showIncomingPulse() {
   setTimeout(() => { incomingPulse.value = false }, 2000)
 }
 
+// Compteur « non vus » de l'écran ; le badge de l'icône (commandes en attente)
+// est tenu par kitchenWatch à partir des bons signalés ci-dessous
 function resetNewOrdersCounter() {
   newOrdersCount.value = 0
-  clearBadge()
 }
 
 // ── Audio notification (Web Audio API) ─────────────────
@@ -608,9 +586,9 @@ function handleWsMessage(msg) {
       upsertOrder(msg.data)
       newOrdersCount.value++
       playNotification()
+      vibrateNewOrder()
       showIncomingPulse()
       knownIds.add(msg.data.id)
-      updateBadge(newOrdersCount.value)
       showFlash('📦 ' + t('kitchen.newOrder'))
       checkUrgency()
       break
@@ -808,8 +786,8 @@ async function loadOrders() {
       if (fresh.length && knownIds.size > 0) {
         newOrdersCount.value += fresh.length
         playNotification()
+        vibrateNewOrder()
         showIncomingPulse()
-        updateBadge(newOrdersCount.value)
         showFlash('📦 ' + t('kitchen.toast.newOrders', { count: fresh.length }))
       }
       // Mark fresh items with _new for slide-in animation
@@ -1007,6 +985,9 @@ function cleanupWebSocket() {
     ws = null
   }
 }
+
+// Bons à jour (chargement ou temps réel) : badge « en attente » de l'app
+watch(orders, list => reportKitchenOrders(list), { deep: true })
 
 onMounted(() => {
   loadOrders()

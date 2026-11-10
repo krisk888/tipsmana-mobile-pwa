@@ -18,6 +18,9 @@
       </div>
     </header>
 
+    <!-- Tirer vers le bas : plan et notes rechargés -->
+    <PullIndicator :distance="pullDistance" :refreshing="pullRefreshing" :threshold="PULL_THRESHOLD" />
+
     <!-- ═══ ONGLETS ESPACES ═══ -->
     <div class="ps-tabs" v-if="spaces.length > 0">
       <button
@@ -130,6 +133,8 @@ import { useRouter } from 'vue-router'
 import api from '../../shared/api'
 import TipsIcon from '../../components/TipsIcon.vue'
 import TableHistorySheet from '../../components/TableHistorySheet.vue'
+import PullIndicator from '../../components/PullIndicator.vue'
+import { usePullToRefresh, PULL_THRESHOLD } from '../../shared/pullToRefresh'
 import { fetchOpenTickets } from '../../shared/serviceOrders'
 import { createLongPress } from '../../shared/longPress'
 import { useI18n } from '../../i18n'
@@ -194,6 +199,12 @@ async function loadSpaces() {
     loading.value = false
   }
 }
+
+// Tirer pour rafraîchir : pas depuis une table (glisser = déplacer la table)
+const { distance: pullDistance, refreshing: pullRefreshing } = usePullToRefresh(
+  () => Promise.all([loadSpaces(), fetchOpenTickets().catch(() => {})]),
+  { ignore: '.ps-table' },
+)
 
 /* ═══ Rafraîchissement silencieux (temps réel) ═══ */
 // Met à jour les états des tables (libre/occupée/addition/réservée) depuis les

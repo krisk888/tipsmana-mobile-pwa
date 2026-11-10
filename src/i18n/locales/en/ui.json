@@ -22,6 +22,11 @@
       "ariaDark": "Dark mode — click to switch to light mode",
       "ariaLight": "Light mode — click to switch to auto mode",
       "ariaAuto": "Auto mode (dark from 8 pm to 7 am) — click to switch to dark mode"
+    },
+    "pull": {
+      "pull": "Pull to refresh",
+      "release": "Release to refresh",
+      "refreshing": "Refreshing…"
     }
   }
 }

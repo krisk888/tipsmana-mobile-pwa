@@ -22,6 +22,11 @@
       "ariaDark": "Mode sombre — cliquer pour passer en mode clair",
       "ariaLight": "Mode clair — cliquer pour passer en mode auto",
       "ariaAuto": "Mode auto (sombre de 20h à 7h) — cliquer pour passer en mode sombre"
+    },
+    "pull": {
+      "pull": "Tirer pour actualiser",
+      "release": "Relâcher pour actualiser",
+      "refreshing": "Actualisation…"
     }
   }
 }
