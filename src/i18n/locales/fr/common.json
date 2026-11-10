@@ -31,7 +31,8 @@
       "cuisine": "Cuisine",
       "alerts": "Alertes",
       "profile": "Profil",
-      "quit": "Quitter"
+      "quit": "Quitter",
+      "kitchenPending": "{count} commande en attente | {count} commandes en attente"
     },
     "roles": {
       "OWNER": "Boss",
@@ -65,7 +66,8 @@
       "waiterCall": "Appeler le serveur",
       "feedback": "Votre avis",
       "menu": "La carte",
-      "inventoryCount": "Comptage inventaire"
+      "inventoryCount": "Comptage inventaire",
+      "guest": "Ma table"
     },
     "errors": {
       "network": "Réseau indisponible.",

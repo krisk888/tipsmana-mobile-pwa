@@ -118,6 +118,14 @@ const routes = [
     meta: { titleKey: 'common.titles.menu', public: true, bare: true, browserLocale: true }
   },
   {
+    // App client : addition en cours, statut des plats et carte, ouverte par le
+    // QR code de la table, sans connexion (installable : « Tipsmana Client »)
+    path: '/guest/:tableId(\\d+)?',
+    name: 'Guest',
+    component: () => import('./views/guest/GuestApp.vue'),
+    meta: { titleKey: 'common.titles.guest', public: true, bare: true, browserLocale: true }
+  },
+  {
     path: '/halls',
     name: 'plan-salle',
     component: () => import('./views/halls/plan-salle.vue'),

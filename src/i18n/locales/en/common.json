@@ -31,7 +31,8 @@
       "cuisine": "Kitchen",
       "alerts": "Alerts",
       "profile": "Profile",
-      "quit": "Quit"
+      "quit": "Quit",
+      "kitchenPending": "{count} order waiting | {count} orders waiting"
     },
     "roles": {
       "OWNER": "Boss",
@@ -65,7 +66,8 @@
       "waiterCall": "Call the waiter",
       "feedback": "Your feedback",
       "menu": "Menu",
-      "inventoryCount": "Inventory count"
+      "inventoryCount": "Inventory count",
+      "guest": "My table"
     },
     "errors": {
       "network": "Network unavailable.",

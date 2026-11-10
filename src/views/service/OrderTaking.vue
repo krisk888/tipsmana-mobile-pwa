@@ -127,7 +127,9 @@
             <span class="ot-line-qty">{{ i.qty }}×</span>
             <span class="ot-line-info">
               <span class="ot-line-name">{{ i.name }}</span>
-              <span v-if="i.options" class="ot-line-sub">⚙️ {{ formatOptions(i.options) }}</span>
+              <span v-if="modifierChips(i).length" class="ot-mods">
+                <span v-for="(m, k) in modifierChips(i)" :key="k" class="ot-mod">⚙️ {{ m.label }}</span>
+              </span>
               <span v-if="i.note" class="ot-line-sub">📝 {{ i.note }}</span>
             </span>
             <span v-if="failedIds.includes(i.id)" class="ot-line-flag">{{ t('service.orderTaking.notSent') }}</span>
@@ -162,7 +164,11 @@
           <div v-for="l in g.lines" :key="lineKey(l)" class="ot-line">
             <button class="ot-line-info ot-line-edit" :title="t('service.orderTaking.editLine')" @click="openLineEditor(l)">
               <span class="ot-line-name">{{ l.name }} <span class="ot-line-pen">✎</span></span>
-              <span v-if="l.options" class="ot-line-sub">⚙️ {{ formatOptions(l.options) }}</span>
+              <span v-if="modifierChips(l).length" class="ot-mods">
+                <span v-for="(m, k) in modifierChips(l)" :key="k" class="ot-mod">
+                  ⚙️ {{ m.label }}<span v-if="m.priceDelta" class="ot-mod-price"> {{ formatDelta(m.priceDelta) }}</span>
+                </span>
+              </span>
               <span v-if="l.note" class="ot-line-sub">📝 {{ l.note }}</span>
             </button>
             <span class="ot-qty">
@@ -333,16 +339,22 @@
           </span>
         </div>
 
-        <div v-for="group in sheetGroups" :key="group.key" class="sheet-group">
-          <div class="sheet-label">{{ t(group.labelKey) }}</div>
+        <!-- Modificateurs de l'article (cuisson, garniture, sauce…) -->
+        <div v-for="group in sheetGroups" :key="group.id" class="sheet-group">
+          <div class="sheet-label">
+            {{ groupLabel(group) }}
+            <span v-if="group.required" class="sheet-req" :class="{ missing: sheetMissing.includes(group) }">{{ t('service.orderTaking.modifiers.required') }}</span>
+            <span v-else-if="group.max > 1" class="sheet-req">{{ t('service.orderTaking.modifiers.upTo', { n: group.max }) }}</span>
+          </div>
           <div class="sheet-opts">
             <button
               v-for="opt in group.options"
-              :key="opt"
+              :key="opt.id"
               class="sheet-opt"
-              :class="{ active: sheet.options[group.key] === opt }"
-              @click="toggleOption(group.key, opt)"
-            >{{ optionLabel(opt) }}</button>
+              :class="{ active: isChosen(group, opt) }"
+              :aria-pressed="isChosen(group, opt)"
+              @click="toggleOption(group, opt)"
+            >{{ modifierOptionLabel(group, opt) }}<span v-if="opt.priceDelta" class="sheet-opt-price"> {{ formatDelta(opt.priceDelta) }}</span></button>
           </div>
         </div>
 
@@ -358,9 +370,13 @@
           ></textarea>
         </div>
 
+        <p v-if="sheetMissing.length" class="sheet-missing">
+          {{ t('service.orderTaking.modifiers.choose', { groups: sheetMissing.map(groupLabel).join(', ') }) }}
+        </p>
+
         <div class="modal-actions">
-          <span class="modal-price">{{ formatEur(sheet.qty * sheet.product.price) }}</span>
-          <button class="btn-primary" @click="addFromSheet">+ {{ t('service.orderTaking.add') }}</button>
+          <span class="modal-price">{{ formatEur(sheet.qty * sheetUnitPrice) }}</span>
+          <button class="btn-primary" :disabled="sheetMissing.length > 0" @click="addFromSheet">+ {{ t('service.orderTaking.add') }}</button>
         </div>
       </div>
     </div>
@@ -372,13 +388,17 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import QRCode from 'qrcode'
 import {
-  OPTION_GROUPS, COURSE_OPTIONS, COURSES,
-  addLine, setLineQty, lineKey, computeTotals, groupByCourse, formatEur, formatOptions, optionLabel,
+  COURSES,
+  addLine, setLineQty, lineKey, computeTotals, groupByCourse, formatEur, round2,
   removeLine, setLineNote, setLineCourse, moveLine, ticketTables, splitTableTicket, customerDisplayUrl,
   fetchMenu, fetchTableTicket, sendOrder, retryFailedDispatch,
   getKitchenRecord, loadDraft, saveDraft, currentEstablishmentId, toNumber, recordServiceOrder,
 } from '../../shared/serviceOrders'
 import { ensureNotificationPermission } from '../../shared/orderNotifications'
+import {
+  cachedModifierGroups, fetchModifierGroups, modifierGroupsFor, groupLabel, modifierOptionLabel,
+  toggleModifier, missingRequired, selectedModifiers, modifiersText, modifiersPrice, modifierChips,
+} from '../../shared/menuModifiers'
 import { MENU_VIEWS, getMenuView, saveMenuView, warmMenuImages } from '../../shared/menuImages'
 import MenuThumb from '../../components/MenuThumb.vue'
 import { useAuthStore } from '../../stores/authStore'
@@ -400,6 +420,8 @@ const activeCatId = ref(null)
 const loadingMenu = ref(true)
 const menuError = ref(null)
 const menuView = ref(getMenuView())
+// Modificateurs : dernière liste connue tout de suite, rafraîchie au montage
+const modifierGroups = ref(cachedModifierGroups(estId))
 
 const ticket = ref(null)
 const loadingTicket = ref(true)
@@ -438,6 +460,9 @@ const splitMoves = computed(() =>
   split.value ? Object.values(split.value.assignments).filter(n => n !== tableNumber.value).length : 0
 )
 const sheetGroups = computed(() => (sheet.value ? optionGroupsFor(sheet.value.product) : []))
+const sheetMods = computed(() => (sheet.value ? selectedModifiers(sheetGroups.value, sheet.value.selection) : []))
+const sheetMissing = computed(() => (sheet.value ? missingRequired(sheetGroups.value, sheet.value.selection) : []))
+const sheetUnitPrice = computed(() => (sheet.value ? round2(sheet.value.product.price + modifiersPrice(sheetMods.value)) : 0))
 
 watch(cart, val => saveDraft(estId, tableNumber.value, val), { deep: true })
 
@@ -498,8 +523,12 @@ function setMenuView(view) {
   saveMenuView(view)
 }
 
+async function loadModifiers() {
+  modifierGroups.value = (await fetchModifierGroups(estId)).groups
+}
+
 function optionGroupsFor(product) {
-  return (COURSE_OPTIONS[product.course] || []).map(k => OPTION_GROUPS[k]).filter(Boolean)
+  return modifierGroupsFor(product, modifierGroups.value)
 }
 
 function hasOptions(product) {
@@ -519,18 +548,26 @@ function tapProduct(product) {
 }
 
 function openSheet(product) {
-  sheet.value = { product, qty: 1, options: {}, note: '' }
+  sheet.value = { product, qty: 1, selection: {}, note: '' }
 }
 
-function toggleOption(groupKey, opt) {
-  const current = sheet.value.options[groupKey]
-  sheet.value.options = { ...sheet.value.options, [groupKey]: current === opt ? null : opt }
+function isChosen(group, opt) {
+  return (sheet.value.selection[group.id] || []).includes(opt.id)
+}
+
+function toggleOption(group, opt) {
+  sheet.value.selection = toggleModifier(sheet.value.selection, group, opt.id)
+}
+
+function formatDelta(v) {
+  return `${v > 0 ? '+' : '−'}${formatEur(Math.abs(v))}`
 }
 
 function addFromSheet() {
+  if (sheetMissing.value.length) return
   const { product, qty, note } = sheet.value
-  const opts = sheetGroups.value.map(g => sheet.value.options[g.key]).filter(Boolean)
-  cart.value = addLine(cart.value, product, { qty, options: opts.join(' + ') || null, note })
+  const mods = sheetMods.value
+  cart.value = addLine(cart.value, product, { qty, options: modifiersText(mods), modifiers: mods, note })
   sheet.value = null
 }
 
@@ -689,6 +726,7 @@ async function retryDispatch() {
 onMounted(() => {
   loadMenu()
   loadTicket()
+  loadModifiers()
 })
 </script>
 
@@ -828,6 +866,12 @@ onMounted(() => {
 .ot-line-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ot-line-name { font-size: 13px; font-weight: 700; }
 .ot-line-sub { font-size: 11px; color: var(--muted, #8a8aa0); }
+.ot-mods { display: flex; flex-wrap: wrap; gap: 4px; }
+.ot-mod {
+  padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 600;
+  background: var(--hover-bg, #2a2a40); color: var(--muted, #8a8aa0);
+}
+.ot-mod-price { color: var(--success, #10b981); font-weight: 800; }
 .ot-line-flag {
   font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 6px;
   color: var(--amber, #f59e0b); background: rgba(245, 158, 11, 0.15);
@@ -972,6 +1016,13 @@ onMounted(() => {
   border: 1px solid var(--card-border, #2a2a40); background: var(--bg, #0d0d14); color: var(--text, #fff);
 }
 .sheet-opt.active { background: var(--primary, #10b981); border-color: var(--primary, #10b981); color: #0d0d14; }
+.sheet-opt-price { font-size: 11px; font-weight: 800; opacity: 0.8; }
+.sheet-req {
+  margin-left: 6px; padding: 1px 6px; border-radius: 6px; font-size: 10px; letter-spacing: 0;
+  background: var(--hover-bg, #2a2a40); color: var(--muted, #8a8aa0);
+}
+.sheet-req.missing { background: rgba(245, 158, 11, 0.15); color: var(--amber, #f59e0b); }
+.sheet-missing { margin: 0; font-size: 12px; font-weight: 700; color: var(--amber, #f59e0b); }
 .sheet-note {
   width: 100%; padding: 10px; border-radius: 10px; resize: none; font: inherit; font-size: 14px;
   border: 1px solid var(--card-border, #2a2a40); background: var(--bg, #0d0d14); color: var(--text, #fff);

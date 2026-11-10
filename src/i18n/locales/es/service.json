@@ -11,7 +11,8 @@
     },
     "optionGroups": {
       "cuisson": "Punto",
-      "garniture": "Guarnición"
+      "garniture": "Guarnición",
+      "sauce": "Salsa"
     },
     "options": {
       "bleu": "Vuelta y vuelta",
@@ -21,7 +22,11 @@
       "frites": "Patatas fritas",
       "riz": "Arroz",
       "legumes": "Verduras",
-      "salade": "Ensalada"
+      "salade": "Ensalada",
+      "poivre": "Pimienta",
+      "bearnaise": "Bearnesa",
+      "roquefort": "Roquefort",
+      "sansSauce": "Sin salsa"
     },
     "notePresets": {
       "glutenFree": "Sin gluten",
@@ -120,6 +125,11 @@
       "views": {
         "list": "Lista",
         "gallery": "Galería"
+      },
+      "modifiers": {
+        "required": "Obligatorio",
+        "upTo": "Hasta {n}",
+        "choose": "Elige: {groups}"
       }
     },
     "orderHistory": {

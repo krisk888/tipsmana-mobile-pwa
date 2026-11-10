@@ -58,6 +58,10 @@ const OPTION_LABEL_KEYS = {
   'Riz': 'service.options.riz',
   'Légumes': 'service.options.legumes',
   'Salade': 'service.options.salade',
+  'Poivre': 'service.options.poivre',
+  'Béarnaise': 'service.options.bearnaise',
+  'Roquefort': 'service.options.roquefort',
+  'Sans sauce': 'service.options.sansSauce',
 }
 
 /** Libellé affiché d'une valeur d'option (valeur inconnue : telle quelle). */
@@ -72,7 +76,7 @@ export function formatOptions(options) {
   return String(options).split(' + ').map(optionLabel).join(' + ')
 }
 
-// Options proposées par service (les articles du pos-menu ne portent pas d'options)
+// Options intégrées proposées par service (repli des modificateurs, menuModifiers.js)
 export const COURSE_OPTIONS = {
   plat: ['cuisson', 'garniture'],
 }
@@ -214,6 +218,10 @@ export function normalizeCategory(cat) {
       vatRate: toNumber(p.vat_rate, DEFAULT_VAT_RATE),
       isKitchen: p.is_kitchen !== false,
       course,
+      categoryId: String(cat.id),
+      // Groupes de modificateurs de l'article, si le pos-menu les renvoie
+      modifierGroupIds: (Array.isArray(p.modifier_group_ids) ? p.modifier_group_ids : Array.isArray(p.modifier_groups) ? p.modifier_groups : [])
+        .map(g => String(g?.id ?? g)),
       imageUrl: imageUrlOf(p),
     })),
   }
@@ -331,14 +339,21 @@ export function lineKey(l) {
   return `${l.productId}|${l.options || ''}|${l.note || ''}`
 }
 
-export function addLine(cart, product, { qty = 1, options = null, note = null } = {}) {
+/**
+ * Ajoute un article au panier. `modifiers` (menuModifiers.selectedModifiers) :
+ * détail des choix gardé pour l'affichage, supplément ajouté au prix unitaire.
+ */
+export function addLine(cart, product, { qty = 1, options = null, note = null, modifiers = null } = {}) {
+  const mods = Array.isArray(modifiers) && modifiers.length ? modifiers : null
+  const extra = mods ? mods.reduce((s, m) => s + toNumber(m.priceDelta), 0) : 0
   const line = {
     productId: product.id,
     name: product.name,
-    price: round2(product.price),
+    price: round2(toNumber(product.price) + extra),
     vatRate: toNumber(product.vatRate, DEFAULT_VAT_RATE),
     qty: Math.max(1, Math.floor(toNumber(qty, 1))),
     options: options || null,
+    ...(mods ? { modifiers: mods.map(m => ({ name: m.name, priceDelta: round2(m.priceDelta), builtin: m.builtin !== false })) } : {}),
     note: note?.trim() || null,
     course: product.course || 'plat',
     isKitchen: product.isKitchen !== false,

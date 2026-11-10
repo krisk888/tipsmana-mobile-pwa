@@ -1,0 +1,40 @@
+{
+  "guest": {
+    "kicker": "Your table",
+    "title": "Welcome",
+    "tabs": {
+      "bill": "My bill",
+      "menu": "Menu"
+    },
+    "loading": "Loading your bill…",
+    "noTableTitle": "Scan your table's QR code",
+    "noTableText": "You will find it on your table: it opens the menu and your bill.",
+    "errors": {
+      "offlineTitle": "No connection",
+      "offlineText": "Check your internet connection and try again.",
+      "unavailableTitle": "Bill unavailable",
+      "unavailableText": "Your bill cannot be viewed here yet: please ask your waiter.",
+      "errorTitle": "Technical issue",
+      "errorText": "Your bill cannot be loaded right now.",
+      "noTableTitle": "Scan your table's QR code",
+      "noTableText": "You will find it on your table."
+    },
+    "emptyTitle": "Nothing ordered yet",
+    "emptyText": "Your order will show up here as soon as it is taken. Meanwhile, have a look at the menu.",
+    "closed": "Bill settled — thank you for your visit!",
+    "stale": "Offline — bill as of {time}",
+    "status": {
+      "en_cours": "Being prepared",
+      "pret": "Ready",
+      "servi": "Served"
+    },
+    "statusCount": {
+      "en_cours": "{count} being prepared",
+      "pret": "{count} ready",
+      "servi": "{count} served"
+    },
+    "total": "Total",
+    "vatIncluded": "VAT included",
+    "updated": "updated at {time}"
+  }
+}

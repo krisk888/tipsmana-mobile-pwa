@@ -41,7 +41,13 @@
         >
           <span class="nav-icon-wrap">
             <TipsIcon :name="tab.iconName" :size="22" class="nav-icon" />
-            <span v-if="tab.showNotifDot && notifCount > 0" class="nav-notif-dot"></span>
+            <!-- Cuisine : nombre de commandes en attente -->
+            <span
+              v-if="tab.path === '/cuisine' && kitchenCount > 0"
+              class="notif-badge nav-kitchen-badge"
+              :aria-label="t('common.nav.kitchenPending', { count: kitchenCount })"
+            >{{ kitchenCount > 99 ? '99+' : kitchenCount }}</span>
+            <span v-else-if="tab.showNotifDot && notifCount > 0" class="nav-notif-dot"></span>
           </span>
           <span class="nav-label">{{ tab.label }}</span>
         </router-link>
@@ -73,7 +79,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { computed, ref, shallowRef, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
 import { useOffline } from './shared/useOffline'
@@ -149,6 +155,28 @@ watch(() => authStore.isAuthenticated && SERVICE_ROLES.includes(authStore.roleCo
     stopOrderWatcher()
     stopOrderWatcher = null
   }
+}, { immediate: true })
+
+// Cuisine : badge « commandes en attente » (onglet + icône) et vibration aux
+// nouvelles commandes ; vibration et icône réservées au rôle cuisine
+const KITCHEN_ROLES = ['OWNER', 'MANAGER', 'CUISINE']
+const kitchenCountRef = shallowRef(null)
+const kitchenCount = computed(() => kitchenCountRef.value?.value || 0)
+let stopKitchenWatcher = null
+let kitchenRole = null
+watch(() => (authStore.isAuthenticated && KITCHEN_ROLES.includes(authStore.roleCode) ? authStore.roleCode : null), async (role) => {
+  kitchenRole = role
+  if (stopKitchenWatcher) {
+    stopKitchenWatcher()
+    stopKitchenWatcher = null
+  }
+  if (!role) return
+  const m = await import('./shared/kitchenWatch')
+  // Déconnexion / changement de rôle pendant le chargement du chunk
+  if (kitchenRole !== role || stopKitchenWatcher) return
+  kitchenCountRef.value = m.kitchenPendingCount
+  const cook = role === 'CUISINE'
+  stopKitchenWatcher = m.startKitchenWatcher({ alert: cook, appBadge: cook })
 }, { immediate: true })
 
 function handleLogout() {
@@ -229,6 +257,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (notifInterval) clearInterval(notifInterval)
   if (stopOrderWatcher) stopOrderWatcher()
+  if (stopKitchenWatcher) stopKitchenWatcher()
   if (stopForegroundPushes) stopForegroundPushes()
   onlineEvent.removeEventListener('online', onReconnect)
 })
@@ -350,6 +379,7 @@ body {
   line-height: 1;
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
+.nav-kitchen-badge { background: #f59e0b; color: #1a1a2e; }
 .offline-dot {
   position: absolute; bottom: -4px; right: -4px;
   width: 10px; height: 10px;

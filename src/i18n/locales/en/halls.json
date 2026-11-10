@@ -44,9 +44,9 @@
       "localNote": "History recorded by this phone (closed tickets timed to within a few seconds)."
     },
     "menuQr": {
-      "button": "Menu QR code",
-      "alt": "Menu QR code — table {number}",
-      "hint": "Print it and place it on the table: guests open the menu without logging in."
+      "button": "Table QR code",
+      "alt": "QR code for table {number}",
+      "hint": "Print it and place it on the table: guests see the menu, their bill and the progress of their dishes, no login needed."
     }
   }
 }

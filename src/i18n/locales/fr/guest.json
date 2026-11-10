@@ -1,0 +1,40 @@
+{
+  "guest": {
+    "kicker": "Votre table",
+    "title": "Bienvenue",
+    "tabs": {
+      "bill": "Mon addition",
+      "menu": "La carte"
+    },
+    "loading": "Chargement de votre addition…",
+    "noTableTitle": "Scannez le QR code de votre table",
+    "noTableText": "Il se trouve sur votre table : il ouvre la carte et votre addition.",
+    "errors": {
+      "offlineTitle": "Pas de connexion",
+      "offlineText": "Vérifiez votre connexion internet puis réessayez.",
+      "unavailableTitle": "Addition indisponible",
+      "unavailableText": "Votre addition n'est pas encore consultable ici : demandez-la à votre serveur.",
+      "errorTitle": "Un souci technique",
+      "errorText": "Impossible de charger votre addition pour le moment.",
+      "noTableTitle": "Scannez le QR code de votre table",
+      "noTableText": "Il se trouve sur votre table."
+    },
+    "emptyTitle": "Rien de commandé pour l'instant",
+    "emptyText": "Votre commande apparaîtra ici dès qu'elle sera prise. En attendant, découvrez la carte.",
+    "closed": "Addition réglée — merci de votre visite !",
+    "stale": "Hors ligne — addition relevée à {time}",
+    "status": {
+      "en_cours": "En préparation",
+      "pret": "Prêt",
+      "servi": "Servi"
+    },
+    "statusCount": {
+      "en_cours": "{count} en préparation",
+      "pret": "{count} prêt | {count} prêts",
+      "servi": "{count} servi | {count} servis"
+    },
+    "total": "Total",
+    "vatIncluded": "TVA incluse",
+    "updated": "mise à jour à {time}"
+  }
+}

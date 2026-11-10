@@ -17,6 +17,9 @@
       </div>
     </header>
 
+    <!-- Tirer vers le bas : tables et notes rechargées -->
+    <PullIndicator :distance="pullDistance" :refreshing="pullRefreshing" :threshold="PULL_THRESHOLD" />
+
     <!-- Bascule d'établissement (boss multi-établissement) -->
     <div v-if="authStore.establishments.length > 1" class="svc-est">
       <EstablishmentSwitcher />
@@ -190,6 +193,8 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore'
 import EstablishmentSwitcher from '../../components/EstablishmentSwitcher.vue'
 import QrTableScanner from '../../components/QrTableScanner.vue'
+import PullIndicator from '../../components/PullIndicator.vue'
+import { usePullToRefresh, PULL_THRESHOLD } from '../../shared/pullToRefresh'
 import { fetchTables, formatEur, mergeTableTickets } from '../../shared/serviceOrders'
 import { useI18n } from '../../i18n'
 
@@ -281,6 +286,8 @@ const canMerge = computed(() =>
 function stateLabel(state) {
   return t(`tables.states.${STATUS_DOTS[state] ? state : 'libre'}`)
 }
+
+const { distance: pullDistance, refreshing: pullRefreshing } = usePullToRefresh(() => load())
 
 async function load(silent = false) {
   if (!silent) loading.value = true
