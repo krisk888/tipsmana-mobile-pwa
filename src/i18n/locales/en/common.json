@@ -63,7 +63,9 @@
       "serviceReport": "Service report",
       "inventoryItems": "Product stock",
       "waiterCall": "Call the waiter",
-      "feedback": "Your feedback"
+      "feedback": "Your feedback",
+      "menu": "Menu",
+      "inventoryCount": "Inventory count"
     },
     "errors": {
       "network": "Network unavailable.",

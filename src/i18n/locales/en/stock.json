@@ -32,7 +32,9 @@
         "receptionsTitle": "Deliveries",
         "receptionsDesc": "Pending deliveries",
         "itemsTitle": "Product stock",
-        "itemsDesc": "Quantities, thresholds, quick adjust"
+        "itemsDesc": "Quantities, thresholds, quick adjust",
+        "countTitle": "Inventory count",
+        "countDesc": "All products, movements frozen"
       }
     },
     "express": {
@@ -224,6 +226,58 @@
         "offline": "Can't create a product offline. Try again once the network is back.",
         "options": "Units and VAT unavailable: {message}",
         "noOptions": "No unit or VAT rate configured for this establishment."
+      }
+    },
+    "count": {
+      "title": "🧮 Inventory count",
+      "subtitle": "Full count of every product",
+      "progress": "{counted} / {total} counted",
+      "intro": "{count} product will be listed with its theoretical quantity. | {count} products will be listed with their theoretical quantity.",
+      "introFreeze": "Stock movements are frozen on this phone until the count is finished.",
+      "introScan": "Scan a barcode or search a product to enter the actual quantity.",
+      "introResume": "The count is saved on the phone: you can close the app and resume.",
+      "start": "▶ Start the count",
+      "frozenSince": "Count in progress since {time} — stock movements frozen",
+      "frozenBanner": "Inventory count in progress: adjustments frozen. Open the count →",
+      "frozenError": "Inventory count in progress: stock movements are frozen.",
+      "openMode": "Inventory count mode (all products)",
+      "searchPlaceholder": "Search (name, SKU, barcode)…",
+      "filters": {
+        "all": "All",
+        "todo": "To count",
+        "gaps": "Variances"
+      },
+      "empty": {
+        "all": "No product.",
+        "todo": "Every product has been counted.",
+        "gaps": "No variance so far."
+      },
+      "theoretical": "Theoretical {value} {unit}",
+      "variance": "variance {value}",
+      "sameAsTheoretical": "Actual = theoretical",
+      "realShort": "Actual",
+      "real": "Actual quantity — {name}",
+      "unknownCode": "Unknown code: {code}",
+      "abandon": "Abandon",
+      "finish": "Finish ({counted})",
+      "summaryTitle": "Finish the count?",
+      "statCounted": "products counted",
+      "statVariances": "variances",
+      "statValue": "variance value",
+      "lossGain": "Missing {loss} · surplus {gain}",
+      "notCounted": "{count} uncounted product will not be sent. | {count} uncounted products will not be sent.",
+      "unvalued": "{count} variance without a known cost (not valued). | {count} variances without a known cost (not valued).",
+      "send": "Send variances",
+      "doneTitle": "Count sent",
+      "sentAsSession": "Saved as a completed inventory session: validate it in the back office to adjust the stock.",
+      "backToStock": "Back to stock",
+      "abandonTitle": "Abandon the count?",
+      "abandonText": "{count} entry will be lost and stock movements unfrozen. | {count} entries will be lost and stock movements unfrozen.",
+      "abandonConfirm": "Abandon",
+      "abandoned": "Count abandoned — movements unfrozen",
+      "errors": {
+        "offline": "No network: the count stays saved on the phone. Try again once connected.",
+        "send": "Could not send: {message}"
       }
     }
   }

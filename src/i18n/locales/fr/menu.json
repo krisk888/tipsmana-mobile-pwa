@@ -1,0 +1,23 @@
+{
+  "menu": {
+    "kicker": "La carte",
+    "title": "Notre carte",
+    "loading": "Chargement de la carte…",
+    "categories": "Catégories",
+    "search": "Rechercher un plat…",
+    "noResult": "Aucun plat ne correspond.",
+    "empty": "La carte est vide pour le moment.",
+    "allergens": "Allergènes : {list}",
+    "callWaiter": "Appeler le serveur",
+    "pricesNote": "Prix TTC, service compris.",
+    "cached": "Hors-ligne — carte du {time}.",
+    "errors": {
+      "offlineTitle": "Pas de connexion",
+      "offlineText": "Vérifiez votre connexion puis réessayez.",
+      "unavailableTitle": "Carte bientôt disponible",
+      "unavailableText": "La carte en ligne n'est pas encore accessible. Demandez la carte à votre serveur.",
+      "errorTitle": "Carte indisponible",
+      "errorText": "Un problème est survenu. Réessayez dans un instant."
+    }
+  }
+}

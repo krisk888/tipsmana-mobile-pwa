@@ -64,6 +64,7 @@
           @touchstart.prevent="onTouchStart(tb, $event)"
           @mousedown.prevent="onTableMouseDown(tb, $event)"
           @click.stop="onTableClick(tb)"
+          @contextmenu.prevent"
         >
           <span class="ps-table-num">{{ tb.number }}</span>
           <span v-if="tb.state !== 'libre'" class="ps-table-info">
@@ -82,6 +83,12 @@
               :title="t('halls.viewInCaisse')"
             >🛒</button>
             <button
+              class="ps-ta-btn"
+              @click.stop="openHistory(tb)"
+              :title="t('halls.history.action')"
+              :aria-label="t('halls.history.action')"
+            >🕘</button>
+            <button
               class="ps-ta-btn ps-ta-close"
               @click.stop="hideTableActions"
               :title="t('common.close')"
@@ -94,6 +101,11 @@
         </div>
       </div>
     </div>
+
+    <p v-if="activeSpace && activeSpace.tables.length" class="ps-hint">{{ t('halls.history.longPressHint') }}</p>
+
+    <!-- Appui long sur une table : historique du jour -->
+    <TableHistorySheet v-if="historyTable != null" :table="historyTable" @close="historyTable = null" />
 
     <!-- ═══ LOADING / ERROR ═══ -->
     <div v-if="loading && !spaces.length" class="ps-loading">
@@ -117,6 +129,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../shared/api'
 import TipsIcon from '../../components/TipsIcon.vue'
+import TableHistorySheet from '../../components/TableHistorySheet.vue'
+import { fetchOpenTickets } from '../../shared/serviceOrders'
+import { createLongPress } from '../../shared/longPress'
 import { useI18n } from '../../i18n'
 
 const { t } = useI18n()
@@ -184,6 +199,8 @@ async function loadSpaces() {
 // Met à jour les états des tables (libre/occupée/addition/réservée) depuis les
 // autres terminaux SANS afficher le spinner ni écraser un drag en cours.
 async function refreshSpacesSilent() {
+  // Notes ouvertes relevées en parallèle : alimente l'historique d'occupation
+  fetchOpenTickets().catch(() => {})
   if (isDragging.value) return // ne pas écraser la position pendant un drag
   try {
     const res = await api.get('/floorplan/spaces')
@@ -323,7 +340,30 @@ function calcPercent(clientX, clientY) {
   }
 }
 
+/* ═══ Appui long → historique de la table ═══ */
+const historyTable = ref(null)
+// Un appui long ne doit ni déplacer la table ni changer son statut au relâcher
+let suppressClick = false
+
+const longPress = createLongPress({
+  onLongPress(table) {
+    // Fin du drag sans sauvegarde : la table n'a pas bougé au-delà du seuil
+    isDragging.value = false
+    draggingTableNumber.value = null
+    suppressClick = true
+    openHistory(table)
+  },
+})
+
+function openHistory(table) {
+  hideTableActions()
+  historyTable.value = table.number
+  navigator.vibrate?.(30)
+}
+
 function startDrag(table, clientX, clientY) {
+  suppressClick = false
+  longPress.start(table, clientX, clientY)
   dragTable.value = table
   draggingTableNumber.value = table.number
   isDragging.value = true
@@ -334,6 +374,7 @@ function startDrag(table, clientX, clientY) {
 }
 
 function moveDrag(clientX, clientY) {
+  longPress.move(clientX, clientY)
   if (!isDragging.value || draggingTableNumber.value === null) return
   const raw = calcPercent(clientX, clientY)
   // Apply the initial offset so the table tracks smoothly without jumping
@@ -366,6 +407,7 @@ function onMouseMove(e) {
 }
 
 async function onDragEnd() {
+  longPress.cancel()
   if (!isDragging.value || draggingTableNumber.value === null) return
   const table = getTableInActiveSpace(draggingTableNumber.value)
   isDragging.value = false
@@ -396,6 +438,7 @@ async function onDragEnd() {
 
 /* ═══ Clic table → changer statut + navigation caisse ═══ */
 function onTableClick(table) {
+  if (suppressClick) { suppressClick = false; return }
   // Cycle through states: libre → occupée → réservée → libre
   const cycle = { 'libre': 'occupee', 'occupee': 'reservee', 'reservee': 'libre' }
   const nextState = cycle[table.state] || 'libre'
@@ -447,6 +490,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  longPress.cancel()
   cleanupWebSocket()
   if (pollTimer) {
     clearInterval(pollTimer)
@@ -612,6 +656,8 @@ onUnmounted(() => {
 .ps-table-info { display: flex; flex-direction: column; align-items: center; font-size: 8px; line-height: 1.1; opacity: 0.9; margin-top: 1px; }
 .ps-table-covers { font-size: 9px; }
 .ps-table-serveur { font-size: 7px; max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ps-hint { margin: 0; font-size: 11px; text-align: center; color: var(--nav-inactive, #6b6b7b); }
 
 /* ═══ États ═══ */
 .ps-empty { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--nav-inactive, #6b6b7b); font-size: 14px; pointer-events: none; }

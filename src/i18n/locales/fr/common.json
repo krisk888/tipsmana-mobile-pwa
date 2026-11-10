@@ -63,7 +63,9 @@
       "serviceReport": "Rapport de service",
       "inventoryItems": "Stock produits",
       "waiterCall": "Appeler le serveur",
-      "feedback": "Votre avis"
+      "feedback": "Votre avis",
+      "menu": "La carte",
+      "inventoryCount": "Comptage inventaire"
     },
     "errors": {
       "network": "Réseau indisponible.",

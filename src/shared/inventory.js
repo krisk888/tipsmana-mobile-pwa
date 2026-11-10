@@ -14,6 +14,7 @@
 
 import api from './api'
 import { t, intlLocale } from '../i18n'
+import { isStockFrozen } from './inventoryCount'
 
 const THEORETICAL_PAGE_SIZE = 200
 const THEORETICAL_MAX_PAGES = 5
@@ -53,6 +54,8 @@ export function normalizeInventoryItem(raw) {
     threshold: num(raw.threshold ?? raw.minimum_stock_level ?? raw.min_quantity),
     unit: raw.unit || raw.unit_symbol || raw.unit_name || null,
     category: raw.category || raw.category_name || null,
+    // Coût moyen d'achat : valorisation des écarts d'inventaire
+    unitCost: num(raw.unit_cost ?? raw.average_unit_cost ?? raw.cost),
   }
 }
 
@@ -149,6 +152,8 @@ function postMovement(item, delta) {
 export async function adjustItem(item, delta) {
   delta = roundQty(delta)
   if (!delta) return { queued: false }
+  // Comptage d'inventaire en cours : aucun mouvement depuis ce téléphone
+  if (isStockFrozen()) throw Object.assign(new Error(t('stock.count.frozenError')), { frozen: true })
   if (!itemsEndpointMissing) {
     try {
       const res = await api.patch(`/inventory/items/${encodeURIComponent(item.id)}/adjust`, { delta })

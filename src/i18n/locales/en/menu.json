@@ -1,0 +1,23 @@
+{
+  "menu": {
+    "kicker": "Menu",
+    "title": "Our menu",
+    "loading": "Loading the menu…",
+    "categories": "Categories",
+    "search": "Search a dish…",
+    "noResult": "No dish matches.",
+    "empty": "The menu is empty for now.",
+    "allergens": "Allergens: {list}",
+    "callWaiter": "Call the waiter",
+    "pricesNote": "Prices include VAT and service.",
+    "cached": "Offline — menu from {time}.",
+    "errors": {
+      "offlineTitle": "No connection",
+      "offlineText": "Check your connection and try again.",
+      "unavailableTitle": "Menu coming soon",
+      "unavailableText": "The online menu isn't available yet. Please ask your waiter for the menu.",
+      "errorTitle": "Menu unavailable",
+      "errorText": "Something went wrong. Please try again in a moment."
+    }
+  }
+}

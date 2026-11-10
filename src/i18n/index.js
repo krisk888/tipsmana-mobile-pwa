@@ -48,6 +48,29 @@ export function getSavedLocale() {
   return DEFAULT_LOCALE
 }
 
+/** Vrai si l'utilisateur a déjà choisi une langue sur ce téléphone. */
+export function hasSavedLocale() {
+  try {
+    return isSupported(localStorage.getItem(LOCALE_KEY))
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Langue du navigateur parmi celles gérées ("en-US" → "en"), français sinon.
+ * Pour les pages client (carte numérique) ouvertes sans connexion.
+ */
+export function detectBrowserLocale(languages = typeof navigator !== 'undefined'
+  ? (navigator.languages?.length ? navigator.languages : [navigator.language])
+  : []) {
+  for (const tag of languages || []) {
+    const code = String(tag || '').toLowerCase().split(/[-_]/)[0]
+    if (isSupported(code)) return code
+  }
+  return DEFAULT_LOCALE
+}
+
 /** Enregistre un catalogue (utilisé par le chargeur et par les tests). */
 export function registerMessages(lang, catalog) {
   messages[lang] = { ...(messages[lang] || {}), ...catalog }

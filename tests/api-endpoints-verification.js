@@ -42,7 +42,8 @@ const EXPECTED = [
   // Statut commande, KDS en colonnes, rapport de service — contrats demandés au mobile, PAS ENCORE dans le backend (vérifié 2026-11-08)
   { method: 'GET',    pattern: '/mobile/orders/{id}/status', exist: false, pending: true, note: '{ status } — fallback: /cash/tickets/{ref}/kitchen-status' },
   { method: 'PATCH',  pattern: '/kds/orders/{id}/status', exist: false, pending: true, note: '{ status } — fallback: validate N times (forward only)' },
-  { method: 'GET',    pattern: '/mobile/service-report', exist: false, pending: true, note: '?date=YYYY-MM-DD → revenue, covers, tickets, tables, payments, top_items' },
+  // Rapport de service : ajouté au backend depuis (vérifié 2026-11-10, mobile/routes.py)
+  { method: 'GET',    pattern: '/mobile/service-report', exist: true, note: '?date=YYYY-MM-DD → total_ca, couverts, tickets_count, tables_count, payment_breakdown, top_5_products' },
   // Images de la carte, stock mobile, appel serveur — contrats demandés au mobile, PAS ENCORE dans le backend (vérifié 2026-11-08)
   { method: 'GET',    pattern: '/mobile/menu/items', exist: false, pending: true, note: '?with_images=true → [{ id, image_url }] — fallback: menu without images' },
   { method: 'GET',    pattern: '/inventory/items', exist: false, pending: true, note: '[{ id, name, quantity, threshold, unit }] — fallback: /inventory/stock/theoretical' },
@@ -56,6 +57,13 @@ const EXPECTED = [
   { method: 'GET',    pattern: '/settings/tax-rates', exist: true, note: 'tax rates for the product creation form' },
   { method: 'POST',   pattern: '/products', exist: true, note: 'create product (unknown barcode → barcode pre-filled)' },
   // POST /feedback { table, rating, comment?, establishment_id } (public, fetch direct dans feedback.js) : pas encore dans le backend
+  // Carte numérique, inventaire complet, historique des tables (verified 2026-11-10)
+  // GET /public/menu?est=&lang= (public, fetch direct dans publicMenu.js) : pas encore dans le backend — repli pos-menu (équipe) / cache
+  { method: 'POST',   pattern: '/inventory/count', exist: false, pending: true, note: '{ session_id, counts: [{ product_id, theoretical_quantity, counted_quantity, variance, variance_value }] } — fallback: session counts/bulk + complete' },
+  { method: 'POST',   pattern: '/inventory/sessions/{id}/counts/bulk', exist: true, note: '{ counts: [{ product_id, counted_quantity, barcode_scanned }] }' },
+  { method: 'PUT',    pattern: '/inventory/sessions/{id}/complete', exist: true, note: 'IN_PROGRESS → COMPLETED' },
+  { method: 'DEL',    pattern: '/inventory/sessions/{id}', exist: true, note: 'abandoned count' },
+  { method: 'GET',    pattern: '/table-tickets/history', exist: false, pending: true, note: '?date=YYYY-MM-DD → day tickets (open + closed) — fallback: local occupancy log' },
   // Sales
   { method: 'POST',   pattern: '/sales/entries', exist: true, note: 'create sales entry' },
   // Auth
@@ -102,6 +110,8 @@ const VIEWS = [
   { name: 'inventory.js',     file: 'src/shared/inventory.js' },
   { name: 'barcode.js',       file: 'src/shared/barcode.js' },
   { name: 'push.js',          file: 'src/shared/push.js' },
+  { name: 'inventoryCount.js', file: 'src/shared/inventoryCount.js' },
+  { name: 'tableHistory.js',  file: 'src/shared/tableHistory.js' },
 ]
 
 const REPO = new URL('..', import.meta.url).pathname
