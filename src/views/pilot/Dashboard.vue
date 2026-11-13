@@ -42,6 +42,22 @@
         </div>
       </div>
 
+      <!-- ═══ Widget retards : commandes en attente + en retard ═══ -->
+      <div class="late-widget" v-if="lateSummary.late > 0 || lateSummary.waiting > 0">
+        <div class="late-card late-card-waiting">
+          <span class="late-label">{{ t('pilot.dashboard.late.waiting') }}</span>
+          <span class="late-value">{{ lateSummary.waiting }}</span>
+        </div>
+        <div class="late-card late-card-late" :class="{ 'late-card-pulse': lateSummary.late > 0 }">
+          <span class="late-label">{{ t('pilot.dashboard.late.late') }}</span>
+          <span class="late-value">{{ lateSummary.late }}</span>
+        </div>
+        <div class="late-card late-card-longest">
+          <span class="late-label">{{ t('pilot.dashboard.late.longest') }}</span>
+          <span class="late-value">{{ formatLongestWait(lateSummary.longest) }}</span>
+        </div>
+      </div>
+
       <!-- ═══ Plan de salle : occupation en direct ═══ -->
       <div class="floorplan-widget" v-if="floorplanSpaces.length">
         <h3>{{ t('pilot.dashboard.floorplan') }}
@@ -171,6 +187,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { auth } from '../../shared/auth'
 import api from '../../shared/api'
 import { useI18n } from '../../i18n'
+import { waitSummary } from '../../shared/lateAlerts'
 
 const { t, intlLocale } = useI18n()
 
@@ -199,6 +216,7 @@ const cacheAvailable = ref(false)
 const lastSync = ref(null)
 const floorplanSpaces = ref([])
 const floorplanLoading = ref(false)
+const lateSummary = ref({ waiting: 0, late: 0, longest: 0 })
 
 async function loadFloorplan() {
   floorplanLoading.value = true
@@ -357,6 +375,16 @@ function formatEur(amount) {
   return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(amount || 0)
 }
 
+function formatLongestWait(ms) {
+  if (!ms || ms <= 0) return '—'
+  const min = Math.floor(ms / 60000)
+  if (min < 1) return '< 1 min'
+  if (min < 60) return `${min} min`
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  return m > 0 ? `${h}h ${m}m` : `${h}h`
+}
+
 const lastSyncLabel = computed(() => {
   if (!lastSync.value) return ''
   return new Date(lastSync.value).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
@@ -419,6 +447,9 @@ async function loadOrdersCount() {
     if (pendingOrdersCount.value === 0 && pending > 0) {
       pendingOrdersCount.value = pending
     }
+    // Compute late summary for the dashboard widget
+    const summary = waitSummary(orders, Date.now())
+    lateSummary.value = { waiting: summary.waiting, late: summary.late, longest: summary.longest }
   } catch { /* silencieux — widget reste à 0 */ }
 }
 
@@ -471,6 +502,25 @@ onUnmounted(() => {
 .summary-value { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
 .summary-card:last-child .summary-value { color: #10b981; }
 .summary-delta { font-size: 11px; font-weight: 600; color: #888; }
+
+/* ═══ Widget retards ═══ */
+.late-widget {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px;
+}
+.late-card {
+  background: linear-gradient(135deg, #1a1a2e, #15152a);
+  border: 1px solid #2a2a40; border-radius: 12px; padding: 12px 10px;
+  display: flex; flex-direction: column; gap: 4px; text-align: center;
+}
+.late-card-waiting { border-left: 4px solid #6366f1; }
+.late-card-late { border-left: 4px solid #ef4444; }
+.late-card-longest { border-left: 4px solid #f59e0b; }
+.late-card-pulse { animation: late-pulse 1.5s infinite; }
+@keyframes late-pulse { 50% { opacity: 0.6; } }
+.late-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.late-value { font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+.late-card-late .late-value { color: #ef4444; }
+.late-card-longest .late-value { color: #f59e0b; }
 
 .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 .kpi-card {

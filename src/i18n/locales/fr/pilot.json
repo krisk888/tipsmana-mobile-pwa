@@ -45,6 +45,11 @@
       "actionValidations": "✅ Validations",
       "actionScan": "📷 Scanner",
       "actionStock": "📦 Inventaire",
+      "late": {
+        "waiting": "En attente",
+        "late": "En retard",
+        "longest": "Plus longtemps"
+      },
       "timeAgo": {
         "justNow": "à l'instant",
         "minutes": "il y a {n} min",

@@ -45,6 +45,11 @@
       "actionValidations": "✅ Approvals",
       "actionScan": "📷 Scan",
       "actionStock": "📦 Inventory",
+      "late": {
+        "waiting": "Waiting",
+        "late": "Late",
+        "longest": "Longest wait"
+      },
       "timeAgo": {
         "justNow": "just now",
         "minutes": "{n} min ago",
