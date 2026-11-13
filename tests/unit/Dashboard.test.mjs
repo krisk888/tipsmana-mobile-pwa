@@ -107,4 +107,58 @@ describe('Dashboard.vue — Résumé commandes', () => {
     await vi.waitUntil(() => wrapper.find('.summary-delta').exists(), { timeout: 3000 })
     expect(wrapper.text()).toContain('1 commande en attente')
   })
+
+  it('affiche le widget retards quand des commandes sont en retard', async () => {
+    const now = Date.now()
+    const lateOrder = {
+      id: 1, status: 'pending',
+      created_at: new Date(now - 20 * 60 * 1000).toISOString(),
+    }
+    const waitingOrder = {
+      id: 2, status: 'preparing',
+      created_at: new Date(now - 5 * 60 * 1000).toISOString(),
+    }
+    const servedOrder = {
+      id: 3, status: 'served',
+      created_at: new Date(now - 30 * 60 * 1000).toISOString(),
+    }
+
+    api.get.mockResolvedValueOnce({
+      data: {
+        quick_stats: { today_revenue: 0, today_transactions: 0, pending_orders: 0 },
+        metrics: {},
+        active_alerts: [],
+        recent_activities: [],
+      },
+    })
+    api.get.mockResolvedValueOnce({
+      data: [lateOrder, waitingOrder, servedOrder],
+    })
+
+    const wrapper = mountComponent()
+    await vi.waitUntil(() => wrapper.find('.late-widget').exists(), { timeout: 3000 })
+
+    expect(wrapper.text()).toContain('En attente')
+    expect(wrapper.text()).toContain('En retard')
+    // 2 waiting (pending + preparing), 1 late (>15min pending)
+    expect(wrapper.text()).toContain('2')
+    expect(wrapper.text()).toContain('1')
+  })
+
+  it('ne montre pas le widget retards quand aucune commande', async () => {
+    api.get.mockResolvedValueOnce({
+      data: {
+        quick_stats: { today_revenue: 0, today_transactions: 0, pending_orders: 0 },
+        metrics: {},
+        active_alerts: [],
+        recent_activities: [],
+      },
+    })
+    api.get.mockResolvedValueOnce({ data: [] })
+
+    const wrapper = mountComponent()
+    await vi.waitUntil(() => wrapper.find('.summary-widget').exists(), { timeout: 3000 })
+
+    expect(wrapper.find('.late-widget').exists()).toBe(false)
+  })
 })
