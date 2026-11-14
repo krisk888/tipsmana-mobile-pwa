@@ -18,8 +18,12 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api/v1'
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 class ApiClient {
-  constructor() {
+  /**
+   * @param {number} timeoutMs - timeout par défaut pour fetch (ms). 0 = pas de timeout.
+   */
+  constructor(timeoutMs = 10000) {
     this.baseUrl = API_BASE
+    this.timeoutMs = timeoutMs
   }
 
   getToken() {
@@ -144,16 +148,30 @@ class ApiClient {
     }
 
     // ── Mode EN-LIGNE ──
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs)
     try {
-      const res = await fetch(url, config)
+      const res = await fetch(url, { ...config, signal: controller.signal })
+      clearTimeout(timeoutId)
 
       // Auto-refresh on 401
       if (res.status === 401 && this.getRefreshToken()) {
         const refreshed = await this._refreshToken()
         if (refreshed) {
           headers['Authorization'] = `Bearer ${this.getToken()}`
-          const retryRes = await fetch(url, { ...config, headers })
-          return this._handleResponse(path, method, retryRes)
+          const retryController = new AbortController()
+          const retryTimeout = setTimeout(() => retryController.abort(), this.timeoutMs)
+          try {
+            const retryRes = await fetch(url, { ...config, headers, signal: retryController.signal })
+            clearTimeout(retryTimeout)
+            return this._handleResponse(path, method, retryRes)
+          } catch (retryErr) {
+            clearTimeout(retryTimeout)
+            if (retryErr.name === 'AbortError') {
+              throw new Error(t('common.errors.network'))
+            }
+            throw retryErr
+          }
         }
       }
 
@@ -165,8 +183,13 @@ class ApiClient {
 
       return this._handleResponse(path, method, res)
     } catch (err) {
+      clearTimeout(timeoutId)
+      // Timeout → traité comme erreur réseau
+      if (err.name === 'AbortError') {
+        err.message = t('common.errors.network')
+      }
       // Fallback réseau : cache pour les GET, file d'attente pour les mutations
-      if (!replay && (err.name === 'TypeError' || err.message?.includes('fetch'))) {
+      if (!replay && (err.name === 'TypeError' || err.message?.includes('fetch') || err.name === 'AbortError')) {
         if (!MUTATION_METHODS.has(method)) {
           const cached = await this._getCachedResponse(path)
           if (cached) {
