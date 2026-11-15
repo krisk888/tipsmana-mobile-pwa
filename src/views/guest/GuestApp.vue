@@ -263,6 +263,7 @@ import {
 import { fetchPublicMenu } from '../../shared/publicMenu'
 import { WAITER_CALL_MESSAGES, callWaiter } from '../../shared/waiterCall'
 import { recordGuestVisit, readGuestHistory, markVisitPaid, historyTotals } from '../../shared/guestHistory'
+import { formatEur } from '../../shared/serviceOrders'
 import {
   paymentProviders, startGuestPayment, paymentReturnStatus, tablePaymentQr,
 } from '../../shared/guestPayment'
@@ -320,9 +321,7 @@ const activeItems = computed(() => {
   return (cats.find(c => c.id === activeCat.value) || cats[0])?.items || []
 })
 
-function formatEur(v) {
-  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0)
-}
+/* formatEur imported from shared/serviceOrders */
 
 function formatDay(ts) {
   return ts ? new Date(ts).toLocaleDateString(intlLocale(), { weekday: 'short', day: 'numeric', month: 'short' }) : '—'

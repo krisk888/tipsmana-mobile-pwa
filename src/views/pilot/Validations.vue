@@ -31,6 +31,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '../../shared/api'
+import { formatEur } from '../../shared/serviceOrders'
 import { useI18n } from '../../i18n'
 
 const { t, intlLocale } = useI18n()
@@ -40,7 +41,7 @@ const loading = ref(true)
 const error = ref(null)
 const busy = ref({})
 
-function formatEur(v) { return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0) }
+/* formatEur imported from shared/serviceOrders */
 
 async function load() {
   loading.value = true
