@@ -86,6 +86,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from '../../i18n'
+import { formatEur } from '../../shared/serviceOrders'
 
 const { t, intlLocale } = useI18n()
 
@@ -105,9 +106,7 @@ defineEmits(['à-suivre', 'envoi', 'réclamer', 'addition', 'solder', 'increment
 
 const expanded = ref(true)
 
-function formatEur(v) {
-  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0)
-}
+/* formatEur imported from shared/serviceOrders */
 
 function courseLabel(key) {
   return props.courses.find(c => c.key === key)?.label || t('caisse.courses.fallback')

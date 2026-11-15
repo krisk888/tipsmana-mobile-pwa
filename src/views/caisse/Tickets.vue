@@ -327,6 +327,7 @@ import { useRouter } from 'vue-router'
 import api from '../../shared/api'
 import { auth, getEstablishmentId } from '../../shared/auth'
 import { feedbackUrl } from '../../shared/feedback'
+import { formatEur } from '../../shared/serviceOrders'
 import CaisseCart from './CaisseCart.vue'
 import TipsIcon from '../../components/TipsIcon.vue'
 import { useI18n } from '../../i18n'
@@ -990,9 +991,7 @@ function finishPayment() {
 }
 
 /* ═══ Utils ═══ */
-function formatEur(v) {
-  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0)
-}
+/* formatEur imported from shared/serviceOrders */
 
 /* ═══ Lifecycle ═══ */
 onMounted(() => {

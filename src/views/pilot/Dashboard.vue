@@ -170,6 +170,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { auth } from '../../shared/auth'
 import api from '../../shared/api'
+import { formatEur } from '../../shared/serviceOrders'
 import { useI18n } from '../../i18n'
 
 const { t, intlLocale } = useI18n()
@@ -353,9 +354,7 @@ function tableTitle(table) {
     : t('pilot.dashboard.tableTitle', { number: table.number, state })
 }
 
-function formatEur(amount) {
-  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(amount || 0)
-}
+/* formatEur imported from shared/serviceOrders */
 
 const lastSyncLabel = computed(() => {
   if (!lastSync.value) return ''
