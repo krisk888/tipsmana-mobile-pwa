@@ -59,10 +59,10 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { decodeSnapshot, fetchCustomerNote, groupByCourse, formatEur, toNumber } from '../../shared/serviceOrders'
+import { decodeSnapshot, fetchCustomerNote, groupByCourse, formatEur, toNumber, formatTime } from '../../shared/serviceOrders'
 import { useI18n } from '../../i18n'
 
-const { t, intlLocale } = useI18n()
+const { t } = useI18n()
 
 const REFRESH_MS = 10000
 
@@ -82,11 +82,6 @@ let timer = null
 
 const groups = computed(() => groupByCourse(note.value?.items || []))
 const itemCount = computed(() => (note.value?.items || []).reduce((s, i) => s + i.qty, 0))
-
-function formatTime(ts) {
-  if (!ts) return '—'
-  return new Date(ts).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
-}
 
 async function refresh() {
   if (closed.value || !ticketId) {

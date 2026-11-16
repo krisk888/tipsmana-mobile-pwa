@@ -56,10 +56,11 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { WAITER_CALL_MESSAGES, callWaiter, lastCallAt, tableFromRoute } from '../../shared/waiterCall'
+import { formatTime } from '../../shared/serviceOrders'
 import LanguageSwitcher from '../../components/LanguageSwitcher.vue'
 import { useI18n } from '../../i18n'
 
-const { t, intlLocale } = useI18n()
+const { t } = useI18n()
 const route = useRoute()
 
 const tableNumber = computed(() => tableFromRoute(route))
@@ -74,10 +75,6 @@ let ticker = null
 
 function sentAt(code) {
   return tableNumber.value ? lastCallAt(tableNumber.value, code, now.value) : null
-}
-
-function formatTime(ts) {
-  return new Date(ts).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
 }
 
 async function send(code) {

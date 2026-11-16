@@ -267,6 +267,7 @@ import {
   paymentProviders, startGuestPayment, paymentReturnStatus, tablePaymentQr,
 } from '../../shared/guestPayment'
 import { modifierChips } from '../../shared/menuModifiers'
+import { formatTime, formatDay } from '../../shared/serviceOrders'
 import LanguageSwitcher from '../../components/LanguageSwitcher.vue'
 import { useI18n } from '../../i18n'
 
@@ -324,16 +325,8 @@ function formatEur(v) {
   return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0)
 }
 
-function formatDay(ts) {
-  return ts ? new Date(ts).toLocaleDateString(intlLocale(), { weekday: 'short', day: 'numeric', month: 'short' }) : '—'
-}
-
 function visitQty(v) {
   return (v.items || []).reduce((s, i) => s + (i.qty || 0), 0)
-}
-
-function formatTime(ts) {
-  return ts ? new Date(ts).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' }) : '—'
 }
 
 // Addition déjà payée en ligne (en attente de clôture par la caisse) : plus de bouton « Payer »
