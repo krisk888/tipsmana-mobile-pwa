@@ -113,6 +113,15 @@ export function formatEur(v) {
   return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'EUR' }).format(v || 0)
 }
 
+export function formatTime(ts) {
+  if (!ts) return '—'
+  return new Date(ts).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
+}
+
+export function formatDay(ts) {
+  return ts ? new Date(ts).toLocaleDateString(intlLocale(), { weekday: 'short', day: 'numeric', month: 'short' }) : '—'
+}
+
 // Réponses api.js : { success, data, message } (ou cache hors-ligne avec la même forme)
 export function unwrap(res) {
   return res && typeof res === 'object' && 'data' in res ? res.data : res
