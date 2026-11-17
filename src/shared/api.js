@@ -126,7 +126,7 @@ class ApiClient {
     const config = { method, headers }
     if (body) config.body = JSON.stringify(body)
 
-    // ── Mode HORS-LIGNE ──
+    // Mode HORS-LIGNE ──
     if (!navigator.onLine) {
       if (replay) throw new Error(t('common.errors.network'))
       if (MUTATION_METHODS.has(method)) {
@@ -137,6 +137,12 @@ class ApiClient {
         // GET : on sert le cache
         const cached = await this._getCachedResponse(path)
         if (cached) {
+          // Préserve la nature du tableau : un spread ({...cached}) sur un
+          // array crée un objet array-like qui casse Array.isArray() chez
+          // les callers (ex: unwrapList() dans kds.js).
+          if (Array.isArray(cached)) {
+            return Object.assign([...cached], { offline: true, fromCache: true })
+          }
           return { ...cached, offline: true, fromCache: true }
         }
         throw new Error(t('common.errors.networkNoCache'))
