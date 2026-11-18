@@ -75,6 +75,7 @@
       "networkNoCache": "Network unavailable. No cached data.",
       "networkDownload": "Network unavailable. Unable to download the file.",
       "sessionExpired": "Session expired. Please log in again.",
+      "timeout": "Connection timed out.",
       "unexpected": "Unexpected server response",
       "generic": "Something went wrong",
       "login": "Login error"
