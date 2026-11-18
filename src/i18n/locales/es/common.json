@@ -75,6 +75,7 @@
       "networkNoCache": "Red no disponible. No hay datos en caché.",
       "networkDownload": "Red no disponible. No se puede descargar el archivo.",
       "sessionExpired": "Sesión caducada. Vuelva a iniciar sesión.",
+      "timeout": "Tiempo de conexión agotado.",
       "unexpected": "Respuesta inesperada del servidor",
       "generic": "Se ha producido un error",
       "login": "Error de conexión"

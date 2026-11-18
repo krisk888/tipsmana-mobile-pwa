@@ -75,6 +75,7 @@
       "networkNoCache": "Réseau indisponible. Aucune donnée en cache.",
       "networkDownload": "Réseau indisponible. Impossible de télécharger le fichier.",
       "sessionExpired": "Session expirée. Veuillez vous reconnecter.",
+      "timeout": "Délai de connexion dépassé.",
       "unexpected": "Réponse inattendue du serveur",
       "generic": "Une erreur est survenue",
       "login": "Erreur de connexion"

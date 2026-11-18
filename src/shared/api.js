@@ -14,6 +14,9 @@ import { t } from '../i18n'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1'
 
+// Timeout de requête en ms — les requêtes lentes sur mobile ne bloquent plus l'UI
+const REQUEST_TIMEOUT = 10_000
+
 // Types de requêtes mutables (POST/PUT/PATCH/DELETE)
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
@@ -143,9 +146,14 @@ class ApiClient {
       }
     }
 
-    // ── Mode EN-LIGNE ──
+    // ── Mode EN-LIGNE avec timeout ──
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT)
+
     try {
+      config.signal = controller.signal
       const res = await fetch(url, config)
+      clearTimeout(timeoutId)
 
       // Auto-refresh on 401
       if (res.status === 401 && this.getRefreshToken()) {
@@ -165,6 +173,12 @@ class ApiClient {
 
       return this._handleResponse(path, method, res)
     } catch (err) {
+      clearTimeout(timeoutId)
+      // Une requête abortée par timeout n'est ni un bug réseau ni une mutation
+      // à mettre en file — c'est une erreur d'expiration qu'on remonte telle quelle
+      if (err.name === 'AbortError') {
+        throw new Error(t('common.errors.timeout'))
+      }
       // Fallback réseau : cache pour les GET, file d'attente pour les mutations
       if (!replay && (err.name === 'TypeError' || err.message?.includes('fetch'))) {
         if (!MUTATION_METHODS.has(method)) {
