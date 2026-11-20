@@ -224,6 +224,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
 import { reportKitchenOrders, vibrateNewOrder } from '../../shared/kitchenWatch'
 import { lateOrderIds, kitchenLateAlert } from '../../shared/lateAlerts'
+import { playNewOrderSound, playUrgencySound } from '../../shared/notificationSound.js'
 import { useI18n } from '../../i18n'
 
 const { t } = useI18n()
@@ -243,21 +244,6 @@ const incomingPulse = ref(false)
 const newOrdersCount = ref(0)
 const showUrgencyFlash = ref(false)
 const urgencyFlashOrders = ref(new Set())
-
-// ── Audio context lazy singleton ────────────────────────
-let audioCtx = null
-function getAudioContext() {
-  if (!audioCtx) {
-    try {
-      const Ctx = window.AudioContext || window.webkitAudioContext
-      if (Ctx) audioCtx = new Ctx()
-    } catch { /* silencieux */ }
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {})
-  }
-  return audioCtx
-}
 
 // ── WebSocket state ────────────────────────────────────
 let ws = null
@@ -456,52 +442,6 @@ function resetNewOrdersCounter() {
   newOrdersCount.value = 0
 }
 
-// ── Audio notification (Web Audio API) ─────────────────
-function playNote(freq, startTime, duration, type = 'sine', gainVal = 0.3) {
-  const ctx = getAudioContext()
-  if (!ctx) return
-  try {
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.type = type
-    osc.frequency.setValueAtTime(freq, startTime)
-    gain.gain.setValueAtTime(gainVal, startTime)
-    gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration)
-    osc.start(startTime)
-    osc.stop(startTime + duration)
-  } catch { /* silencieux */ }
-}
-
-function playNotification() {
-  try {
-    const ctx = getAudioContext()
-    if (!ctx) return
-    const t0 = ctx.currentTime
-    playNote(880, t0, 0.4)
-    playNote(1108.73, t0 + 0.15, 0.3)
-  } catch (e) {
-    // Silently ignore audio errors
-  }
-}
-
-function playUrgencySound() {
-  try {
-    const ctx = getAudioContext()
-    if (!ctx) return
-    const t0 = ctx.currentTime
-    // Descending alarm: three short buzzy pulses
-    playNote(660, t0, 0.15, 'square', 0.25)
-    playNote(440, t0 + 0.2, 0.15, 'square', 0.25)
-    playNote(330, t0 + 0.4, 0.2, 'square', 0.25)
-    // One high alert note on top
-    playNote(1320, t0 + 0.1, 0.35, 'sawtooth', 0.15)
-  } catch (e) {
-    // Silently ignore audio errors
-  }
-}
-
 // ── WebSocket ──────────────────────────────────────────
 function getWsUrl() {
   const token = api.getToken()
@@ -586,7 +526,7 @@ function handleWsMessage(msg) {
     case 'new_order':
       upsertOrder(msg.data)
       newOrdersCount.value++
-      playNotification()
+      playNewOrderSound()
       vibrateNewOrder()
       showIncomingPulse()
       knownIds.add(msg.data.id)
@@ -786,7 +726,7 @@ async function loadOrders() {
       const fresh = incoming.filter(i => !knownIds.has(i.id))
       if (fresh.length && knownIds.size > 0) {
         newOrdersCount.value += fresh.length
-        playNotification()
+        playNewOrderSound()
         vibrateNewOrder()
         showIncomingPulse()
         showFlash('📦 ' + t('kitchen.toast.newOrders', { count: fresh.length }))
@@ -891,7 +831,7 @@ function loadDemo() {
     },
   ]
   orders.value.forEach(o => knownIds.add(o.id))
-  playNotification()
+  playNewOrderSound()
   showFlash('🎮 ' + t('kitchen.toast.demoOn'))
 }
 
