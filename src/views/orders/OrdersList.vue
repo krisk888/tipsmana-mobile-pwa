@@ -117,6 +117,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../../shared/api'
 import { useI18n } from '../../i18n'
+import { playNewOrderSound } from '../../shared/notificationSound.js'
 
 const { t } = useI18n()
 
@@ -280,27 +281,6 @@ async function validateItem(order, itemIndex) {
 let refreshTimer
 let pollTimer
 
-function playNotificationSound() {
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext
-    if (!Ctx) return
-    const ctx = new Ctx()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(880, ctx.currentTime)
-    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1)
-    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.2)
-    gain.gain.setValueAtTime(0.3, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.45)
-  } catch (_) { /* AudioContext not available */ }
-}
-
 async function pollOrders() {
   try {
     const res = await api.get('/cash/kds/cuisine?include_served=true')
@@ -311,7 +291,7 @@ async function pollOrders() {
     const newPending = newOrders.filter(o => o.status === 'pending').length
     // Son si nouvelle commande en attente
     if (newPending > prevPending) {
-      playNotificationSound()
+      playNewOrderSound()
     }
     // Auto-expand first pending
     const firstPending = newOrders.find(o => o.status === 'pending')

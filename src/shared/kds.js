@@ -130,33 +130,5 @@ export function withStatus(order, status) {
 
 /* ═══ Son « nouvelle commande » (Web Audio, aucun fichier) ═══ */
 
-let audioCtx = null
-export function unlockAudio() {
-  try {
-    if (!audioCtx) {
-      const Ctx = window.AudioContext || window.webkitAudioContext
-      if (Ctx) audioCtx = new Ctx()
-    }
-    if (audioCtx?.state === 'suspended') audioCtx.resume().catch(() => {})
-  } catch { /* audio indisponible */ }
-  return audioCtx
-}
-
-export function playNewOrderSound() {
-  const ctx = unlockAudio()
-  if (!ctx) return
-  try {
-    const t0 = ctx.currentTime
-    for (const [freq, at] of [[880, 0], [1174.66, 0.16]]) {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.setValueAtTime(freq, t0 + at)
-      gain.gain.setValueAtTime(0.3, t0 + at)
-      gain.gain.exponentialRampToValueAtTime(0.01, t0 + at + 0.35)
-      osc.start(t0 + at)
-      osc.stop(t0 + at + 0.35)
-    }
-  } catch { /* silencieux */ }
-}
+import { playNewOrderSound, unlockAudio } from './notificationSound.js'
+export { playNewOrderSound, unlockAudio }
