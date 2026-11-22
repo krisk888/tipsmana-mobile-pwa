@@ -14,7 +14,8 @@
     },
     "actions": {
       "prep": "Start",
-      "ready": "Ready"
+      "ready": "Ready",
+      "serveAll": "Serve all"
     },
     "empty": {
       "served": "No served orders",
