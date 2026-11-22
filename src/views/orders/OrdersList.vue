@@ -107,6 +107,17 @@
               >{{ t('orders.status.served') }}</span>
             </div>
           </div>
+          <!-- Mark all as served — all items are ready, one click -->
+          <div v-if="allItemsReady(o)" class="card-bulk-action">
+            <button
+              class="btn-serve-all"
+              @click.stop="markAllServed(o)"
+              :disabled="actionLoading[o.id + '-all']"
+            >
+              <span v-if="actionLoading[o.id + '-all']" class="action-spinner"></span>
+              <span v-else>🍽 {{ t('orders.actions.serveAll') }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -218,6 +229,29 @@ function toggleOrder(id) {
   const next = { ...expanded.value }
   next[id] = !next[id]
   expanded.value = next
+}
+
+// ── Bulk actions ──────────────────────────────────
+function allItemsReady(order) {
+  const items = order.items || []
+  return items.length > 0 && items.every(i => i.status === 'ready')
+}
+
+async function markAllServed(order) {
+  const key = order.id + '-all'
+  actionLoading.value = { ...actionLoading.value, [key]: true }
+  try {
+    const station = order.station || 'cuisine'
+    await api.post(`/cash/kds/${station}/orders/${order.id}/validate`, {})
+    // Update local state: all items → served, order → served
+    const items = order.items.map(i => ({ ...i, status: 'served' }))
+    order.items = items
+    order.status = 'served'
+  } catch (e) {
+    console.error('Mark all served échoué:', e.message || e)
+  } finally {
+    actionLoading.value = { ...actionLoading.value, [key]: false }
+  }
 }
 
 // ── API ─────────────────────────────────────────────────
@@ -501,4 +535,19 @@ onUnmounted(() => {
   vertical-align: middle;
 }
 @keyframes action-spin { to { transform: rotate(360deg); } }
+
+/* Bulk action — serve all ready items at once */
+.card-bulk-action {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid #2a2a40;
+  display: flex; justify-content: flex-end;
+}
+.btn-serve-all {
+  padding: 8px 18px; border: none; border-radius: 10px;
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-serve-all:active { transform: scale(0.95); }
+.btn-serve-all:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>

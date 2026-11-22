@@ -14,7 +14,8 @@
     },
     "actions": {
       "prep": "En prépa",
-      "ready": "Prêt"
+      "ready": "Prêt",
+      "serveAll": "Tout servir"
     },
     "empty": {
       "served": "Aucune commande servie",

@@ -14,7 +14,8 @@
     },
     "actions": {
       "prep": "Preparar",
-      "ready": "Listo"
+      "ready": "Listo",
+      "serveAll": "Servir todo"
     },
     "empty": {
       "served": "Ninguna comanda servida",

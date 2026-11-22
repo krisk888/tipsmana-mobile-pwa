@@ -158,6 +158,93 @@ describe('OrdersList.vue', () => {
     })
   })
 
+  describe('action collective — tout servir', () => {
+    it('affiche le bouton "Tout servir" quand tous les items sont prêts', async () => {
+      api.get.mockResolvedValue({
+        success: true,
+        data: {
+          station: 'cuisine',
+          items: [
+            makeOrder({
+              id: 'ready-order',
+              status: 'ready',
+              items: [
+                { name: 'Burger', qty: 1, note: null, status: 'ready' },
+                { name: 'Frites', qty: 1, note: null, status: 'ready' },
+              ],
+            }),
+          ],
+        },
+      })
+      const wrapper = mountComponent()
+      await vi.waitUntil(() => wrapper.find('.order-card').exists(), { timeout: 3000 })
+      // Expand the order to reveal the bulk action button
+      const card = wrapper.find('.order-card')
+      await card.trigger('click')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('Tout servir')
+    })
+
+    it('ne montre PAS le bouton "Tout servir" quand des items sont encore en attente', async () => {
+      api.get.mockResolvedValue({
+        success: true,
+        data: {
+          station: 'cuisine',
+          items: [
+            makeOrder({
+              id: 'pending-order',
+              status: 'pending',
+              items: [
+                { name: 'Burger', qty: 1, note: null, status: 'pending' },
+                { name: 'Frites', qty: 1, note: null, status: 'preparing' },
+              ],
+            }),
+          ],
+        },
+      })
+      const wrapper = mountComponent()
+      await vi.waitUntil(() => wrapper.find('.order-card').exists(), { timeout: 3000 })
+      // Expand the order
+      const card = wrapper.find('.order-card')
+      await card.trigger('click')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).not.toContain('Tout servir')
+    })
+
+    it('appelle POST /cash/kds/cuisine/orders/{id}/validate sans item_index quand on clique sur Tout servir', async () => {
+      api.get.mockResolvedValue({
+        success: true,
+        data: {
+          station: 'cuisine',
+          items: [
+            makeOrder({
+              id: 'bulk-order',
+              status: 'ready',
+              items: [
+                { name: 'Burger', qty: 1, note: null, status: 'ready' },
+                { name: 'Frites', qty: 1, note: null, status: 'ready' },
+              ],
+            }),
+          ],
+        },
+      })
+      const wrapper = mountComponent()
+      await vi.waitUntil(() => wrapper.find('.order-card').exists(), { timeout: 3000 })
+      // Expand the order
+      const card = wrapper.find('.order-card')
+      await card.trigger('click')
+      await wrapper.vm.$nextTick()
+      const serveAllBtn = wrapper.find('.btn-serve-all')
+      expect(serveAllBtn.exists()).toBe(true)
+      await serveAllBtn.trigger('click')
+      await wrapper.vm.$nextTick()
+      expect(api.post).toHaveBeenCalledWith(
+        '/cash/kds/cuisine/orders/bulk-order/validate',
+        {}
+      )
+    })
+  })
+
   describe('etat vide', () => {
     it("affiche 'Aucune commande' quand la liste est vide", async () => {
       api.get.mockResolvedValue({
