@@ -85,9 +85,12 @@ class ApiClient {
   async _invalidateRelated(path) {
     // Invalide le cache exact
     await offlineStore.invalidateCached(this._cacheKey(path))
-    // Invalide aussi les routes de bundle/dashboard qui pourraient être affectées
+    // Invalide aussi les routes de dashboard qui pourraient être affectées
+    // par une mutation stock/inventory (données KPI + horaire + plan de salle)
     if (path.includes('/stock/') || path.includes('/inventory/')) {
       await offlineStore.invalidateCached(this._cacheKey('/dashboard/bundle'))
+      await offlineStore.invalidateCached(this._cacheKey('/dashboard/hourly-stats'))
+      await offlineStore.invalidateCached(this._cacheKey('/floorplan/spaces'))
     }
   }
 
