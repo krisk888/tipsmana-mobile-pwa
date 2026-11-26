@@ -279,25 +279,35 @@ async function validateItem(order, itemIndex) {
 // ── Auto-refresh + Sound ──────────────────────────────
 let refreshTimer
 let pollTimer
+let audioCtx = null
+
+function getAudioContext() {
+  if (audioCtx) return audioCtx
+  const Ctx = window.AudioContext || window.webkitAudioContext
+  if (!Ctx) return null
+  audioCtx = new Ctx()
+  return audioCtx
+}
+
+function playNote(freq, delay, duration = 0.4, gainVal = 0.3) {
+  const ctx = getAudioContext()
+  if (!ctx) return
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.type = 'sine'
+  osc.frequency.setValueAtTime(freq, ctx.currentTime + delay)
+  gain.gain.setValueAtTime(gainVal, ctx.currentTime + delay)
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + duration)
+  osc.start(ctx.currentTime + delay)
+  osc.stop(ctx.currentTime + delay + duration)
+}
 
 function playNotificationSound() {
   try {
-    const Ctx = window.AudioContext || window.webkitAudioContext
-    if (!Ctx) return
-    const ctx = new Ctx()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(880, ctx.currentTime)
-    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1)
-    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.2)
-    gain.gain.setValueAtTime(0.3, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.45)
+    playNote(880, 0)
+    playNote(1108.73, 0.15)
   } catch (_) { /* AudioContext not available */ }
 }
 
