@@ -141,7 +141,11 @@
       "notDetected": "Código no detectado — introdúcelo manualmente",
       "scanFailed": "Error al escanear",
       "noProduct": "Ningún producto para el código {code}",
-      "lookupFailed": "Error en la búsqueda"
+      "lookupFailed": "Búsqueda fallida",
+      "offline": "Sin conexión — resultado no disponible",
+      "sku": "SKU",
+      "unit": "Unidad",
+      "notInList": "Este producto aún no está en su stock local."
     },
     "detail": {
       "fallbackTitle": "Sesión de stock",
