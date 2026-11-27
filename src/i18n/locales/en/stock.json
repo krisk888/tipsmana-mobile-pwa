@@ -141,7 +141,11 @@
       "notDetected": "No code detected — enter it manually",
       "scanFailed": "Scan failed",
       "noProduct": "No product for code {code}",
-      "lookupFailed": "Lookup failed"
+      "lookupFailed": "Lookup failed",
+      "offline": "Offline — result not available",
+      "sku": "SKU",
+      "unit": "Unit",
+      "notInList": "This product is not yet in your local stock."
     },
     "detail": {
       "fallbackTitle": "Stock session",

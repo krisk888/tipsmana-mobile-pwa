@@ -26,11 +26,19 @@
       <button type="submit" :disabled="busy || !manualCode.trim()">{{ t('stock.scan.ok') }}</button>
     </form>
 
+    <!-- Bandeau hors-ligne -->
+    <div v-if="offline" class="offline-banner" role="status">
+      {{ t('stock.scan.offline') }}
+    </div>
+
     <div v-if="result" class="scan-result">
       <h3>{{ t('stock.scan.resultTitle') }}</h3>
       <p><strong>{{ t('stock.scan.code') }}</strong> {{ result.code }}</p>
       <p><strong>{{ t('stock.scan.product') }}</strong> {{ result.product_name }}</p>
       <p v-if="result.quantity != null"><strong>{{ t('stock.scan.theoreticalStock') }}</strong> {{ result.quantity }}</p>
+      <p v-if="result.sku"><strong>{{ t('stock.scan.sku') }}</strong> {{ result.sku }}</p>
+      <p v-if="result.unit"><strong>{{ t('stock.scan.unit') }}</strong> {{ result.unit }}</p>
+      <p v-if="result.notInList" class="scan-note">{{ t('stock.scan.notInList') }}</p>
     </div>
 
     <div v-if="error" class="error-msg">{{ error }}</div>
@@ -40,7 +48,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '../../shared/api'
+import { lookupBarcode } from '../../shared/barcode'
 import { useI18n } from '../../i18n'
 
 const { t } = useI18n()
@@ -52,6 +60,7 @@ const result = ref(null)
 const error = ref(null)
 const busy = ref(false)
 const navigatingToTable = ref(false)
+const offline = ref(false)
 
 // Le backend n'a pas d'endpoint de décodage d'image
 async function decodeImage(file) {
@@ -74,6 +83,7 @@ async function onFileCapture(e) {
 
   error.value = null
   result.value = null
+  offline.value = false
   try {
     const code = await decodeImage(file)
     if (!code) {
@@ -93,6 +103,7 @@ async function lookup(rawCode) {
   busy.value = true
   error.value = null
   result.value = null
+  offline.value = false
 
   // Détection QR table de restaurant
   const tableMatch = code.match(/^table[:\s]?(\d+)$/i)
@@ -105,15 +116,25 @@ async function lookup(rawCode) {
   }
 
   try {
-    const res = await api.get(`/inventory/barcode/lookup?code=${encodeURIComponent(code)}`)
-    const data = res.data || {}
-    result.value = {
-      code,
-      product_name: data.product?.name,
-      quantity: data.theoretical_stock,
+    const res = await lookupBarcode(code)
+    if (res.status === 'found') {
+      const item = res.item
+      result.value = {
+        code,
+        product_name: item.name || item.product_name || '',
+        quantity: item.quantity ?? null,
+        sku: item.sku || null,
+        unit: item.unit || null,
+        notInList: res.notInList || false,
+      }
+    } else if (res.status === 'unknown') {
+      error.value = t('stock.scan.noProduct', { code })
+    } else if (res.status === 'offline') {
+      offline.value = true
+      error.value = t('stock.scan.offline')
     }
   } catch (e) {
-    error.value = e.status === 404 ? t('stock.scan.noProduct', { code }) : (e.message || t('stock.scan.lookupFailed'))
+    error.value = e.message || t('stock.scan.lookupFailed')
   } finally {
     busy.value = false
   }
@@ -154,4 +175,10 @@ async function lookup(rawCode) {
 }
 .manual-entry button:disabled { opacity: 0.5; }
 .error-msg { color: #ff6b6b; text-align: center; margin-top: 12px; }
+.offline-banner {
+  background: rgba(255,193,7,0.12); border: 1px solid rgba(255,193,7,0.35);
+  color: #fbbf24; font-size: 13px; font-weight: 500;
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; text-align: center;
+}
+.scan-note { font-size: 12px; color: #fbbf24; margin-top: 8px; font-style: italic; }
 </style>
