@@ -109,8 +109,10 @@ import api from '../shared/api'
 import { clearOrderBadge } from '../shared/appBadge'
 import PushPermissionCard from '../components/PushPermissionCard.vue'
 import { useI18n } from '../i18n'
+import { useAuthStore } from '../stores/authStore'
 
 const { t, intlLocale } = useI18n()
+const authStore = useAuthStore()
 
 const notifications = ref([])
 const loading = ref(false)
@@ -205,6 +207,7 @@ async function markRead(n) {
     n.is_read = true
     n.read_at = new Date().toISOString()
     if (unreadCount.value > 0) unreadCount.value--
+    await authStore.fetchNotificationCount()
   } catch {
     // Silently fail
   } finally {
@@ -218,6 +221,7 @@ async function markAllRead() {
     await api.put('/notifications/mark-all-read')
     notifications.value.forEach(n => { n.is_read = true })
     unreadCount.value = 0
+    await authStore.fetchNotificationCount()
   } catch {
     // Silently fail
   } finally {
