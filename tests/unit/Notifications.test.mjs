@@ -7,9 +7,11 @@ import { mount } from '@vue/test-utils'
 
 // ── Mock the shared api module (hoisted automatically by vitest) ──────────
 vi.mock('../../src/shared/api')
+vi.mock('../../src/stores/authStore')
 
 // Import the mocked module AND the component
 import { api } from '../../src/shared/api'
+import { useAuthStore } from '../../src/stores/authStore'
 import NotificationsView from '../../src/views/Notifications.vue'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -41,6 +43,11 @@ describe('Notifications.vue', () => {
     vi.clearAllMocks()
     // Default: API returns 2 notifications, 2 unread
     api.get.mockResolvedValue(defaultApiResponse(2, 2))
+    // Default: authStore notification count fetch succeeds
+    useAuthStore.mockReturnValue({
+      notificationCount: 2,
+      fetchNotificationCount: vi.fn().mockResolvedValue(undefined),
+    })
   })
 
   describe('rendu', () => {
@@ -161,6 +168,35 @@ describe('Notifications.vue', () => {
       await wrapper.find('.mark-all-btn').trigger('click')
       await vi.waitUntil(() => api.put.mock.calls.length > 0)
       expect(api.put).toHaveBeenCalledWith('/notifications/mark-all-read')
+    })
+
+    it('markRead rafraîchit le compteur de notifications après succès', async () => {
+      api.put.mockResolvedValue({ data: { success: true } })
+      const fetchCount = vi.fn().mockResolvedValue(undefined)
+      useAuthStore.mockReturnValue({
+        notificationCount: 2,
+        fetchNotificationCount: fetchCount,
+      })
+      const wrapper = mount(NotificationsView)
+      await vi.waitUntil(() => wrapper.find('.notification-item').exists())
+      const items = wrapper.findAll('.notification-item')
+      await items[0].trigger('click')
+      await vi.waitUntil(() => api.put.mock.calls.length > 0)
+      expect(fetchCount).toHaveBeenCalled()
+    })
+
+    it('markAllRead rafraîchit le compteur de notifications après succès', async () => {
+      api.put.mockResolvedValue({ data: { success: true } })
+      const fetchCount = vi.fn().mockResolvedValue(undefined)
+      useAuthStore.mockReturnValue({
+        notificationCount: 2,
+        fetchNotificationCount: fetchCount,
+      })
+      const wrapper = mount(NotificationsView)
+      await vi.waitUntil(() => wrapper.find('.mark-all-btn').exists())
+      await wrapper.find('.mark-all-btn').trigger('click')
+      await vi.waitUntil(() => api.put.mock.calls.length > 0)
+      expect(fetchCount).toHaveBeenCalled()
     })
 
     it('loadMore increment la page', async () => {
